@@ -3,16 +3,10 @@ import { Helmet } from 'react-helmet-async';
 import { ChevronDown, ChevronUp, HelpCircle, Code, Smartphone, Megaphone, Palette, Users, Clock, DollarSign, Shield } from 'lucide-react';
 
 const FAQ = () => {
-  const [openItems, setOpenItems] = useState(new Set());
+  const [openItem, setOpenItem] = useState(null);
 
   const toggleItem = (id) => {
-    const newOpenItems = new Set(openItems);
-    if (newOpenItems.has(id)) {
-      newOpenItems.delete(id);
-    } else {
-      newOpenItems.add(id);
-    }
-    setOpenItems(newOpenItems);
+    setOpenItem(openItem === id ? null : id);
   };
 
   const faqCategories = [
@@ -212,16 +206,16 @@ const FAQ = () => {
                         className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                       >
                         <span className="font-semibold text-white pr-4">{item.question}</span>
-                        {openItems.has(item.id) ? (
+                        {openItem === item.id ? (
                           <ChevronUp size={20} className="text-blue-400 flex-shrink-0" />
                         ) : (
                           <ChevronDown size={20} className="text-gray-400 flex-shrink-0" />
                         )}
                       </button>
                       
-                      {openItems.has(item.id) && (
+                      {openItem === item.id && (
                         <div className="px-6 pb-4">
-                          <p className="text-gray-300 leading-relaxed">{item.answer}</p>
+                          <p className="text-gray-300 leading-relaxed mt-4">{item.answer}</p>
                         </div>
                       )}
                     </div>

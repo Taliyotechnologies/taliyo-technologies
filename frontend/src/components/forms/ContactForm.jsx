@@ -15,10 +15,12 @@ const ContactForm = () => {
     formState: { errors },
   } = useForm()
 
+  const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  
   const onSubmit = async (data) => {
     setIsSubmitting(true)
     try {
-      const response = await fetch('http://localhost:5000/api/contact', {
+      const response = await fetch(`${API}/api/contact`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -258,14 +260,12 @@ const ContactForm = () => {
 
             <p className="text-sm text-secondary-400 text-center">
               By submitting this form, you agree to our{' '}
-              <a href="/privacy" className="text-primary-400 hover:text-primary-300">
+              <a href="/privacy-policy" className="text-primary-400 hover:text-primary-300 underline">
                 Privacy Policy
-              </a>{' '}
-              and{' '}
-              <a href="/terms" className="text-primary-400 hover:text-primary-300">
-                Terms of Service
-              </a>
-              .
+              </a>{' '}and{' '}
+              <a href="/terms-conditions" className="text-primary-400 hover:text-primary-300 underline">
+                Terms & Conditions
+              </a>.
             </p>
           </motion.form>
         )}

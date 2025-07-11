@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import io from 'socket.io-client';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { FaEye, FaBars, FaTimes, FaCog, FaDownload, FaBell } from 'react-icons/fa';
+import UserManagement from './UserManagement';
+import Projects from './Projects';
+import TeamManagement from './TeamManagement';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const socket = io(API);
@@ -65,6 +68,45 @@ const Sidebar = ({ section, setSection, onLogout, isMobile, toggleSidebar, theme
               }`}
             >
               User Management
+            </button>
+          )}
+          {user?.role === 'admin' && (
+            <button
+              onClick={() => {
+                setSection('Activity Logs');
+                if (isMobile) toggleSidebar();
+              }}
+              className={`text-left px-4 py-3 rounded-lg font-medium transition-colors ${
+                section === 'Activity Logs' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+              }`}
+            >
+              Activity Logs
+            </button>
+          )}
+          {user?.role === 'admin' && (
+            <button
+              onClick={() => {
+                setSection('Projects');
+                if (isMobile) toggleSidebar();
+              }}
+              className={`text-left px-4 py-3 rounded-lg font-medium transition-colors ${
+                section === 'Projects' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+              }`}
+            >
+              Projects
+            </button>
+          )}
+          {user?.role === 'admin' && (
+            <button
+              onClick={() => {
+                setSection('Team Management');
+                if (isMobile) toggleSidebar();
+              }}
+              className={`text-left px-4 py-3 rounded-lg font-medium transition-colors ${
+                section === 'Team Management' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+              }`}
+            >
+              Team Management
             </button>
           )}
         </nav>
@@ -464,6 +506,8 @@ const BlogAnalyticsChart = () => {
 };
 
 const Settings = ({ theme, setTheme }) => {
+  const user = getUser();
+  const [notificationEnabled, setNotificationEnabled] = useState(true); // Default true, fetch from backend in real use
   const [exporting, setExporting] = useState(false);
   const [systemStatus, setSystemStatus] = useState({ connected: true, lastCheck: new Date() });
   const [showNewsletterModal, setShowNewsletterModal] = useState(false);
@@ -944,19 +988,22 @@ const Settings = ({ theme, setTheme }) => {
                   </p>
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium mb-2">Notifications</label>
-                  <div className="space-y-2">
-                    <label className="flex items-center">
-                      <input type="checkbox" className="mr-2" defaultChecked />
-                      Email notifications
+                {/* Notification toggle only for admin */}
+                {user?.role === 'admin' && (
+                  <div>
+                    <label className="block text-sm font-medium mb-2">System Notifications</label>
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={notificationEnabled}
+                        onChange={e => setNotificationEnabled(e.target.checked)}
+                        className="form-checkbox h-5 w-5 text-blue-600"
+                      />
+                      <span className="text-gray-200">Enable email notifications for important system events</span>
                     </label>
-                    <label className="flex items-center">
-                      <input type="checkbox" className="mr-2" defaultChecked />
-                      Real-time updates
-                    </label>
+                    <p className="text-xs text-gray-400 mt-1">You will receive notifications when users visit or important actions occur.</p>
                   </div>
-                </div>
+                )}
                 
                 <div className="flex gap-3 pt-4">
                   <button 
@@ -1101,13 +1148,103 @@ const Settings = ({ theme, setTheme }) => {
   );
 };
 
-const UserManagement = () => (
-  <div className="bg-gray-900 rounded-2xl shadow p-6 mb-8">
-    <h2 className="text-2xl font-semibold mb-4">User Management</h2>
-    <p>This section is under construction. More user management features will be added here.</p>
-    <p>Currently, you can view and manage subscribers and contacts.</p>
-  </div>
-);
+const ActivityLogs = () => {
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('all');
+  const user = getUser();
+
+  useEffect(() => {
+    const fetchLogs = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem('admin_token');
+        const res = await fetch(`${API}/api/admin/logs`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        setLogs(data);
+      } catch {
+        setLogs([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLogs();
+  }, []);
+
+  const loginLogs = logs.filter(log => log.action === 'login');
+  const filteredLogs = filter === 'all' ? logs : loginLogs;
+  const uniqueLoginUsers = Array.from(new Set(loginLogs.map(l => l.user)));
+
+  if (!user || user.role !== 'admin') return null;
+
+  return (
+    <div className="bg-gray-900 rounded-2xl shadow p-6 mb-8">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+        <h2 className="text-2xl font-semibold">Activity Logs</h2>
+        <div className="flex gap-2">
+          <button
+            className={`px-4 py-2 rounded ${filter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-300'}`}
+            onClick={() => setFilter('all')}
+          >
+            All Actions
+          </button>
+          <button
+            className={`px-4 py-2 rounded ${filter === 'login' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-300'}`}
+            onClick={() => setFilter('login')}
+          >
+            Login History
+          </button>
+        </div>
+      </div>
+      {filter === 'login' && !loading && (
+        <div className="mb-6 flex flex-col sm:flex-row gap-4">
+          <div className="bg-blue-800 text-blue-100 rounded-lg px-6 py-4 flex-1 text-center">
+            <div className="text-2xl font-bold">{uniqueLoginUsers.length}</div>
+            <div className="text-sm mt-1">Unique Users</div>
+          </div>
+          <div className="bg-blue-800 text-blue-100 rounded-lg px-6 py-4 flex-1 text-center">
+            <div className="text-2xl font-bold">{loginLogs.length}</div>
+            <div className="text-sm mt-1">Total Login Events</div>
+          </div>
+        </div>
+      )}
+      {loading ? (
+        <div className="flex justify-center items-center py-10">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-lg border border-gray-800">
+          <table className="min-w-full text-left text-sm">
+            <thead>
+              <tr className="bg-gray-800 border-b border-gray-700">
+                <th className="py-2 px-4">User</th>
+                {filter === 'all' && <th className="py-2 px-4">Action</th>}
+                {filter === 'all' && <th className="py-2 px-4">Details</th>}
+                <th className="py-2 px-4">IP</th>
+                <th className="py-2 px-4">Date/Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredLogs.length === 0 ? (
+                <tr><td colSpan={filter === 'all' ? 5 : 4} className="text-center py-6 text-gray-400">No logs found.</td></tr>
+              ) : filteredLogs.map((log, i) => (
+                <tr key={i} className="border-b border-gray-800 hover:bg-gray-800/50 transition">
+                  <td className="py-2 px-4">{log.user}</td>
+                  {filter === 'all' && <td className="py-2 px-4 capitalize">{log.action}</td>}
+                  {filter === 'all' && <td className="py-2 px-4">{log.details}</td>}
+                  <td className="py-2 px-4">{log.ip || '-'}</td>
+                  <td className="py-2 px-4">{new Date(log.createdAt).toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const Admin = () => {
   // Read last section from localStorage, default to 'Dashboard'
@@ -1287,6 +1424,9 @@ const Admin = () => {
             {section === 'Contacts' && <Contacts contacts={contacts} />}
             {section === 'Settings' && <Settings theme={theme} setTheme={setTheme} />}
             {section === 'User Management' && <UserManagement />}
+            {section === 'Activity Logs' && <ActivityLogs />}
+            {section === 'Projects' && <Projects />}
+            {section === 'Team Management' && <TeamManagement />}
           </>
         )}
       </main>

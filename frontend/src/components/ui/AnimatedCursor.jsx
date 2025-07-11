@@ -1,10 +1,27 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 
 const AnimatedCursor = () => {
+  // Add state to detect mobile/tablet
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
   // Remove the logic that disables the cursor for /admin pages
   const dotRef = useRef(null);
   const ringRef = useRef(null);
+
+  useEffect(() => {
+    // Detect mobile or tablet (touch device or small screen)
+    const checkTouch = () => {
+      const isTouch = (
+        'ontouchstart' in window ||
+        navigator.maxTouchPoints > 0 ||
+        window.innerWidth < 1024 // You can adjust this breakpoint as needed
+      );
+      setIsTouchDevice(isTouch);
+    };
+    checkTouch();
+    window.addEventListener('resize', checkTouch);
+    return () => window.removeEventListener('resize', checkTouch);
+  }, []);
 
   useEffect(() => {
     document.body.style.cursor = 'none';
@@ -56,6 +73,8 @@ const AnimatedCursor = () => {
       document.removeEventListener('mousedown', handleClick);
     };
   }, []);
+
+  if (isTouchDevice) return null;
 
   return (
     <>

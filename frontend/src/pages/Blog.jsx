@@ -19,11 +19,13 @@ const Blog = () => {
   const [submitting, setSubmitting] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
 
+  const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  
   const handleSubscribe = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const res = await fetch('http://localhost:5000/api/subscribe', {
+      const res = await fetch(`${API}/api/subscribe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: subscribeEmail }),

@@ -27,10 +27,10 @@ const Footer = () => {
   }
 
   const socialLinks = [
-    { name: 'Facebook', href: 'https://facebook.com/taliyo', icon: Facebook },
-    { name: 'Twitter', href: 'https://twitter.com/taliyo', icon: Twitter },
-    { name: 'LinkedIn', href: 'https://linkedin.com/company/taliyo', icon: Linkedin },
-    { name: 'Instagram', href: 'https://instagram.com/taliyo', icon: Instagram },
+    { name: 'Facebook', href: 'https://www.facebook.com/profile.php?id=61558765421664', icon: Facebook },
+    { name: 'Twitter', href: 'https://x.com/TaliyoTech', icon: Twitter },
+    { name: 'LinkedIn', href: 'https://www.linkedin.com/company/107573393/admin/page-posts/published/', icon: Linkedin },
+    { name: 'Instagram', href: 'https://www.instagram.com/taliyotechnologies/', icon: Instagram },
   ]
 
   return (

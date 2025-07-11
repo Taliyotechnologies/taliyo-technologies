@@ -17,7 +17,7 @@ const PrivacyPolicy = () => {
             <div className="text-center">
               <div className="flex items-center justify-center mb-6">
                 <span className="text-4xl mr-4">🛡️</span>
-                <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white">
+                <h1 className="text-4xl lg:text-5xl mt-4 font-bold text-gray-900 dark:text-white">
                   Privacy Policy
                 </h1>
               </div>
@@ -52,8 +52,8 @@ const PrivacyPolicy = () => {
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
                 Welcome to Taliyo Technologies ("Company", "we", "our", or "us"). Your privacy is of utmost importance to us. 
                 This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our 
-                website <a href="https://taliyo.in" className="text-blue-600 dark:text-blue-400 hover:underline">https://taliyo.in</a> 
-                or use any of our services.
+                website <a href="https://taliyotechnologies.com" className="text-blue-600 dark:text-blue-400 hover:underline">https://taliyotechnologies.com </a> 
+                 or use any of our services.
               </p>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed mt-4">
                 By accessing or using our site or services, you consent to the practices described in this Privacy Policy.
@@ -165,8 +165,8 @@ const PrivacyPolicy = () => {
               </ul>
               <p className="text-gray-700 dark:text-gray-300 mt-4">
                 To exercise any of the above rights, contact us at{' '}
-                <a href="mailto:hello@taliyo.in" className="text-blue-600 dark:text-blue-400 hover:underline">
-                  hello@taliyo.in
+                <a href="mailto:info@taliyotechnologies.com" className="text-blue-600 dark:text-blue-400 hover:underline">
+                  info@taliyotechnologies.com
                 </a>.
               </p>
             </div>

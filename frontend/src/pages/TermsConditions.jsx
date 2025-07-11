@@ -17,7 +17,7 @@ const TermsConditions = () => {
             <div className="text-center">
               <div className="flex items-center justify-center mb-6">
                 <span className="text-4xl mr-4">📜</span>
-                <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white">
+                <h1 className="text-4xl lg:text-5xl mt-5 font-bold text-gray-900 dark:text-white">
                   Terms and Conditions
                 </h1>
               </div>
@@ -51,7 +51,7 @@ const TermsConditions = () => {
             <div className="mb-8">
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">1. Acceptance of Terms</h3>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
-                By accessing or using the website <a href="https://taliyo.in" className="text-blue-600 dark:text-blue-400 hover:underline">https://taliyo.in</a> and any of its services, products, or tools (collectively, "Services"), you agree to be bound by these Terms and Conditions ("Terms"). If you do not agree with any part of these Terms, please do not use our website or services.
+                By accessing or using the website <a href="https://taliyotechnologies.com" className="text-blue-600 dark:text-blue-400 hover:underline">https://taliyotechnologies.com</a> and any of its services, products, or tools (collectively, "Services"), you agree to be bound by these Terms and Conditions ("Terms"). If you do not agree with any part of these Terms, please do not use our website or services.
               </p>
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
                 These Terms constitute a legally binding agreement between you (the "Client", "User", or "You") and Taliyo Technologies ("Company", "We", "Us", or "Our").
