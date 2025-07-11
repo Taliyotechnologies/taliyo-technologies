@@ -8,9 +8,6 @@ import useScrollToTop from './hooks/useScrollToTop'
 // Layout Components
 import Layout from './components/layout/Layout'
 import Admin from './pages/admin/Admin';
-import Login from './pages/admin/Login';
-import ForgotPassword from './pages/admin/ForgotPassword';
-import ResetPassword from './pages/admin/ResetPassword';
 import UserManagement from './pages/admin/UserManagement';
 
 // API Configuration
@@ -109,10 +106,6 @@ function App() {
             <Route path="privacy-policy" element={<PrivacyPolicy />} />
             <Route path="terms-conditions" element={<TermsConditions />} />
           </Route>
-          {/* Admin Auth Routes */}
-          <Route path="/admin/login" element={<Login />} />
-          <Route path="/admin/forgot" element={<ForgotPassword />} />
-          <Route path="/admin/reset/:token" element={<ResetPassword />} />
           {/* Admin Panel (protected) */}
           <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
           <Route path="/admin/users" element={<ProtectedRoute adminOnly={true}><UserManagement /></ProtectedRoute>} />
