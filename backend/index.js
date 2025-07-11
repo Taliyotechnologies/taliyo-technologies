@@ -18,7 +18,11 @@ const JWT_EXPIRES_IN = '7d';
 // CORS configuration for production
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://your-frontend-domain.vercel.app', 'https://your-frontend-domain.netlify.app']
+    ? [
+      'https://taliyotechnologies.com',
+      'https://taliyo-technologies.vercel.app',
+      // ...other allowed domains
+      ]
     : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:5176'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
@@ -28,6 +32,16 @@ const corsOptions = {
 // Middleware
 app.use(cors(corsOptions));
 app.use(express.json());
+
+// Health check endpoint for Render
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'healthy', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
 
 // MongoDB Models
 const blogSchema = new mongoose.Schema({
@@ -44,18 +58,21 @@ const blogSchema = new mongoose.Schema({
   featured: { type: Boolean, default: false }
 });
 
+// Update Contact model to include status
 const contactSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true },
+  name: String,
+  email: String,
   phone: String,
   company: String,
   service: String,
   budget: String,
   timeline: String,
   subject: String,
-  message: { type: String, required: true },
+  message: String,
+  status: { type: String, enum: ['done', 'not done'], default: 'not done' },
   createdAt: { type: Date, default: Date.now }
 });
+const Contact = mongoose.model('Contact', contactSchema);
 
 const subscriberSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
@@ -63,9 +80,11 @@ const subscriberSchema = new mongoose.Schema({
 });
 
 const adminUserSchema = new mongoose.Schema({
+  name: { type: String },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: String, enum: ['admin', 'user'], default: 'user' },
+  role: { type: String, enum: ['admin', 'editor', 'viewer', 'hr'], default: 'viewer' },
+  assignedProjects: [{ type: String }],
   resetToken: String,
   resetTokenExpires: Date,
   createdAt: { type: Date, default: Date.now }
@@ -78,10 +97,29 @@ const pageViewSchema = new mongoose.Schema({
 });
 
 const Blog = mongoose.model('Blog', blogSchema);
-const Contact = mongoose.model('Contact', contactSchema);
 const Subscriber = mongoose.model('Subscriber', subscriberSchema);
 const AdminUser = mongoose.model('AdminUser', adminUserSchema);
 const PageView = mongoose.model('PageView', pageViewSchema);
+
+// ActivityLog model
+const activityLogSchema = new mongoose.Schema({
+  user: { type: String }, // email or user id
+  action: { type: String },
+  details: { type: String },
+  ip: { type: String },
+  createdAt: { type: Date, default: Date.now }
+});
+const ActivityLog = mongoose.model('ActivityLog', activityLogSchema);
+
+// Auto-delete logs older than 7 days on server start
+ActivityLog.deleteMany({ createdAt: { $lt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } }).catch(() => {});
+
+// Helper to log actions
+async function logActivity({ user, action, details, ip }) {
+  try {
+    await ActivityLog.create({ user, action, details, ip });
+  } catch {}
+}
 
 // Auth middleware
 function auth(req, res, next) {
@@ -101,6 +139,15 @@ function adminOnly(req, res, next) {
     return res.status(403).json({ message: 'Admin access required' });
   }
   next();
+}
+
+function roleAccess(allowedRoles) {
+  return (req, res, next) => {
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({ message: 'Access denied: insufficient role' });
+    }
+    next();
+  };
 }
 
 // Setup Nodemailer transporter (Gmail)
@@ -141,11 +188,11 @@ app.get('/api/blogs/:slug', async (req, res) => {
   }
 });
 
-app.post('/api/blogs', auth, adminOnly, async (req, res) => {
+// Blog endpoints with logging
+app.post('/api/blogs', auth, roleAccess(['admin']), async (req, res) => {
   try {
     const { title, content, excerpt, author, image, category, tags, featured } = req.body;
     const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-    
     const blog = new Blog({
       title,
       slug,
@@ -157,27 +204,27 @@ app.post('/api/blogs', auth, adminOnly, async (req, res) => {
       tags,
       featured
     });
-    
     await blog.save();
     res.status(201).json(blog);
+    logActivity({ user: req.user.email, action: 'add_blog', details: `Added blog '${title}'`, ip: req.ip });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
 });
-
-app.put('/api/blogs/:id', auth, adminOnly, async (req, res) => {
+app.put('/api/blogs/:id', auth, roleAccess(['admin']), async (req, res) => {
   try {
     const blog = await Blog.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json(blog);
+    logActivity({ user: req.user.email, action: 'edit_blog', details: `Edited blog ${req.params.id}`, ip: req.ip });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
 });
-
-app.delete('/api/blogs/:id', auth, adminOnly, async (req, res) => {
+app.delete('/api/blogs/:id', auth, roleAccess(['admin']), async (req, res) => {
   try {
     await Blog.findByIdAndDelete(req.params.id);
     res.json({ message: 'Blog deleted' });
+    logActivity({ user: req.user.email, action: 'delete_blog', details: `Deleted blog ${req.params.id}`, ip: req.ip });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -194,21 +241,25 @@ app.post('/api/admin/auth/login', async (req, res) => {
   
   const token = jwt.sign({ id: user._id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
   res.json({ token, user: { email: user.email, role: user.role } });
+  logActivity({ user: user.email, action: 'login', details: 'User logged in', ip: req.ip });
 });
 
-app.post('/api/admin/auth/register', auth, adminOnly, async (req, res) => {
+app.post('/api/admin/auth/register', auth, roleAccess(['admin']), async (req, res) => {
   try {
-    const { email, password, role } = req.body;
+    const { name, email, password, role, assignedProjects } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
     
     const user = new AdminUser({
+      name,
       email,
       password: hashedPassword,
-      role: role || 'user'
+      role: role || 'user',
+      assignedProjects: assignedProjects || []
     });
     
     await user.save();
     res.status(201).json({ message: 'User created successfully' });
+    logActivity({ user: req.user.email, action: 'add_user', details: `Added user ${email}`, ip: req.ip });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
@@ -216,6 +267,8 @@ app.post('/api/admin/auth/register', auth, adminOnly, async (req, res) => {
 
 app.post('/api/admin/auth/forgot', async (req, res) => {
   const { email } = req.body;
+  console.log('Forgot password request received for:', email); // Log request
+
   const user = await AdminUser.findOne({ email });
   if (!user) return res.status(200).json({ message: 'If user exists, email sent' });
   
@@ -233,8 +286,10 @@ app.post('/api/admin/auth/forgot', async (req, res) => {
       subject: 'Password Reset Request',
       html: `<p>You requested a password reset for your Taliyo admin account.</p><p>Click the link below to reset your password:</p><p><a href="${resetUrl}">${resetUrl}</a></p><p>If you did not request this, you can ignore this email.</p>`
     });
+    console.log('Reset email sent to:', user.email); // Log success
     res.json({ message: 'Reset link sent to your email.' });
   } catch (err) {
+    console.error('Failed to send email:', err); // Log error
     res.status(500).json({ message: 'Failed to send email', error: err.message });
   }
 });
@@ -279,22 +334,47 @@ app.get('/api/admin/auth/users', auth, adminOnly, async (req, res) => {
   res.json(users);
 });
 
-app.delete('/api/admin/auth/users/:id', auth, adminOnly, async (req, res) => {
+app.post('/api/admin/auth/register', auth, roleAccess(['admin']), async (req, res) => {
+  try {
+    const { name, email, password, role, assignedProjects } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    const user = new AdminUser({
+      name,
+      email,
+      password: hashedPassword,
+      role: role || 'user',
+      assignedProjects: assignedProjects || []
+    });
+    
+    await user.save();
+    res.status(201).json({ message: 'User created successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.delete('/api/admin/auth/users/:id', auth, roleAccess(['admin']), async (req, res) => {
   const { id } = req.params;
   if (req.user.id === id) return res.status(400).json({ message: 'Cannot delete self' });
   await AdminUser.findByIdAndDelete(id);
   res.json({ message: 'User deleted' });
+  logActivity({ user: req.user.email, action: 'delete_user', details: `Deleted user ${id}`, ip: req.ip });
 });
 
-app.patch('/api/admin/auth/users/:id', auth, adminOnly, async (req, res) => {
+app.patch('/api/admin/auth/users/:id', auth, roleAccess(['admin']), async (req, res) => {
   const { id } = req.params;
-  const { role, password } = req.body;
+  const { name, role, password, email, assignedProjects } = req.body;
   const update = {};
+  if (name) update.name = name;
   if (role) update.role = role;
+  if (email) update.email = email;
+  if (Array.isArray(assignedProjects)) update.assignedProjects = assignedProjects;
   if (password) update.password = await bcrypt.hash(password, 10);
   
   const user = await AdminUser.findByIdAndUpdate(id, update, { new: true, select: '-password -resetToken -resetTokenExpires' });
   res.json(user);
+  logActivity({ user: req.user.email, action: 'edit_user', details: `Edited user ${id}`, ip: req.ip });
 });
 
 // Contact form endpoint
@@ -326,7 +406,8 @@ app.post('/api/subscribe', async (req, res) => {
 });
 
 // Admin API endpoints
-app.get('/api/admin/subscribers', auth, adminOnly, async (req, res) => {
+// Subscribers: only admin can view
+app.get('/api/admin/subscribers', auth, roleAccess(['admin']), async (req, res) => {
   try {
     const subs = await Subscriber.find().sort({ createdAt: -1 });
     res.json(subs);
@@ -334,13 +415,36 @@ app.get('/api/admin/subscribers', auth, adminOnly, async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error.' });
   }
 });
-
-app.get('/api/admin/contacts', auth, adminOnly, async (req, res) => {
+// Contacts: only admin can view
+app.get('/api/admin/contacts', auth, roleAccess(['admin']), async (req, res) => {
   try {
     const contacts = await Contact.find().sort({ createdAt: -1 });
     res.json(contacts);
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server error.' });
+  }
+});
+
+// Reply to contact and mark as done
+app.post('/api/admin/contacts/:id/reply', auth, roleAccess(['admin']), async (req, res) => {
+  const { id } = req.params;
+  const { message } = req.body;
+  const contact = await Contact.findById(id);
+  if (!contact) return res.status(404).json({ message: 'Contact not found' });
+  // Send email
+  try {
+    await transporter.sendMail({
+      from: `Taliyo Admin <${EMAIL_USER}>`,
+      to: contact.email,
+      subject: 'Reply to your inquiry',
+      html: `<p>${message}</p>`
+    });
+    contact.status = 'done';
+    await contact.save();
+    res.json({ success: true, message: 'Reply sent and status updated.' });
+    logActivity({ user: req.user.email, action: 'reply_contact', details: `Replied to contact ${contact.email}`, ip: req.ip });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to send reply', error: err.message });
   }
 });
 
@@ -443,46 +547,151 @@ app.post('/api/admin/send-newsletter', auth, adminOnly, async (req, res) => {
   }
 });
 
-// System logs endpoint
-app.get('/api/admin/logs', auth, adminOnly, async (req, res) => {
+// GET logs endpoint (admin only)
+app.get('/api/admin/logs', auth, roleAccess(['admin']), async (req, res) => {
+  const logs = await ActivityLog.find().sort({ createdAt: -1 });
+  res.json(logs);
+});
+
+// Project model
+const projectSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  client: { type: String, required: true },
+  deadline: { type: Date },
+  price: { type: Number },
+  techStack: { type: String }, // free text
+  status: { type: String, enum: ['Ongoing', 'Completed', 'On Hold'], default: 'Ongoing' },
+  notes: { type: String },
+  createdAt: { type: Date, default: Date.now }
+});
+const Project = mongoose.model('Project', projectSchema);
+
+// Add new project
+app.post('/api/admin/projects', auth, roleAccess(['admin']), async (req, res) => {
   try {
-    // For now, return sample logs. In a real system, you'd store logs in database
-    const sampleLogs = [
-      {
-        timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
-        level: 'info',
-        message: 'Admin user logged in successfully'
-      },
-      {
-        timestamp: new Date(Date.now() - 1000 * 60 * 15), // 15 minutes ago
-        level: 'info',
-        message: 'New contact form submission received'
-      },
-      {
-        timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-        level: 'info',
-        message: 'Newsletter subscriber added'
-      },
-      {
-        timestamp: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
-        level: 'warning',
-        message: 'High memory usage detected'
-      },
-      {
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-        level: 'info',
-        message: 'Database backup completed'
-      },
-      {
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-        level: 'error',
-        message: 'Failed to send email notification'
-      }
-    ];
-    
-    res.json(sampleLogs);
+    const { title, client, deadline, price, techStack, status, notes } = req.body;
+    const project = new Project({ title, client, deadline, price, techStack, status, notes });
+    await project.save();
+    res.status(201).json(project);
+    logActivity({ user: req.user.email, action: 'add_project', details: `Added project '${title}'`, ip: req.ip });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Failed to fetch logs' });
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+// Edit/update project
+app.patch('/api/admin/projects/:id', auth, roleAccess(['admin']), async (req, res) => {
+  try {
+    const update = req.body;
+    const project = await Project.findByIdAndUpdate(req.params.id, update, { new: true });
+    res.json(project);
+    logActivity({ user: req.user.email, action: 'edit_project', details: `Edited project ${req.params.id}`, ip: req.ip });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+// Delete project
+app.delete('/api/admin/projects/:id', auth, roleAccess(['admin']), async (req, res) => {
+  try {
+    await Project.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Project deleted' });
+    logActivity({ user: req.user.email, action: 'delete_project', details: `Deleted project ${req.params.id}`, ip: req.ip });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+// List/search/filter projects
+app.get('/api/admin/projects', auth, roleAccess(['admin']), async (req, res) => {
+  try {
+    const { client, status, from, to, q } = req.query;
+    const filter = {};
+    if (client) filter.client = client;
+    if (status) filter.status = status;
+    if (from || to) filter.deadline = {};
+    if (from) filter.deadline.$gte = new Date(from);
+    if (to) filter.deadline.$lte = new Date(to);
+    if (q) filter.$or = [
+      { title: { $regex: q, $options: 'i' } },
+      { client: { $regex: q, $options: 'i' } },
+      { techStack: { $regex: q, $options: 'i' } }
+    ];
+    const projects = await Project.find(filter).sort({ createdAt: -1 });
+    res.json(projects);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// TeamMember model
+const teamMemberSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  role: { type: String, enum: ['admin', 'dev', 'designer', 'tester'], default: 'dev' },
+  email: { type: String, required: true, unique: true },
+  assignedProjects: [{ type: String }], // changed from ObjectId to String
+  tasks: [{
+    project: { type: String },
+    status: { type: String, enum: ['Ongoing', 'Completed'], default: 'Ongoing' },
+    hours: { type: Number },
+    note: { type: String },
+    date: { type: Date, default: Date.now }
+  }],
+  createdAt: { type: Date, default: Date.now }
+});
+const TeamMember = mongoose.model('TeamMember', teamMemberSchema);
+
+// Add team member
+app.post('/api/admin/team', auth, roleAccess(['admin']), async (req, res) => {
+  try {
+    const { name, role, email, assignedProjects } = req.body;
+    const member = new TeamMember({ name, role, email, assignedProjects });
+    await member.save();
+    res.status(201).json(member);
+    logActivity({ user: req.user.email, action: 'add_team_member', details: `Added team member ${email}`, ip: req.ip });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+// Edit team member
+app.patch('/api/admin/team/:id', auth, roleAccess(['admin']), async (req, res) => {
+  try {
+    const update = req.body;
+    const member = await TeamMember.findByIdAndUpdate(req.params.id, update, { new: true });
+    res.json(member);
+    logActivity({ user: req.user.email, action: 'edit_team_member', details: `Edited team member ${req.params.id}`, ip: req.ip });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+// Delete team member
+app.delete('/api/admin/team/:id', auth, roleAccess(['admin']), async (req, res) => {
+  try {
+    await TeamMember.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Team member deleted' });
+    logActivity({ user: req.user.email, action: 'delete_team_member', details: `Deleted team member ${req.params.id}`, ip: req.ip });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+// List team members
+app.get('/api/admin/team', auth, roleAccess(['admin']), async (req, res) => {
+  try {
+    const members = await TeamMember.find().populate('assignedProjects', 'title');
+    res.json(members);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+// Log task for a member
+app.post('/api/admin/team/:id/task', auth, roleAccess(['admin']), async (req, res) => {
+  try {
+    const { project, status, hours, note } = req.body;
+    const member = await TeamMember.findById(req.params.id);
+    if (!member) return res.status(404).json({ message: 'Team member not found' });
+    member.tasks.push({ project, status, hours, note });
+    await member.save();
+    res.json(member);
+    logActivity({ user: req.user.email, action: 'log_task', details: `Logged task for member ${member.email}`, ip: req.ip });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -492,7 +701,14 @@ mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .catch(err => console.error('MongoDB connection error:', err));
 
 const server = http.createServer(app);
-const io = new SocketIOServer(server, { cors: { origin: '*' } });
+const io = new SocketIOServer(server, { cors: { origin: [
+  'https://taliyotechnologies.com',
+  'https://taliyo-technologies.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:5175',
+  'http://localhost:5176'
+] } });
 
 // In-memory visitor/session tracking
 let liveVisitors = 0;
