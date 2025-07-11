@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X, ChevronDown } from 'lucide-react'
 import logo1 from '../../assets/logo1.png';
-import taliyoLogo from '../../assets/taliyo_technologies_logo.png';
+import taliyoLogo from '../../assets/taliyo logo.png';
 // import logoT from '../../assets/Untitled design.png';
 
 const Header = () => {
@@ -42,7 +42,6 @@ const Header = () => {
     { name: 'Testimonials', href: '/testimonials' },
     { name: 'Blog', href: '/blog' },
     { name: 'FAQ', href: '/faq' },
-    { name: 'Contact', href: '/contact' },
   ];
 
   const isActive = (path) => {
