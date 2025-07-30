@@ -285,7 +285,9 @@ export default function Users() {
                 <td className="px-2 sm:px-4 py-2 sm:py-3 text-white font-medium whitespace-nowrap">{user.name}</td>
                 <td className="px-2 sm:px-4 py-2 sm:py-3 text-blue-400 font-medium whitespace-nowrap">{user.email}</td>
                 <td className="px-2 sm:px-4 py-2 sm:py-3 text-gray-300 font-medium whitespace-nowrap">{user.role}</td>
-                <td className="px-2 sm:px-4 py-2 sm:py-3 text-gray-400 whitespace-nowrap truncate max-w-[120px]">{user.features ? user.features.join(', ') : 'No features'}</td>
+                <td className="px-2 sm:px-4 py-2 sm:py-3 text-gray-400 whitespace-nowrap truncate max-w-[120px]">
+                  {user.features && Array.isArray(user.features) ? user.features.join(', ') : 'No features'}
+                </td>
                 <td className="px-2 sm:px-4 py-2 sm:py-3"><span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold text-white ${statusColors[user.status]}`}>{user.status.charAt(0).toUpperCase() + user.status.slice(1)}</span></td>
                 <td className="px-2 sm:px-4 py-2 sm:py-3 flex items-center gap-1 sm:gap-2">
                   <button onClick={() => { setShowDetail(user); }} className="bg-gray-800 hover:bg-blue-600 text-white rounded p-2 transition" title="View"><Eye className="w-4 h-4" /></button>
@@ -327,7 +329,10 @@ export default function Users() {
             <div className="mb-2 text-gray-300 text-xs sm:text-sm"><span className="font-semibold">Name:</span> {showDetail.name}</div>
             <div className="mb-2 text-gray-300 text-xs sm:text-sm"><span className="font-semibold">Email:</span> {showDetail.email}</div>
             <div className="mb-2 text-gray-300 text-xs sm:text-sm"><span className="font-semibold">Role:</span> {showDetail.role}</div>
-            <div className="mb-2 text-gray-300 text-xs sm:text-sm"><span className="font-semibold">Features:</span> {showDetail.features ? showDetail.features.join(', ') : 'No features'}</div>
+            <div className="mb-2 text-gray-300 text-xs sm:text-sm">
+              <span className="font-semibold">Features:</span> 
+              {showDetail.features && Array.isArray(showDetail.features) ? showDetail.features.join(', ') : 'No features'}
+            </div>
             <div className="mb-2 text-gray-300 text-xs sm:text-sm"><span className="font-semibold">Status:</span> <span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold text-white ${statusColors[showDetail.status]}`}>{showDetail.status.charAt(0).toUpperCase() + showDetail.status.slice(1)}</span></div>
           </div>
         </div>
@@ -341,7 +346,7 @@ function UserModal({ user, onClose, onSave }) {
   const [email, setEmail] = useState(user?.email || '');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState(user?.role || 'admin');
-  const [features, setFeatures] = useState(user?.features || []);
+  const [features, setFeatures] = useState(Array.isArray(user?.features) ? user.features : []);
   const [status, setStatus] = useState(user?.status || 'active');
 
   const handleFeatureToggle = (feature) => {
