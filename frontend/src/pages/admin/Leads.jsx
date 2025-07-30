@@ -16,17 +16,23 @@ const Leads = () => {
     setLoading(true);
     setError('');
     try {
+      const token = localStorage.getItem('adminToken');
       const params = new URLSearchParams({
         page,
         limit,
         search,
         sort
       });
-      const res = await fetch(`${API_URL}/api/leads?${params.toString()}`);
+      const res = await fetch(`${API_URL}/api/admin/contacts?${params.toString()}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
       const data = await res.json();
-      if (data.success) {
-        setLeads(data.data);
-        setTotal(data.total);
+      if (res.ok) {
+        setLeads(data);
+        setTotal(data.length);
       } else {
         setLeads([]);
         setTotal(0);

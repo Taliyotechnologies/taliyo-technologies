@@ -86,8 +86,8 @@ export default function Settings() {
   const loadSettings = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('admin_token');
-      const response = await fetch(`${API_BASE_URL}/api/settings`, {
+      const token = localStorage.getItem('adminToken');
+      const response = await fetch(`${API_BASE_URL}/api/admin/settings`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -111,26 +111,28 @@ export default function Settings() {
   const saveSettings = async (updatedSettings = null) => {
     try {
       setSaving(true);
-      const token = localStorage.getItem('admin_token');
+      const token = localStorage.getItem('adminToken');
       const settingsToSave = updatedSettings || settings;
       
-      const response = await fetch(`${API_BASE_URL}/api/settings`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(settingsToSave)
-      });
-
-      if (response.ok) {
-        const savedSettings = await response.json();
-        setSettings(prev => ({ ...prev, ...savedSettings }));
-        toast.success('Settings saved successfully!');
-      } else {
-        const error = await response.json();
-        toast.error(error.message || 'Failed to save settings');
+      // Save each setting individually
+      for (const [key, value] of Object.entries(settingsToSave)) {
+        const response = await fetch(`${API_BASE_URL}/api/admin/settings`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ key, value })
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          toast.error(error.message || 'Failed to save settings');
+          return;
+        }
       }
+      
+      toast.success('Settings saved successfully!');
     } catch (error) {
       console.error('Error saving settings:', error);
       toast.error('Failed to save settings');
