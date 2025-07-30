@@ -145,6 +145,14 @@ const AdminUser = mongoose.model('AdminUser', adminUserSchema);
 const PageView = mongoose.model('PageView', pageViewSchema);
 const ActivityLog = mongoose.model('ActivityLog', activityLogSchema);
 
+// Settings model
+const settingsSchema = new mongoose.Schema({
+  key: { type: String, required: true, unique: true },
+  value: mongoose.Schema.Types.Mixed,
+  updatedAt: { type: Date, default: Date.now }
+});
+const Settings = mongoose.model('Settings', settingsSchema);
+
 // Auto-delete logs older than 7 days on server start
 ActivityLog.deleteMany({ createdAt: { $lt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } }).catch(() => {});
 
@@ -153,6 +161,34 @@ async function logActivity({ user, action, details, ip }) {
   try {
     await ActivityLog.create({ user, action, details, ip });
   } catch {}
+}
+
+// Date/Time utilities
+function formatDate(date, format = 'DD/MM/YYYY') {
+  const d = new Date(date);
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  
+  if (format === 'DD/MM/YYYY') {
+    return `${day}/${month}/${year}`;
+  } else if (format === 'YYYY-MM-DD') {
+    return `${year}-${month}-${day}`;
+  }
+  return d.toLocaleDateString();
+}
+
+function formatTime(date) {
+  const d = new Date(date);
+  return d.toLocaleTimeString('en-IN', { 
+    hour: '2-digit', 
+    minute: '2-digit',
+    timeZone: 'Asia/Kolkata'
+  });
+}
+
+function getIndianTime() {
+  return new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
 }
 
 // Auth middleware
@@ -188,6 +224,31 @@ function roleAccess(allowedRoles) {
 const EMAIL_USER = process.env.EMAIL_USER || 'your_gmail@gmail.com';
 const EMAIL_PASS = process.env.EMAIL_PASS || 'your_gmail_app_password';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+// Settings configuration
+const defaultSettings = {
+  companyName: 'Taliyo Technologies',
+  companyEmail: 'info@taliyotechnologies.com',
+  companyPhone: '+91 98765 43210',
+  companyAddress: 'Delhi, India',
+  timezone: 'Asia/Kolkata',
+  dateFormat: 'DD/MM/YYYY',
+  timeFormat: 'HH:mm',
+  currency: 'INR',
+  language: 'en',
+  maintenance: false,
+  registration: true,
+  emailNotifications: true,
+  smsNotifications: false,
+  analytics: true,
+  backup: true,
+  security: {
+    passwordMinLength: 8,
+    requireSpecialChars: true,
+    sessionTimeout: 24, // hours
+    maxLoginAttempts: 5
+  }
+};
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -614,7 +675,15 @@ app.get('/api/users', auth, async (req, res) => {
 app.get('/api/admin/subscribers', auth, roleAccess(['admin']), async (req, res) => {
   try {
     const subs = await Subscriber.find().sort({ createdAt: -1 });
-    res.json(subs);
+    
+    // Add formatted dates
+    const formattedSubs = subs.map(sub => ({
+      ...sub.toObject(),
+      formattedDate: formatDate(sub.createdAt),
+      formattedTime: formatTime(sub.createdAt)
+    }));
+    
+    res.json(formattedSubs);
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server error.' });
   }
@@ -623,7 +692,15 @@ app.get('/api/admin/subscribers', auth, roleAccess(['admin']), async (req, res) 
 app.get('/api/admin/contacts', auth, roleAccess(['admin']), async (req, res) => {
   try {
     const contacts = await Contact.find().sort({ createdAt: -1 });
-    res.json(contacts);
+    
+    // Add formatted dates
+    const formattedContacts = contacts.map(contact => ({
+      ...contact.toObject(),
+      formattedDate: formatDate(contact.createdAt),
+      formattedTime: formatTime(contact.createdAt)
+    }));
+    
+    res.json(formattedContacts);
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server error.' });
   }
@@ -654,37 +731,42 @@ app.post('/api/admin/contacts/:id/reply', auth, roleAccess(['admin']), async (re
 
 // Analytics endpoints
 app.get('/api/admin/analytics/range', async (req, res) => {
-  const { start, end } = req.query;
-  const match = {};
-  if (start) match.timestamp = { $gte: new Date(start) };
-  if (end) match.timestamp = { ...(match.timestamp || {}), $lte: new Date(end) };
+  try {
+    const { start, end } = req.query;
+    const match = {};
+    if (start) match.timestamp = { $gte: new Date(start) };
+    if (end) match.timestamp = { ...(match.timestamp || {}), $lte: new Date(end) };
 
-  // Group by day (YYYY-MM-DD)
-  const data = await PageView.aggregate([
-    { $match: match },
-    { $addFields: {
-        day: {
-          $dateToString: { format: "%Y-%m-%d", date: "$timestamp" }
+    // Group by day (YYYY-MM-DD)
+    const data = await PageView.aggregate([
+      { $match: match },
+      { $addFields: {
+          day: {
+            $dateToString: { format: "%Y-%m-%d", date: "$timestamp" }
+          }
         }
-      }
-    },
-    { $group: {
-        _id: "$day",
-        views: { $sum: 1 },
-        uniqueUsers: { $addToSet: "$userId" }
-      }
-    },
-    { $project: {
-        date: "$_id",
-        views: 1,
-        unique: { $size: "$uniqueUsers" },
-        _id: 0
-      }
-    },
-    { $sort: { date: 1 } }
-  ]);
+      },
+      { $group: {
+          _id: "$day",
+          views: { $sum: 1 },
+          uniqueUsers: { $addToSet: "$userId" }
+        }
+      },
+      { $project: {
+          date: "$_id",
+          views: 1,
+          unique: { $size: "$uniqueUsers" },
+          _id: 0
+        }
+      },
+      { $sort: { date: 1 } }
+    ]);
 
-  res.json(data);
+    res.json(data);
+  } catch (err) {
+    console.error('Analytics range error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
 });
 
 // Grand Totals endpoint for all-time analytics
@@ -707,8 +789,18 @@ app.get('/api/admin/analytics/total', async (req, res) => {
       },
       { $sort: { views: -1 } }
     ]);
-    res.json(data);
+    
+    // Add formatted dates and additional stats
+    const enhancedData = data.map(item => ({
+      ...item,
+      formattedViews: item.views.toLocaleString(),
+      formattedUnique: item.unique.toLocaleString(),
+      lastUpdated: getIndianTime()
+    }));
+    
+    res.json(enhancedData);
   } catch (err) {
+    console.error('Analytics total error:', err);
     res.status(500).json({ success: false, message: 'Server error.' });
   }
 });
@@ -755,6 +847,45 @@ app.post('/api/admin/send-newsletter', auth, adminOnly, async (req, res) => {
 app.get('/api/admin/logs', auth, roleAccess(['admin']), async (req, res) => {
   const logs = await ActivityLog.find().sort({ createdAt: -1 });
   res.json(logs);
+});
+
+// Settings routes
+app.get('/api/admin/settings', auth, roleAccess(['admin']), async (req, res) => {
+  try {
+    const settings = await Settings.find();
+    const settingsObj = {};
+    settings.forEach(setting => {
+      settingsObj[setting.key] = setting.value;
+    });
+    
+    // Merge with defaults
+    const mergedSettings = { ...defaultSettings, ...settingsObj };
+    res.json(mergedSettings);
+  } catch (err) {
+    console.error('Get settings error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+app.post('/api/admin/settings', auth, roleAccess(['admin']), async (req, res) => {
+  try {
+    const { key, value } = req.body;
+    
+    if (!key) {
+      return res.status(400).json({ success: false, message: 'Setting key is required' });
+    }
+    
+    await Settings.findOneAndUpdate(
+      { key },
+      { value, updatedAt: new Date() },
+      { upsert: true, new: true }
+    );
+    
+    res.json({ success: true, message: 'Setting updated successfully' });
+  } catch (err) {
+    console.error('Update settings error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
 });
 
 // General logs endpoint (for compatibility)
@@ -1016,6 +1147,64 @@ function getPageStats() {
 
 app.get('/api/admin/blog-analytics', (req, res) => {
   res.json(getPageStats());
+});
+
+// Dashboard stats endpoint
+app.get('/api/admin/dashboard-stats', auth, roleAccess(['admin']), async (req, res) => {
+  try {
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const startOfWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() - today.getDay());
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    // Get counts
+    const totalContacts = await Contact.countDocuments();
+    const totalSubscribers = await Subscriber.countDocuments();
+    const totalBlogs = await Blog.countDocuments();
+    const totalProjects = await Project.countDocuments();
+    const totalTeamMembers = await TeamMember.countDocuments();
+    
+    // Get today's stats
+    const todayContacts = await Contact.countDocuments({ createdAt: { $gte: startOfDay } });
+    const todaySubscribers = await Subscriber.countDocuments({ createdAt: { $gte: startOfDay } });
+    const todayPageViews = await PageView.countDocuments({ timestamp: { $gte: startOfDay } });
+    
+    // Get recent activities
+    const recentActivities = await ActivityLog.find()
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .select('user action details createdAt');
+    
+    // Format activities with Indian time
+    const formattedActivities = recentActivities.map(activity => ({
+      ...activity.toObject(),
+      formattedDate: formatDate(activity.createdAt),
+      formattedTime: formatTime(activity.createdAt)
+    }));
+    
+    res.json({
+      success: true,
+      stats: {
+        total: {
+          contacts: totalContacts,
+          subscribers: totalSubscribers,
+          blogs: totalBlogs,
+          projects: totalProjects,
+          teamMembers: totalTeamMembers
+        },
+        today: {
+          contacts: todayContacts,
+          subscribers: todaySubscribers,
+          pageViews: todayPageViews
+        }
+      },
+      recentActivities: formattedActivities,
+      lastUpdated: getIndianTime()
+    });
+  } catch (err) {
+    console.error('Dashboard stats error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
 });
 
 server.listen(PORT, () => {
