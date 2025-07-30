@@ -26,7 +26,7 @@ const UserManagement = () => {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
-  const token = localStorage.getItem('admin_token');
+  const token = localStorage.getItem('adminToken');
   const [toast, setToast] = useState({ show: false, type: '', message: '' });
   const user = JSON.parse(localStorage.getItem('admin_user'));
 

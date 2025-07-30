@@ -34,7 +34,7 @@ export default function Users() {
   // Fetch current user info
   useEffect(() => {
     const fetchCurrentUser = async () => {
-      const token = localStorage.getItem('admin_token');
+      const token = localStorage.getItem('adminToken');
       if (!token) return;
       try {
         const res = await fetch(`${API_URL}/api/admin/verify-token`, {
@@ -65,7 +65,7 @@ export default function Users() {
         role: roleFilter,
         status: statusFilter
       });
-      const token = localStorage.getItem('admin_token');
+      const token = localStorage.getItem('adminToken');
       const res = await fetch(`${API_URL}/api/users?${params.toString()}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -130,7 +130,7 @@ export default function Users() {
     }
   };
   const handleBulkStatus = async (status) => {
-    const token = localStorage.getItem('admin_token');
+    const token = localStorage.getItem('adminToken');
     for (const id of selectedUsers) {
       await fetch(`${API_URL}/api/users/${id}`, {
         method: 'PUT',
@@ -145,7 +145,7 @@ export default function Users() {
     fetchUsers();
   };
   const handleBulkDelete = async () => {
-    const token = localStorage.getItem('admin_token');
+    const token = localStorage.getItem('adminToken');
     if (window.confirm('Are you sure you want to delete selected users?')) {
       for (const id of selectedUsers) {
         await fetch(`${API_URL}/api/users/${id}`, {
@@ -168,7 +168,7 @@ export default function Users() {
     setShowModal(true);
   };
   const handleSave = async (user) => {
-    const token = localStorage.getItem('admin_token');
+    const token = localStorage.getItem('adminToken');
     if (editUser) {
       // Edit existing user
       await fetch(`${API_URL}/api/users/${editUser._id}`, {
@@ -274,7 +274,7 @@ export default function Users() {
                   <button onClick={() => { setShowDetail(user); }} className="bg-gray-800 hover:bg-blue-600 text-white rounded p-2 transition" title="View"><Eye className="w-4 h-4" /></button>
                   {currentUser?.role === 'admin' && <>
                     <button onClick={() => handleEdit(user)} className="bg-gray-800 hover:bg-green-600 text-white rounded p-2 transition" title="Edit"><Edit className="w-4 h-4" /></button>
-                    <button onClick={async () => { const token = localStorage.getItem('admin_token'); if(window.confirm('Delete this user?')) { await fetch(`${API_URL}/api/users/${user._id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } }); fetchUsers(); } }} className="bg-gray-800 hover:bg-red-600 text-white rounded p-2 transition" title="Delete"><Trash2 className="w-4 h-4" /></button>
+                    <button onClick={async () => { const token = localStorage.getItem('adminToken'); if(window.confirm('Delete this user?')) { await fetch(`${API_URL}/api/users/${user._id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } }); fetchUsers(); } }} className="bg-gray-800 hover:bg-red-600 text-white rounded p-2 transition" title="Delete"><Trash2 className="w-4 h-4" /></button>
                   </>}
                 </td>
               </tr>

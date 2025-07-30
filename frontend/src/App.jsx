@@ -37,7 +37,7 @@ const BlogDetailQuantumComputing = lazy(() => import('./pages/blog/BlogDetailQua
 const BlogDetailRemoteWork = lazy(() => import('./pages/blog/BlogDetailRemoteWork'))
 
 // Auth helpers
-const isAuthenticated = () => !!localStorage.getItem('admin_token');
+const isAuthenticated = () => !!localStorage.getItem('adminToken');
 const getUser = () => {
   try {
     return JSON.parse(localStorage.getItem('admin_user'));

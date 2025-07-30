@@ -13,7 +13,7 @@ const AdminLayout = ({ adminEmail = 'admin@taliyo.com', onLogout }) => {
 
   useEffect(() => {
     // Check if user is authenticated
-    const token = localStorage.getItem('admin_token');
+    const token = localStorage.getItem('adminToken');
     if (!token) {
       // Redirect to login if no token
       navigate('/admin/login');
@@ -34,7 +34,7 @@ const AdminLayout = ({ adminEmail = 'admin@taliyo.com', onLogout }) => {
 
         if (!response.ok) {
           // Token is invalid, redirect to login
-          localStorage.removeItem('admin_token');
+          localStorage.removeItem('adminToken');
           navigate('/admin/login');
           return;
         }
@@ -56,7 +56,7 @@ const AdminLayout = ({ adminEmail = 'admin@taliyo.com', onLogout }) => {
   }, [navigate]);
 
   const handleLogout = () => {
-    localStorage.removeItem('admin_token');
+    localStorage.removeItem('adminToken');
     navigate('/admin/login');
   };
 

@@ -165,7 +165,7 @@ export default function Settings() {
 
   const testEmailSettings = async () => {
     try {
-      const token = localStorage.getItem('admin_token');
+      const token = localStorage.getItem('adminToken');
       const response = await fetch(`${API_BASE_URL}/api/settings/test-email`, {
         method: 'POST',
         headers: {
@@ -195,7 +195,7 @@ export default function Settings() {
 
   const testAnalyticsSettings = async () => {
     try {
-      const token = localStorage.getItem('admin_token');
+      const token = localStorage.getItem('adminToken');
       const response = await fetch(`${API_BASE_URL}/api/settings/test-analytics`, {
         method: 'POST',
         headers: {
@@ -232,7 +232,7 @@ export default function Settings() {
     }
 
     try {
-      const token = localStorage.getItem('admin_token');
+      const token = localStorage.getItem('adminToken');
       const response = await fetch(`${API_BASE_URL}/api/admin/change-password`, {
         method: 'POST',
         headers: {
@@ -265,7 +265,7 @@ export default function Settings() {
 
     try {
       setSaving(true);
-      const token = localStorage.getItem('admin_token');
+      const token = localStorage.getItem('adminToken');
       const response = await fetch(`${API_BASE_URL}/api/settings/reset`, {
         method: 'POST',
         headers: {

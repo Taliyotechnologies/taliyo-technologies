@@ -17,7 +17,7 @@ const Projects = () => {
   const fetchProjects = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('admin_token');
+      const token = localStorage.getItem('adminToken');
       const params = new URLSearchParams();
       if (filter.client) params.append('client', filter.client);
       if (filter.status) params.append('status', filter.status);
@@ -73,7 +73,7 @@ const Projects = () => {
 
   const handleSubmit = async e => {
     e.preventDefault();
-    const token = localStorage.getItem('admin_token');
+    const token = localStorage.getItem('adminToken');
     try {
       const res = await fetch(
         modal.edit
@@ -97,7 +97,7 @@ const Projects = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this project?')) return;
-    const token = localStorage.getItem('admin_token');
+    const token = localStorage.getItem('adminToken');
     try {
       const res = await fetch(`${API}/api/admin/projects/${id}`, {
         method: 'DELETE',
@@ -112,7 +112,7 @@ const Projects = () => {
   };
 
   const handleStatusChange = async (project, status) => {
-    const token = localStorage.getItem('admin_token');
+    const token = localStorage.getItem('adminToken');
     try {
       const res = await fetch(`${API}/api/admin/projects/${project._id}`, {
         method: 'PATCH',
@@ -132,7 +132,7 @@ const Projects = () => {
   };
 
   const handleNotesSave = async () => {
-    const token = localStorage.getItem('admin_token');
+    const token = localStorage.getItem('adminToken');
     try {
       const res = await fetch(`${API}/api/admin/projects/${notesModal.project._id}`, {
         method: 'PATCH',

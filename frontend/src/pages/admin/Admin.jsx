@@ -533,7 +533,7 @@ const Settings = ({ theme, setTheme }) => {
   const exportContacts = async () => {
     setExporting(true);
     try {
-      const token = localStorage.getItem('admin_token');
+      const token = localStorage.getItem('adminToken');
       const response = await fetch(`${API}/api/admin/contacts`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -571,7 +571,7 @@ const Settings = ({ theme, setTheme }) => {
   const exportSubscribers = async () => {
     setExporting(true);
     try {
-      const token = localStorage.getItem('admin_token');
+      const token = localStorage.getItem('adminToken');
       const response = await fetch(`${API}/api/admin/subscribers`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -607,7 +607,7 @@ const Settings = ({ theme, setTheme }) => {
     
     setSendingNewsletter(true);
     try {
-      const token = localStorage.getItem('admin_token');
+      const token = localStorage.getItem('adminToken');
       const response = await fetch(`${API}/api/admin/send-newsletter`, {
         method: 'POST',
         headers: {
@@ -652,7 +652,7 @@ const Settings = ({ theme, setTheme }) => {
     setPasswordMessage('');
 
     try {
-      const token = localStorage.getItem('admin_token');
+      const token = localStorage.getItem('adminToken');
       const response = await fetch(`${API}/api/admin/auth/change-password`, {
         method: 'POST',
         headers: {
@@ -674,7 +674,7 @@ const Settings = ({ theme, setTheme }) => {
         
         // Log out after successful password change
         setTimeout(() => {
-          localStorage.removeItem('admin_token');
+          localStorage.removeItem('adminToken');
           localStorage.removeItem('admin_user');
           window.location.href = '/admin/login';
         }, 2000);
@@ -690,7 +690,7 @@ const Settings = ({ theme, setTheme }) => {
 
   const loadLogs = async () => {
     try {
-      const token = localStorage.getItem('admin_token');
+      const token = localStorage.getItem('adminToken');
       const response = await fetch(`${API}/api/admin/logs`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -1158,7 +1158,7 @@ const ActivityLogs = () => {
     const fetchLogs = async () => {
       setLoading(true);
       try {
-        const token = localStorage.getItem('admin_token');
+        const token = localStorage.getItem('adminToken');
         const res = await fetch(`${API}/api/admin/logs`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -1296,7 +1296,7 @@ const Admin = () => {
       setError('');
       
       try {
-        const token = localStorage.getItem('admin_token');
+        const token = localStorage.getItem('adminToken');
         const headers = {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -1363,7 +1363,7 @@ const Admin = () => {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('admin_token');
+    localStorage.removeItem('adminToken');
     localStorage.removeItem('admin_user');
     window.location.href = '/admin/login';
   };

@@ -23,7 +23,7 @@ const Login = () => {
       if (!data.success) {
         setError(data.message || 'Login failed');
       } else {
-        localStorage.setItem('admin_token', data.token);
+        localStorage.setItem('adminToken', data.token);
         window.location.href = '/admin/analytics';
       }
     } catch (err) {

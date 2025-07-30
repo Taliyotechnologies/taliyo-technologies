@@ -19,7 +19,7 @@ const TeamManagement = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('admin_token');
+      const token = localStorage.getItem('adminToken');
       const [teamRes, projRes] = await Promise.all([
         fetch(`${API}/api/admin/team`, { headers: { Authorization: `Bearer ${token}` } }),
         fetch(`${API}/api/admin/projects`, { headers: { Authorization: `Bearer ${token}` } })
@@ -73,7 +73,7 @@ const TeamManagement = () => {
 
   const handleSubmit = async e => {
     e.preventDefault();
-    const token = localStorage.getItem('admin_token');
+    const token = localStorage.getItem('adminToken');
     try {
       const res = await fetch(
         modal.edit
@@ -97,7 +97,7 @@ const TeamManagement = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this team member?')) return;
-    const token = localStorage.getItem('admin_token');
+    const token = localStorage.getItem('adminToken');
     try {
       const res = await fetch(`${API}/api/admin/team/${id}`, {
         method: 'DELETE',
@@ -129,7 +129,7 @@ const TeamManagement = () => {
 
   const handleTaskSubmit = async e => {
     e.preventDefault();
-    const token = localStorage.getItem('admin_token');
+    const token = localStorage.getItem('adminToken');
     try {
       const res = await fetch(`${API}/api/admin/team/${taskModal.member._id}/task`, {
         method: 'POST',
