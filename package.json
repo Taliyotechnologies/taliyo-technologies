@@ -1,0 +1,32 @@
+{
+  "name": "taliyo-technologies",
+  "version": "1.0.0",
+  "description": "Taliyo Technologies - IT Company Website",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "start": "cd backend && node index.js",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "postinstall": "npm run install:all"
+  },
+  "keywords": [
+    "IT company",
+    "web development",
+    "app development",
+    "digital marketing",
+    "Delhi",
+    "India"
+  ],
+  "author": "Taliyo Technologies",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+} 
