@@ -11,9 +11,17 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/taliyo';
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://taliyo_user:Taliyo019@cluster0.kmbp5ro.mongodb.net/taliyo?retryWrites=true&w=majority&appName=Cluster0';
+const JWT_SECRET = process.env.JWT_SECRET || 'taliyo-super-secret-jwt-key-2024';
 const JWT_EXPIRES_IN = '7d';
+
+// Validate required environment variables
+if (!process.env.MONGO_URI) {
+  console.warn('Warning: MONGO_URI not set, using default MongoDB Atlas connection');
+}
+if (!process.env.JWT_SECRET) {
+  console.warn('Warning: JWT_SECRET not set, using default secret');
+}
 
 // CORS configuration for production
 const corsOptions = {
@@ -39,7 +47,21 @@ app.get('/api/health', (req, res) => {
     status: 'healthy', 
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    mongoState: mongoose.connection.readyState,
+    hasMongoUri: !!process.env.MONGO_URI,
+    hasJwtSecret: !!process.env.JWT_SECRET
+  });
+});
+
+// Debug endpoint
+app.get('/api/debug', (req, res) => {
+  res.json({
+    mongoState: mongoose.connection.readyState,
+    mongoUri: process.env.MONGO_URI ? 'Set' : 'Not set',
+    jwtSecret: process.env.JWT_SECRET ? 'Set' : 'Not set',
+    nodeEnv: process.env.NODE_ENV,
+    port: process.env.PORT
   });
 });
 
@@ -269,6 +291,12 @@ app.post('/api/admin/login', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Email and password are required' });
     }
     
+    // Check if MongoDB is connected
+    if (mongoose.connection.readyState !== 1) {
+      console.error('MongoDB not connected. State:', mongoose.connection.readyState);
+      return res.status(500).json({ success: false, message: 'Database connection error' });
+    }
+    
     // Find admin user
     const user = await AdminUser.findOne({ email });
     
@@ -305,7 +333,7 @@ app.post('/api/admin/login', async (req, res) => {
     });
   } catch (err) {
     console.error('Login error:', err);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res.status(500).json({ success: false, message: 'Server error: ' + err.message });
   }
 });
 
