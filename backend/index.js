@@ -12,15 +12,21 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://taliyo_user:Taliyo019@cluster0.kmbp5ro.mongodb.net/taliyo?retryWrites=true&w=majority&appName=Cluster0';
-const JWT_SECRET = process.env.JWT_SECRET || 'taliyo-super-secret-jwt-key-2024';
+const JWT_SECRET = process.env.JWT_SECRET || 'mySuperSecretKey123!';
+
+// Log environment status
+console.log('Environment Check:');
+console.log('- MONGO_URI:', process.env.MONGO_URI ? 'Set' : 'Using default');
+console.log('- JWT_SECRET:', process.env.JWT_SECRET ? 'Set' : 'Using default');
+console.log('- NODE_ENV:', process.env.NODE_ENV || 'development');
 const JWT_EXPIRES_IN = '7d';
 
 // Validate required environment variables
 if (!process.env.MONGO_URI) {
-  console.warn('Warning: MONGO_URI not set, using default MongoDB Atlas connection');
+  console.log('Info: Using default MongoDB Atlas connection');
 }
 if (!process.env.JWT_SECRET) {
-  console.warn('Warning: JWT_SECRET not set, using default secret');
+  console.log('Info: Using default JWT secret');
 }
 
 // CORS configuration for production
@@ -61,7 +67,12 @@ app.get('/api/debug', (req, res) => {
     mongoUri: process.env.MONGO_URI ? 'Set' : 'Not set',
     jwtSecret: process.env.JWT_SECRET ? 'Set' : 'Not set',
     nodeEnv: process.env.NODE_ENV,
-    port: process.env.PORT
+    port: process.env.PORT,
+    environment: {
+      hasMongoUri: !!process.env.MONGO_URI,
+      hasJwtSecret: !!process.env.JWT_SECRET,
+      isProduction: process.env.NODE_ENV === 'production'
+    }
   });
 });
 
