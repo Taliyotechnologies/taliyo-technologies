@@ -43,6 +43,8 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+
+
 // MongoDB Models
 const blogSchema = new mongoose.Schema({
   title: { type: String, required: true },
@@ -96,19 +98,18 @@ const pageViewSchema = new mongoose.Schema({
   timestamp: { type: Date, default: Date.now }
 });
 
+const activityLogSchema = new mongoose.Schema({
+  user: { type: String, required: true },
+  action: { type: String, required: true },
+  details: String,
+  ip: String,
+  createdAt: { type: Date, default: Date.now }
+});
+
 const Blog = mongoose.model('Blog', blogSchema);
 const Subscriber = mongoose.model('Subscriber', subscriberSchema);
 const AdminUser = mongoose.model('AdminUser', adminUserSchema);
 const PageView = mongoose.model('PageView', pageViewSchema);
-
-// ActivityLog model
-const activityLogSchema = new mongoose.Schema({
-  user: { type: String }, // email or user id
-  action: { type: String },
-  details: { type: String },
-  ip: { type: String },
-  createdAt: { type: Date, default: Date.now }
-});
 const ActivityLog = mongoose.model('ActivityLog', activityLogSchema);
 
 // Auto-delete logs older than 7 days on server start
@@ -258,6 +259,317 @@ app.post('/api/subscribe', async (req, res) => {
   }
 });
 
+// Admin Authentication Routes
+// Admin login
+app.post('/api/admin/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: 'Email and password are required' });
+    }
+    
+    // Find admin user
+    const user = await AdminUser.findOne({ email });
+    
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
+    
+    // Check password
+    const isMatch = await bcrypt.compare(password, user.password);
+    
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
+    
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user._id, email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN }
+    );
+    
+    // Log activity
+    logActivity({ user: user.email, action: 'admin_login', details: 'Admin logged in', ip: req.ip });
+    
+    res.json({
+      success: true,
+      message: 'Login successful',
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Verify admin token
+app.get('/api/admin/verify-token', auth, async (req, res) => {
+  try {
+    const user = await AdminUser.findById(req.user.userId);
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'User not found' });
+    }
+    
+    res.json({
+      success: true,
+      user: {
+        id: user._id,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (err) {
+    console.error('Token verification error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Admin forgot password
+app.post('/api/admin/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required' });
+    }
+    
+    const user = await AdminUser.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    user.resetToken = resetToken;
+    user.resetTokenExpires = Date.now() + 3600000; // 1 hour
+    await user.save();
+    
+    // Send reset email
+    const resetUrl = `${FRONTEND_URL}/admin/reset-password?token=${resetToken}`;
+    await transporter.sendMail({
+      from: `Taliyo Admin <${EMAIL_USER}>`,
+      to: email,
+      subject: 'Password Reset Request',
+      html: `
+        <p>You requested a password reset.</p>
+        <p>Click <a href="${resetUrl}">here</a> to reset your password.</p>
+        <p>This link expires in 1 hour.</p>
+      `
+    });
+    
+    res.json({ success: true, message: 'Reset email sent' });
+  } catch (err) {
+    console.error('Forgot password error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Admin reset password
+app.post('/api/admin/reset-password', async (req, res) => {
+  try {
+    const { token, password } = req.body;
+    
+    if (!token || !password) {
+      return res.status(400).json({ success: false, message: 'Token and password are required' });
+    }
+    
+    const user = await AdminUser.findOne({
+      resetToken: token,
+      resetTokenExpires: { $gt: Date.now() }
+    });
+    
+    if (!user) {
+      return res.status(400).json({ success: false, message: 'Invalid or expired token' });
+    }
+    
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    user.password = hashedPassword;
+    user.resetToken = undefined;
+    user.resetTokenExpires = undefined;
+    await user.save();
+    
+    res.json({ success: true, message: 'Password reset successful' });
+  } catch (err) {
+    console.error('Reset password error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Admin change password
+app.post('/api/admin/auth/change-password', auth, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Current and new password are required' });
+    }
+    
+    const user = await AdminUser.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
+    // Verify current password
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ success: false, message: 'Current password is incorrect' });
+    }
+    
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
+    
+    res.json({ success: true, message: 'Password changed successfully' });
+  } catch (err) {
+    console.error('Change password error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Admin user management routes
+app.get('/api/admin/auth/users', auth, roleAccess(['admin']), async (req, res) => {
+  try {
+    const users = await AdminUser.find().select('-password');
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+app.post('/api/admin/auth/register', auth, roleAccess(['admin']), async (req, res) => {
+  try {
+    const { name, email, password, role } = req.body;
+    
+    if (!name || !email || !password) {
+      return res.status(400).json({ success: false, message: 'Name, email and password are required' });
+    }
+    
+    const existingUser = await AdminUser.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({ success: false, message: 'User already exists' });
+    }
+    
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = new AdminUser({
+      name,
+      email,
+      password: hashedPassword,
+      role: role || 'viewer'
+    });
+    
+    await user.save();
+    
+    res.status(201).json({
+      success: true,
+      message: 'User created successfully',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (err) {
+    console.error('Register error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+app.put('/api/admin/auth/users/:id', auth, roleAccess(['admin']), async (req, res) => {
+  try {
+    const { name, email, role } = req.body;
+    const user = await AdminUser.findByIdAndUpdate(
+      req.params.id,
+      { name, email, role },
+      { new: true }
+    ).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
+    res.json({
+      success: true,
+      message: 'User updated successfully',
+      user
+    });
+  } catch (err) {
+    console.error('Update user error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+app.delete('/api/admin/auth/users/:id', auth, roleAccess(['admin']), async (req, res) => {
+  try {
+    const user = await AdminUser.findByIdAndDelete(req.params.id);
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
+    res.json({
+      success: true,
+      message: 'User deleted successfully'
+    });
+  } catch (err) {
+    console.error('Delete user error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// General users endpoint (for compatibility)
+app.get('/api/users', auth, async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search = '', sort = 'name', role = '', status = '' } = req.query;
+    
+    const filter = {};
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } }
+      ];
+    }
+    if (role) filter.role = role;
+    if (status) filter.status = status;
+    
+    const sortObj = {};
+    if (sort.startsWith('-')) {
+      sortObj[sort.substring(1)] = -1;
+    } else {
+      sortObj[sort] = 1;
+    }
+    
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const users = await AdminUser.find(filter)
+      .select('-password')
+      .sort(sortObj)
+      .skip(skip)
+      .limit(parseInt(limit));
+    
+    const total = await AdminUser.countDocuments(filter);
+    
+    res.json({
+      success: true,
+      data: users,
+      total,
+      page: parseInt(page),
+      limit: parseInt(limit)
+    });
+  } catch (err) {
+    console.error('Users error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 // Admin API endpoints
 // Subscribers: only admin can view
 app.get('/api/admin/subscribers', auth, roleAccess(['admin']), async (req, res) => {
@@ -404,6 +716,49 @@ app.post('/api/admin/send-newsletter', auth, adminOnly, async (req, res) => {
 app.get('/api/admin/logs', auth, roleAccess(['admin']), async (req, res) => {
   const logs = await ActivityLog.find().sort({ createdAt: -1 });
   res.json(logs);
+});
+
+// General logs endpoint (for compatibility)
+app.get('/api/logs', auth, async (req, res) => {
+  try {
+    const { page = 1, limit = 20, search = '', level = '', sort = '-createdAt' } = req.query;
+    
+    const filter = {};
+    if (search) {
+      filter.$or = [
+        { user: { $regex: search, $options: 'i' } },
+        { action: { $regex: search, $options: 'i' } },
+        { details: { $regex: search, $options: 'i' } }
+      ];
+    }
+    if (level) filter.level = level;
+    
+    const sortObj = {};
+    if (sort.startsWith('-')) {
+      sortObj[sort.substring(1)] = -1;
+    } else {
+      sortObj[sort] = 1;
+    }
+    
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const logs = await ActivityLog.find(filter)
+      .sort(sortObj)
+      .skip(skip)
+      .limit(parseInt(limit));
+    
+    const total = await ActivityLog.countDocuments(filter);
+    
+    res.json({
+      success: true,
+      data: logs,
+      total,
+      page: parseInt(page),
+      limit: parseInt(limit)
+    });
+  } catch (err) {
+    console.error('Logs error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
 });
 
 // Project model

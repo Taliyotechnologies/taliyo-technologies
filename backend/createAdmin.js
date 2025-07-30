@@ -1,12 +1,16 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/taliyo';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://taliyo_user:Taliyo019@cluster0.kmbp5ro.mongodb.net/taliyo?retryWrites=true&w=majority&appName=Cluster0';
 
 const adminUserSchema = new mongoose.Schema({
+  name: { type: String },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: String, enum: ['admin', 'user'], default: 'user' },
+  role: { type: String, enum: ['admin', 'editor', 'viewer', 'hr'], default: 'viewer' },
+  assignedProjects: [{ type: String }],
+  resetToken: String,
+  resetTokenExpires: Date,
   createdAt: { type: Date, default: Date.now }
 });
 const AdminUser = mongoose.model('AdminUser', adminUserSchema);

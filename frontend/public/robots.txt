@@ -1,0 +1,30 @@
+User-agent: *
+Allow: /
+
+# Block admin and private areas
+Disallow: /admin/
+Disallow: /api/
+Disallow: /_next/
+Disallow: /static/
+
+# Allow important pages
+Allow: /about
+Allow: /services
+Allow: /contact
+Allow: /projects
+Allow: /blog
+Allow: /testimonials
+Allow: /faq
+Allow: /book
+Allow: /privacy-policy
+Allow: /terms-conditions
+
+# Crawl delay for better server performance
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://taliyotechnologies.com/sitemap.xml
+
+# Additional sitemaps for different content types
+Sitemap: https://taliyotechnologies.com/blog-sitemap.xml
+Sitemap: https://taliyotechnologies.com/services-sitemap.xml 
