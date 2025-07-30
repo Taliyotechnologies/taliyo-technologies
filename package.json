@@ -9,8 +9,7 @@
     "dev:frontend": "cd frontend && npm run dev",
     "build": "cd frontend && npm run build",
     "start": "cd backend && node index.js",
-    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
-    "postinstall": "npm run install:all"
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install"
   },
   "keywords": [
     "IT company",

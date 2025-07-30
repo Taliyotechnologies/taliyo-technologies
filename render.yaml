@@ -4,7 +4,7 @@ services:
     name: taliyo-backend
     env: node
     plan: free
-    buildCommand: npm run install:all
+    buildCommand: cd backend && npm install
     startCommand: cd backend && node index.js
     envVars:
       - key: NODE_ENV
