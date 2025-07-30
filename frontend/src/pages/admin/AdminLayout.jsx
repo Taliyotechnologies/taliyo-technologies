@@ -4,7 +4,7 @@ import Sidebar from './Sidebar';
 import { Outlet } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 
-const AdminLayout = ({ adminEmail = 'admin@taliyo.com', onLogout }) => {
+const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,11 +41,15 @@ const AdminLayout = ({ adminEmail = 'admin@taliyo.com', onLogout }) => {
         const data = await response.json();
         if (data.success && data.user) {
           setCurrentUser(data.user);
+        } else {
+          // Set default user if no user data
+          setCurrentUser({ email: 'admin@taliyo.com', role: 'admin' });
         }
         setIsAuthenticated(true);
       } catch (error) {
         console.error('Token verification failed:', error);
         // On network error, still allow access but log the error
+        setCurrentUser({ email: 'admin@taliyo.com', role: 'admin' });
         setIsAuthenticated(true);
       } finally {
         setIsLoading(false);
@@ -74,7 +78,7 @@ const AdminLayout = ({ adminEmail = 'admin@taliyo.com', onLogout }) => {
     return null;
   }
 
-  const allFeatures = ['Analytics', 'Leads', 'SEO', 'Team', 'Logs', 'Subscribers', 'Services', 'Users'];
+  const allFeatures = ['Analytics', 'Leads', 'Users', 'Projects', 'Team', 'Logs', 'Settings'];
 
   return (
     <div className="min-h-screen flex bg-gray-950">
@@ -103,7 +107,7 @@ const AdminLayout = ({ adminEmail = 'admin@taliyo.com', onLogout }) => {
           <button className="lg:hidden text-gray-300 hover:text-white mr-2" onClick={() => setSidebarOpen(true)}>
             <Menu size={28} />
           </button>
-          <span className="text-gray-300 font-medium">Logged in as <span className="text-blue-400">{adminEmail}</span></span>
+          <span className="text-gray-300 font-medium">Logged in as <span className="text-blue-400">{currentUser?.email || 'admin@taliyo.com'}</span></span>
           <button
             onClick={handleLogout}
             className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded font-semibold transition"

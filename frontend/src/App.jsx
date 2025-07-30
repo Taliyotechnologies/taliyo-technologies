@@ -7,8 +7,20 @@ import useScrollToTop from './hooks/useScrollToTop'
 
 // Layout Components
 import Layout from './components/layout/Layout'
-import Admin from './pages/admin/Admin';
-import UserManagement from './pages/admin/UserManagement';
+
+// Admin Components
+import AdminLayout from './pages/admin/AdminLayout'
+import Login from './pages/admin/Login'
+import ForgotPassword from './pages/admin/ForgotPassword'
+import ResetPassword from './pages/admin/ResetPassword'
+import Analytics from './pages/admin/Analytics'
+import Leads from './pages/admin/Leads'
+import Settings from './pages/admin/Settings'
+import Users from './pages/admin/Users'
+import UserManagement from './pages/admin/UserManagement'
+import Projects from './pages/admin/Projects'
+import TeamManagement from './pages/admin/TeamManagement'
+import Logs from './pages/admin/Logs'
 
 // API Configuration
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -18,7 +30,7 @@ const Home = lazy(() => import('./pages/Home'))
 const Services = lazy(() => import('./pages/Services'))
 const ServiceDetail = lazy(() => import('./pages/ServiceDetail'))
 const About = lazy(() => import('./pages/About'))
-const Projects = lazy(() => import('./pages/Projects'))
+const ProjectsPublic = lazy(() => import('./pages/Projects'))
 const ProjectDetail = lazy(() => import('./pages/ProjectDetail'))
 const Testimonials = lazy(() => import('./pages/Testimonials'))
 const Blog = lazy(() => import('./pages/Blog'))
@@ -88,7 +100,7 @@ function App() {
             <Route path="services" element={<Services />} />
             <Route path="services/:slug" element={<ServiceDetail />} />
             <Route path="about" element={<About />} />
-            <Route path="projects" element={<Projects />} />
+            <Route path="projects" element={<ProjectsPublic />} />
             <Route path="projects/:slug" element={<ProjectDetail />} />
             <Route path="testimonials" element={<Testimonials />} />
             <Route path="blog" element={<Blog />} />
@@ -106,9 +118,25 @@ function App() {
             <Route path="privacy-policy" element={<PrivacyPolicy />} />
             <Route path="terms-conditions" element={<TermsConditions />} />
           </Route>
-          {/* Admin Panel (protected) */}
-          <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
-          <Route path="/admin/users" element={<ProtectedRoute adminOnly={true}><UserManagement /></ProtectedRoute>} />
+          
+          {/* Admin Routes */}
+          <Route path="/admin/login" element={<Login />} />
+          <Route path="/admin/forgot-password" element={<ForgotPassword />} />
+          <Route path="/admin/reset-password" element={<ResetPassword />} />
+          
+          {/* Protected Admin Routes */}
+          <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
+            <Route index element={<Analytics />} />
+            <Route path="analytics" element={<Analytics />} />
+            <Route path="leads" element={<Leads />} />
+            <Route path="settings" element={<Settings />} />
+            <Route path="users" element={<ProtectedRoute adminOnly={true}><Users /></ProtectedRoute>} />
+            <Route path="user-management" element={<ProtectedRoute adminOnly={true}><UserManagement /></ProtectedRoute>} />
+            <Route path="projects" element={<ProtectedRoute adminOnly={true}><Projects /></ProtectedRoute>} />
+            <Route path="team" element={<ProtectedRoute adminOnly={true}><TeamManagement /></ProtectedRoute>} />
+            <Route path="logs" element={<ProtectedRoute adminOnly={true}><Logs /></ProtectedRoute>} />
+          </Route>
+          
           {/* 404 Route */}
           <Route path="*" element={<Layout><div>404 - Page Not Found</div></Layout>} />
         </Routes>
