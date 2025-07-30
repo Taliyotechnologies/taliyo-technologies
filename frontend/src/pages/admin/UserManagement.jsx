@@ -37,15 +37,28 @@ const UserManagement = () => {
 
   const fetchUsers = async () => {
     setFetching(true);
+    setError('');
     try {
       const res = await fetch(`${API}/api/admin/auth/users`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
       const data = await res.json();
-      setUsers(data);
-      setFilteredUsers(data);
+      if (res.ok) {
+        setUsers(Array.isArray(data) ? data : []);
+        setFilteredUsers(Array.isArray(data) ? data : []);
+      } else {
+        setError(data.message || 'Failed to fetch users');
+        setUsers([]);
+        setFilteredUsers([]);
+      }
     } catch (err) {
-      setError('Failed to fetch users');
+      console.error('Error fetching users:', err);
+      setError('Network error. Please try again.');
+      setUsers([]);
+      setFilteredUsers([]);
     } finally {
       setFetching(false);
     }
@@ -104,37 +117,31 @@ const UserManagement = () => {
 
   const handleSubmit = async e => {
     e.preventDefault();
-    setError(''); setMessage('');
-    if (!form.email || (!editId && !form.password)) return setError('Email and password required');
     setLoading(true);
+    setError('');
+    setMessage('');
     try {
-      let res, data;
-      if (editId) {
-        res = await fetch(`${API}/api/admin/auth/users/${editId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      const res = await fetch(
+        editId
+          ? `${API}/api/admin/auth/users/${editId}`
+          : `${API}/api/admin/auth/register`,
+        {
+          method: editId ? 'PUT' : 'POST',
+          headers: { 
+            'Content-Type': 'application/json', 
+            'Authorization': `Bearer ${token}` 
+          },
           body: JSON.stringify(form)
-        });
-        data = await res.json();
-        if (!res.ok) throw new Error(data.message || 'Failed to update user');
-        setMessage('User updated');
-        showToast('success', 'User updated successfully');
-      } else {
-        res = await fetch(`${API}/api/admin/auth/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify(form)
-        });
-        data = await res.json();
-        if (!res.ok) throw new Error(data.message || 'Failed to add user');
-        setMessage('User added');
-        showToast('success', 'User added successfully');
-      }
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to save user');
+      showToast('success', editId ? 'User updated!' : 'User added!');
       closeModal();
       fetchUsers();
     } catch (err) {
+      console.error('Error saving user:', err);
       setError(err.message);
-      showToast('error', err.message);
     } finally {
       setLoading(false);
     }
@@ -143,21 +150,18 @@ const UserManagement = () => {
   const handleDelete = async () => {
     if (!deleteId) return;
     setLoading(true);
-    setError(''); setMessage('');
     try {
       const res = await fetch(`${API}/api/admin/auth/users/${deleteId}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to delete user');
-      setMessage('User deleted');
-      showToast('success', 'User deleted successfully');
+      if (!res.ok) throw new Error('Failed to delete user');
+      showToast('success', 'User deleted!');
       setDeleteId(null);
       fetchUsers();
     } catch (err) {
+      console.error('Error deleting user:', err);
       setError(err.message);
-      showToast('error', err.message);
     } finally {
       setLoading(false);
     }

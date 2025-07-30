@@ -73,18 +73,19 @@ export default function Users() {
         }
       });
       const data = await res.json();
-      if (data.success) {
-        setUsers(data.data);
-        setTotal(data.total);
+      if (res.ok && data.success) {
+        setUsers(data.data || []);
+        setTotal(data.total || 0);
       } else {
         setUsers([]);
         setTotal(0);
-        setError(data.message || 'Users unavailable');
+        setError(data.message || 'Failed to fetch users');
       }
     } catch (e) {
+      console.error('Error fetching users:', e);
       setUsers([]);
       setTotal(0);
-      setError('Users unavailable');
+      setError('Network error. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -131,32 +132,42 @@ export default function Users() {
   };
   const handleBulkStatus = async (status) => {
     const token = localStorage.getItem('adminToken');
-    for (const id of selectedUsers) {
-      await fetch(`${API_URL}/api/users/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ status })
-      });
-    }
-    setSelectedUsers([]);
-    fetchUsers();
-  };
-  const handleBulkDelete = async () => {
-    const token = localStorage.getItem('adminToken');
-    if (window.confirm('Are you sure you want to delete selected users?')) {
+    try {
       for (const id of selectedUsers) {
-        await fetch(`${API_URL}/api/users/${id}`, {
-          method: 'DELETE',
+        await fetch(`${API_URL}/api/admin/auth/users/${id}`, {
+          method: 'PUT',
           headers: {
-            'Authorization': `Bearer ${token}`
-          }
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ status })
         });
       }
       setSelectedUsers([]);
       fetchUsers();
+    } catch (error) {
+      console.error('Error updating user status:', error);
+      setError('Failed to update user status');
+    }
+  };
+  const handleBulkDelete = async () => {
+    const token = localStorage.getItem('adminToken');
+    if (window.confirm('Are you sure you want to delete selected users?')) {
+      try {
+        for (const id of selectedUsers) {
+          await fetch(`${API_URL}/api/admin/auth/users/${id}`, {
+            method: 'DELETE',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+        }
+        setSelectedUsers([]);
+        fetchUsers();
+      } catch (error) {
+        console.error('Error deleting users:', error);
+        setError('Failed to delete users');
+      }
     }
   };
   const handleAdd = () => {
@@ -169,30 +180,36 @@ export default function Users() {
   };
   const handleSave = async (user) => {
     const token = localStorage.getItem('adminToken');
-    if (editUser) {
-      // Edit existing user
-      await fetch(`${API_URL}/api/users/${editUser._id}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(user)
-      });
-    } else {
-      // Add new user
-      await fetch(`${API_URL}/api/users`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(user)
-      });
+    try {
+      if (editUser) {
+        // Edit existing user
+        const res = await fetch(`${API_URL}/api/admin/auth/users/${user._id}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(user)
+        });
+        if (!res.ok) throw new Error('Failed to update user');
+      } else {
+        // Add new user
+        const res = await fetch(`${API_URL}/api/admin/auth/register`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(user)
+        });
+        if (!res.ok) throw new Error('Failed to create user');
+      }
+      setEditUser(null);
+      fetchUsers();
+    } catch (error) {
+      console.error('Error saving user:', error);
+      setError('Failed to save user');
     }
-    setShowModal(false);
-    setEditUser(null);
-    fetchUsers();
   };
   return (
     <div className="space-y-4 sm:space-y-6">
