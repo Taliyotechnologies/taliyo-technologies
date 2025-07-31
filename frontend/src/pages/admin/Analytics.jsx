@@ -29,7 +29,7 @@ ChartJS.register(
   Filler
 );
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || 'https://taliyo-backend.onrender.com';
 
 // Get auth token
 const getAuthHeaders = () => {

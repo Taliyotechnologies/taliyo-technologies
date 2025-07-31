@@ -8,7 +8,7 @@ const ForgotPassword = () => {
   const [success, setSuccess] = useState('');
   const [testEmailLoading, setTestEmailLoading] = useState(false);
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const API_URL = import.meta.env.VITE_API_URL || 'https://taliyo-backend.onrender.com';
 
   const handleSubmit = async (e) => {
     e.preventDefault();

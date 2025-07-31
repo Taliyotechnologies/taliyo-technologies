@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Mail, Eye, Download, CheckCircle, Clock, Loader2, Trash2, ChevronLeft, ChevronRight, Search, Filter } from 'lucide-react';
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || 'https://taliyo-backend.onrender.com';
 
 const Leads = () => {
   const [leads, setLeads] = useState([]);

@@ -3,7 +3,7 @@ import { Settings2, Upload, Mail, Lock, Bell, Palette, Users2, ToggleRight, Chev
 import toast from 'react-hot-toast';
 import io from 'socket.io-client';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://taliyo-backend.onrender.com';
 const socket = io(API_BASE_URL);
 
 const features = ['Analytics', 'Leads', 'SEO', 'Team', 'Logs', 'Subscribers', 'Services'];

@@ -23,7 +23,7 @@ const AdminLayout = () => {
     // Verify token with backend (optional but recommended)
     const verifyToken = async () => {
       try {
-        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const API_URL = import.meta.env.VITE_API_URL || 'https://taliyo-backend.onrender.com';
         const response = await fetch(`${API_URL}/api/admin/verify-token`, {
           method: 'GET',
           headers: {

@@ -23,7 +23,7 @@ import TeamManagement from './pages/admin/TeamManagement'
 import Logs from './pages/admin/Logs'
 
 // API Configuration
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || 'https://taliyo-backend.onrender.com';
 
 // Lazy load Public Pages
 const Home = lazy(() => import('./pages/Home'))

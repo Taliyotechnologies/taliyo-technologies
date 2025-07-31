@@ -19,7 +19,7 @@ const Blog = () => {
   const [submitting, setSubmitting] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
 
-  const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const API = import.meta.env.VITE_API_URL || 'https://taliyo-backend.onrender.com';
   
   const handleSubscribe = async (e) => {
     e.preventDefault();

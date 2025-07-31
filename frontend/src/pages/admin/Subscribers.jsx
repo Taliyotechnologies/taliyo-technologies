@@ -3,7 +3,7 @@ import { FaEnvelope, FaUserCheck } from 'react-icons/fa';
 import { Download, CheckCircle, XCircle, Trash2, ChevronLeft, ChevronRight, Search, Eye } from 'lucide-react';
 import { io } from 'socket.io-client';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || 'https://taliyo-backend.onrender.com';
 const socket = io(API_URL, { autoConnect: false });
 
 const statusColors = {

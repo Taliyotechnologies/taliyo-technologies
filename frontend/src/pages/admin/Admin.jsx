@@ -6,7 +6,7 @@ import UserManagement from './UserManagement';
 import Projects from './Projects';
 import TeamManagement from './TeamManagement';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API = import.meta.env.VITE_API_URL || 'https://taliyo-backend.onrender.com';
 const socket = io(API);
 
 const getUser = () => {

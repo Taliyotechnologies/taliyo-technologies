@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Rocket } from 'lucide-react';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API = import.meta.env.VITE_API_URL || 'https://taliyo-backend.onrender.com';
 
 const projectTypes = [
   'Website Development',

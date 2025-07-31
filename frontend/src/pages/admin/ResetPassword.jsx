@@ -29,7 +29,7 @@ const ResetPassword = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const token = getTokenFromUrl();
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const API_URL = import.meta.env.VITE_API_URL || 'https://taliyo-backend.onrender.com';
 
   // Debug logging
   console.log('ResetPassword component loaded');

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaTrash, FaUserPlus, FaEdit, FaSearch } from 'react-icons/fa';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API = import.meta.env.VITE_API_URL || 'https://taliyo-backend.onrender.com';
 
 const PROJECTS = [
   'Website Redesign',

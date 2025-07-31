@@ -15,7 +15,7 @@ const ContactForm = () => {
     formState: { errors },
   } = useForm()
 
-  const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const API = import.meta.env.VITE_API_URL || 'https://taliyo-backend.onrender.com';
   
   const onSubmit = async (data) => {
     setIsSubmitting(true)

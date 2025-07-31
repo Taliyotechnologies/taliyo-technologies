@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API = import.meta.env.VITE_API_URL || 'https://taliyo-backend.onrender.com';
 const STATUS_OPTIONS = ['Ongoing', 'Completed', 'On Hold'];
 
 const Projects = () => {

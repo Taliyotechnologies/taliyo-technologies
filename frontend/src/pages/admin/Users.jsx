@@ -4,7 +4,7 @@ import { io } from 'socket.io-client';
 
 const roles = ['admin', 'editor', 'custom'];
 const allFeatures = ['Analytics', 'Leads', 'SEO', 'Team', 'Logs', 'Subscribers', 'Services'];
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL || 'https://taliyo-backend.onrender.com';
 const socket = io(API_URL, { autoConnect: false });
 
 const statusColors = {
