@@ -30,6 +30,8 @@ ChartJS.register(
 );
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://taliyo-backend.onrender.com';
+console.log('API_URL:', API_URL);
+console.log('VITE_API_URL env var:', import.meta.env.VITE_API_URL);
 
 // Get auth token
 const getAuthHeaders = () => {
@@ -110,13 +112,17 @@ const useRealTimeAnalytics = () => {
   // Fetch analytics stats
   const fetchStats = useCallback(async () => {
     try {
+      console.log('Fetching stats from:', `${API_URL}/api/admin/analytics/stats?period=7d`);
       const response = await fetch(`${API_URL}/api/admin/analytics/stats?period=7d`, {
         headers: getAnalyticsHeaders()
       });
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
       if (!response.ok) {
-        throw new Error('Failed to fetch stats');
+        throw new Error(`Failed to fetch stats: ${response.status} ${response.statusText}`);
       }
       const data = await response.json();
+      console.log('Stats data received:', data);
       setStats(data);
     } catch (error) {
       console.error('Error fetching stats:', error);
