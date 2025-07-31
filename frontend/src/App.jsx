@@ -8,23 +8,6 @@ import useScrollToTop from './hooks/useScrollToTop'
 // Layout Components
 import Layout from './components/layout/Layout'
 
-// Admin Components
-import AdminLayout from './pages/admin/AdminLayout'
-import Login from './pages/admin/Login'
-import ForgotPassword from './pages/admin/ForgotPassword'
-import ResetPassword from './pages/admin/ResetPassword'
-import Analytics from './pages/admin/Analytics'
-import Leads from './pages/admin/Leads'
-import Settings from './pages/admin/Settings'
-import Users from './pages/admin/Users'
-import UserManagement from './pages/admin/UserManagement'
-import Projects from './pages/admin/Projects'
-import TeamManagement from './pages/admin/TeamManagement'
-import Logs from './pages/admin/Logs'
-
-// API Configuration
-const API_URL = import.meta.env.VITE_API_URL || 'https://taliyo-backend.onrender.com';
-
 // Lazy load Public Pages
 const Home = lazy(() => import('./pages/Home'))
 const Services = lazy(() => import('./pages/Services'))
@@ -47,28 +30,6 @@ const BlogDetailMarketingAI = lazy(() => import('./pages/blog/BlogDetailMarketin
 const BlogDetailCloudComputing = lazy(() => import('./pages/blog/BlogDetailCloudComputing'))
 const BlogDetailQuantumComputing = lazy(() => import('./pages/blog/BlogDetailQuantumComputing'))
 const BlogDetailRemoteWork = lazy(() => import('./pages/blog/BlogDetailRemoteWork'))
-
-// Auth helpers
-const isAuthenticated = () => !!localStorage.getItem('adminToken');
-const getUser = () => {
-  try {
-    return JSON.parse(localStorage.getItem('admin_user'));
-  } catch {
-    return null;
-  }
-};
-
-function ProtectedRoute({ children, adminOnly }) {
-  const user = getUser();
-  if (!isAuthenticated()) {
-    window.location.href = '/admin/login';
-    return null;
-  }
-  if (adminOnly && user?.role !== 'admin') {
-    return <div className="p-8 text-red-400">Access denied: Admins only</div>;
-  }
-  return children;
-}
 
 function App() {
   // Use scroll to top hook
@@ -117,24 +78,6 @@ function App() {
             <Route path="faq" element={<FAQ />} />
             <Route path="privacy-policy" element={<PrivacyPolicy />} />
             <Route path="terms-conditions" element={<TermsConditions />} />
-          </Route>
-          
-          {/* Admin Routes */}
-          <Route path="/admin/login" element={<Login />} />
-          <Route path="/admin/forgot-password" element={<ForgotPassword />} />
-          <Route path="/admin/reset-password" element={<ResetPassword />} />
-          
-          {/* Protected Admin Routes */}
-          <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
-            <Route index element={<Analytics />} />
-            <Route path="analytics" element={<Analytics />} />
-            <Route path="leads" element={<Leads />} />
-            <Route path="settings" element={<Settings />} />
-            <Route path="users" element={<ProtectedRoute adminOnly={true}><Users /></ProtectedRoute>} />
-            <Route path="user-management" element={<ProtectedRoute adminOnly={true}><UserManagement /></ProtectedRoute>} />
-            <Route path="projects" element={<ProtectedRoute adminOnly={true}><Projects /></ProtectedRoute>} />
-            <Route path="team" element={<ProtectedRoute adminOnly={true}><TeamManagement /></ProtectedRoute>} />
-            <Route path="logs" element={<ProtectedRoute adminOnly={true}><Logs /></ProtectedRoute>} />
           </Route>
           
           {/* 404 Route */}
