@@ -1,12 +1,11 @@
 import React from 'react';
-import { AlertTriangle, FileX, Server, Lock, UserX, Home, RefreshCw, ArrowLeft } from 'lucide-react';
+import { AlertTriangle, FileX, Server, Lock, Home, RefreshCw, ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 const iconMap = {
   404: <FileX className="text-red-400" size={56} />, // Not Found
   500: <Server className="text-orange-400" size={56} />, // Server Error
   403: <Lock className="text-yellow-400" size={56} />, // Forbidden
-  401: <UserX className="text-yellow-400" size={56} />, // Unauthorized
   default: <AlertTriangle className="text-blue-400" size={56} />,
 };
 
