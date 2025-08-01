@@ -16,19 +16,20 @@ console.log('🔍 PORT:', process.env.PORT);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI;
+const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI;
 
 // Check if MongoDB URI is provided
 const hasMongoDB = !!MONGO_URI;
 
 if (!hasMongoDB) {
-  console.warn('⚠️  MONGO_URI environment variable is not set');
+  console.warn('⚠️  MONGO_URI/MONGODB_URI environment variable is not set');
   console.warn('🔧 Some features (contact form, blog, analytics) will be disabled');
-  console.warn('🔧 To enable full functionality, set MONGO_URI in your environment variables');
+  console.warn('🔧 To enable full functionality, set MONGO_URI or MONGODB_URI in your environment variables');
   console.warn('🔧 Example: MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/database');
   console.warn('🔧 Current environment variables:', Object.keys(process.env).filter(key => key.includes('MONGO')));
 } else {
-  console.log('✅ MONGO_URI found in environment variables');
+  console.log('✅ MongoDB URI found in environment variables');
+  console.log('🔍 Using URI from:', process.env.MONGO_URI ? 'MONGO_URI' : 'MONGODB_URI');
 }
 
 // Middleware
