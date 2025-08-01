@@ -1,10 +1,18 @@
+require('dotenv').config();
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
 const http = require('http');
 const { Server: SocketIOServer } = require('socket.io');
-require('dotenv').config();
+
+// Debug environment variables
+console.log('🔍 Environment check at startup:');
+console.log('🔍 MONGO_URI exists:', !!process.env.MONGO_URI);
+console.log('🔍 MONGO_URI length:', process.env.MONGO_URI ? process.env.MONGO_URI.length : 'undefined');
+console.log('🔍 NODE_ENV:', process.env.NODE_ENV);
+console.log('🔍 PORT:', process.env.PORT);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -18,6 +26,9 @@ if (!hasMongoDB) {
   console.warn('🔧 Some features (contact form, blog, analytics) will be disabled');
   console.warn('🔧 To enable full functionality, set MONGO_URI in your environment variables');
   console.warn('🔧 Example: MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/database');
+  console.warn('🔧 Current environment variables:', Object.keys(process.env).filter(key => key.includes('MONGO')));
+} else {
+  console.log('✅ MONGO_URI found in environment variables');
 }
 
 // Middleware
