@@ -8,6 +8,12 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: VITE_API_URL
+        value: https://taliyo-backend.onrender.com
+      - key: VITE_FRONTEND_URL
+        value: https://taliyo-frontend.onrender.com
+      - key: VITE_NODE_ENV
+        value: production
 
   # Backend Service
   - type: web
@@ -19,4 +25,14 @@ services:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 10000 
+        value: 10000
+      - key: MONGO_URI
+        value: mongodb+srv://taliyo_user:Taliyo019@cluster0.kmbp5ro.mongodb.net/taliyo?retryWrites=true&w=majority&appName=Cluster0
+      - key: JWT_SECRET
+        value: your-super-secret-jwt-key-change-this-in-production
+      - key: EMAIL_USER
+        value: your_gmail@gmail.com
+      - key: EMAIL_PASS
+        value: your_gmail_app_password
+      - key: FRONTEND_URL
+        value: https://taliyo-frontend.onrender.com 
