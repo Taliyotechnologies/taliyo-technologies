@@ -18,7 +18,7 @@ const ProjectDetail = () => {
     image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=500&fit=crop",
     overview: "A comprehensive e-commerce platform built for a leading fashion retailer in India. The platform handles thousands of daily transactions and provides a seamless shopping experience across all devices.",
     challenge: "The client needed a scalable e-commerce solution that could handle high traffic during sales events, integrate with multiple payment gateways, and provide real-time inventory management.",
-    solution: "We built a modern, responsive e-commerce platform using React, Node.js, and MongoDB. The solution includes advanced features like real-time inventory tracking, multiple payment gateways, and a robust admin panel.",
+    solution: "We built a modern, responsive e-commerce platform using React, Node.js, and MongoDB. The solution includes advanced features like real-time inventory tracking, multiple payment gateways, and comprehensive analytics.",
     technologies: ["React", "Node.js", "MongoDB", "Express", "Stripe", "AWS", "Docker", "Redis"],
     features: [
       "Responsive design for all devices",
@@ -26,7 +26,7 @@ const ProjectDetail = () => {
       "Real-time inventory management",
       "Multiple payment gateways",
       "Order tracking and notifications",
-      "Admin dashboard with analytics",
+      "Advanced analytics dashboard",
       "SEO optimized product pages",
       "Mobile app integration"
     ],
