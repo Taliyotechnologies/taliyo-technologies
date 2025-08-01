@@ -41,17 +41,7 @@ const ErrorPage = ({ code = 404, message = "Sorry, the page you are looking for 
             "Go back to homepage"
           ]
         };
-      case 401:
-        return {
-          icon: <AlertTriangle className="text-yellow-400" size={48} />,
-          title: "Unauthorized",
-          message: "Please log in to access this page.",
-          suggestions: [
-            "Log in to your account",
-            "Check your credentials",
-            "Contact support if needed"
-          ]
-        };
+
       default:
         return {
           icon: <AlertTriangle className="text-blue-400" size={48} />,

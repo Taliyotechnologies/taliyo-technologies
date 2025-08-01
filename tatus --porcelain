@@ -1,5 +1,0 @@
-[33m84d54694[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Remove admin reference from LinkedIn link in Footer
-[33m642cf231[m Remove entire admin panel from frontend - keep only public website
-[33m7434ba07[m Add debugging logs to Analytics component to troubleshoot API connection issues
-[33m140d2d1e[m Fix API URL: Update all frontend files to use Render backend URL instead of localhost
-[33m5577ed47[m Fix backend authentication and analytics endpoints - Complete rewrite of backend with proper login, forgot password, and analytics functionality - Fixed all 404 errors in analytics - Updated frontend to use correct Render backend URL - Installed missing chart.js dependencies
