@@ -8,12 +8,13 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://taliyo_user:Taliyo019@cluster0.kmbp5ro.mongodb.net/taliyo?retryWrites=true&w=majority&appName=Cluster0';
+const MONGO_URI = process.env.MONGO_URI;
 
 // Validate environment variables
-if (!process.env.MONGO_URI) {
+if (!MONGO_URI) {
   console.error('❌ MONGO_URI environment variable is not set');
   console.error('🔧 Please set MONGO_URI in your environment variables');
+  console.error('🔧 Example: MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/database');
   process.exit(1);
 }
 
@@ -160,8 +161,7 @@ mongoose.connect(MONGO_URI, {
   useUnifiedTopology: true,
   serverSelectionTimeoutMS: 5000,
   socketTimeoutMS: 45000,
-  bufferCommands: false,
-  bufferMaxEntries: 0
+  bufferCommands: false
 })
 .then(() => {
   console.log('✅ MongoDB connected successfully');
