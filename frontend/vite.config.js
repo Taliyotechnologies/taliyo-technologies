@@ -38,7 +38,9 @@ export default defineConfig({
           router: ['react-router-dom']
         }
       }
-    }
+    },
+    minify: 'terser',
+    target: 'es2015'
   },
   server: {
     port: 5173,

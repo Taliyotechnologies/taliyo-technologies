@@ -1,0 +1,31 @@
+From 034dcf39a81aa3dc71a7fbd6630d13a415a444ef Mon Sep 17 00:00:00 2001
+From: Harsh Budhauliya <taliyotechnologies@gmail.com>
+Date: Fri, 1 Aug 2025 23:18:53 +0530
+Subject: [PATCH] Remove admin-related 401 Unauthorized error from
+ UniversalErrorPage
+
+---
+ frontend/src/components/ui/UniversalErrorPage.jsx | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/frontend/src/components/ui/UniversalErrorPage.jsx b/frontend/src/components/ui/UniversalErrorPage.jsx
+index 8b47bd414..fe0a60d24 100644
+--- a/frontend/src/components/ui/UniversalErrorPage.jsx
++++ b/frontend/src/components/ui/UniversalErrorPage.jsx
+@@ -1,12 +1,11 @@
+ import React from 'react';
+-import { AlertTriangle, FileX, Server, Lock, UserX, Home, RefreshCw, ArrowLeft } from 'lucide-react';
++import { AlertTriangle, FileX, Server, Lock, Home, RefreshCw, ArrowLeft } from 'lucide-react';
+ import { Link, useNavigate } from 'react-router-dom';
+ 
+ const iconMap = {
+   404: <FileX className="text-red-400" size={56} />, // Not Found
+   500: <Server className="text-orange-400" size={56} />, // Server Error
+   403: <Lock className="text-yellow-400" size={56} />, // Forbidden
+-  401: <UserX className="text-yellow-400" size={56} />, // Unauthorized
+   default: <AlertTriangle className="text-blue-400" size={56} />,
+ };
+ 
+-- 
+2.50.0.windows.2
+
