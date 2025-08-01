@@ -10,9 +10,34 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://taliyo_user:Taliyo019@cluster0.kmbp5ro.mongodb.net/taliyo?retryWrites=true&w=majority&appName=Cluster0';
 
+// Validate environment variables
+if (!process.env.MONGO_URI) {
+  console.error('❌ MONGO_URI environment variable is not set');
+  console.error('🔧 Please set MONGO_URI in your environment variables');
+  process.exit(1);
+}
+
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: [
+    'https://taliyotechnologies.com',
+    'https://taliyo-technologies.vercel.app',
+    'https://taliyo-frontend.onrender.com',
+    'http://localhost:5173',
+    'http://localhost:3000'
+  ],
+  credentials: true
+}));
 app.use(express.json());
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
 
 // Schemas
 const contactSchema = new mongoose.Schema({
@@ -129,10 +154,24 @@ app.get('/api/blogs/:slug', async (req, res) => {
   }
 });
 
-// Connect to MongoDB
-mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.error('MongoDB connection error:', err));
+// Connect to MongoDB with proper error handling
+mongoose.connect(MONGO_URI, { 
+  useNewUrlParser: true, 
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+  bufferCommands: false,
+  bufferMaxEntries: 0
+})
+.then(() => {
+  console.log('✅ MongoDB connected successfully');
+  console.log(`📊 Database: ${MONGO_URI.split('/').pop().split('?')[0]}`);
+})
+.catch(err => {
+  console.error('❌ MongoDB connection error:', err.message);
+  console.error('🔧 Please check your MONGO_URI environment variable');
+  process.exit(1);
+});
 
 const server = http.createServer(app);
 const io = new SocketIOServer(server, { 
