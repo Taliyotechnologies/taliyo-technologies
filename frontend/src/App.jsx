@@ -7,6 +7,7 @@ import useScrollToTop from './hooks/useScrollToTop'
 
 // Layout Components
 import Layout from './components/layout/Layout'
+import AdminLayout from './components/admin/AdminLayout'
 
 // Lazy load Public Pages
 const Home = lazy(() => import('./pages/Home'))
@@ -30,6 +31,14 @@ const BlogDetailMarketingAI = lazy(() => import('./pages/blog/BlogDetailMarketin
 const BlogDetailCloudComputing = lazy(() => import('./pages/blog/BlogDetailCloudComputing'))
 const BlogDetailQuantumComputing = lazy(() => import('./pages/blog/BlogDetailQuantumComputing'))
 const BlogDetailRemoteWork = lazy(() => import('./pages/blog/BlogDetailRemoteWork'))
+
+// Lazy load Admin Pages
+const Dashboard = lazy(() => import('./pages/admin/Dashboard'))
+const TeamManagement = lazy(() => import('./pages/admin/TeamManagement'))
+const Projects = lazy(() => import('./pages/admin/Projects'))
+const SEO = lazy(() => import('./pages/admin/SEO'))
+const BlogManagement = lazy(() => import('./pages/admin/Blog'))
+const Settings = lazy(() => import('./pages/admin/Settings'))
 
 function App() {
   // Use scroll to top hook
@@ -78,6 +87,16 @@ function App() {
             <Route path="faq" element={<FAQ />} />
             <Route path="privacy-policy" element={<PrivacyPolicy />} />
             <Route path="terms-conditions" element={<TermsConditions />} />
+          </Route>
+
+          {/* Admin Routes */}
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="team" element={<TeamManagement />} />
+            <Route path="projects" element={<Projects />} />
+            <Route path="seo" element={<SEO />} />
+            <Route path="blog" element={<BlogManagement />} />
+            <Route path="settings" element={<Settings />} />
           </Route>
           
           {/* 404 Route */}
