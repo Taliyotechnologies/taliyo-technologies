@@ -28,7 +28,6 @@ Your website is now configured to run without MongoDB, but to enable full functi
 MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/database
 EMAIL_USER=your_gmail@gmail.com
 EMAIL_PASS=your_gmail_app_password
-JWT_SECRET=your_secret_key_here
 ```
 
 ### Features Available Without MongoDB

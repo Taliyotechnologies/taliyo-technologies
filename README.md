@@ -10,9 +10,7 @@ A modern, responsive website for Taliyo Technologies featuring a comprehensive b
 - **Contact Form**: Lead generation with status tracking
 - **Services Showcase**: Detailed service pages
 - **Project Portfolio**: Project management and display
-- **Team Management**: Team member profiles and task tracking
-
-
+- **Newsletter Subscription**: Email subscription functionality
 
 ## 🛠️ Tech Stack
 
@@ -28,10 +26,8 @@ A modern, responsive website for Taliyo Technologies featuring a comprehensive b
 ### Backend
 - **Node.js** with Express
 - **MongoDB** with Mongoose
-- **JWT** for authentication
 - **Nodemailer** for email functionality
 - **Socket.IO** for real-time features
-- **bcryptjs** for password hashing
 
 ## 📁 Project Structure
 
@@ -40,7 +36,6 @@ taliyo-technologies/
 ├── backend/                 # Backend API server
 │   ├── index.js            # Main server file
 │   ├── package.json        # Backend dependencies
-│   ├── railway.json        # Railway deployment config
 │   └── env.example         # Environment variables template
 ├── frontend/               # React frontend application
 │   ├── src/
@@ -53,8 +48,7 @@ taliyo-technologies/
 │   ├── vite.config.js      # Vite configuration
 │   ├── vercel.json         # Vercel deployment config
 │   └── env.example         # Environment variables template
-├── DEPLOYMENT.md           # Detailed deployment guide
-├── deploy.sh              # Deployment script
+├── render.yaml             # Render deployment config
 └── README.md              # This file
 ```
 
