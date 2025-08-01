@@ -1,6 +1,6 @@
 # Taliyo Technologies Website
 
-A modern, responsive website for Taliyo Technologies featuring a comprehensive admin panel, blog system, and contact management.
+A modern, responsive website for Taliyo Technologies featuring a comprehensive blog system and contact management.
 
 ## 🚀 Features
 
@@ -12,15 +12,7 @@ A modern, responsive website for Taliyo Technologies featuring a comprehensive a
 - **Project Portfolio**: Project management and display
 - **Team Management**: Team member profiles and task tracking
 
-### Admin Panel Features
-- **User Management**: Role-based access control (Admin, Editor, Viewer, HR)
-- **Blog Management**: Create, edit, and manage blog posts
-- **Contact Leads**: Track and manage contact form submissions
-- **Activity Logs**: Comprehensive audit trail with auto-cleanup
-- **Project Management**: Add, edit, and track project status
-- **Team Management**: Manage team members and assign projects
-- **System Settings**: Email notification preferences
-- **Analytics**: Page views and user activity tracking
+
 
 ## 🛠️ Tech Stack
 
@@ -117,7 +109,6 @@ taliyo-technologies/
 5. **Access the application**
    - Frontend: http://localhost:5173
    - Backend API: http://localhost:5000
-   - Admin Panel: http://localhost:5173/admin
 
 ## 🚀 Deployment
 
@@ -169,12 +160,7 @@ VITE_FRONTEND_URL=https://your-frontend-domain.vercel.app
 VITE_NODE_ENV=production
 ```
 
-## 👥 Admin Roles
 
-- **Admin**: Full access to all features
-- **Editor**: Can manage blogs and content
-- **Viewer**: Read-only access to admin panel
-- **HR**: Can manage team members and projects
 
 ## 📊 Features Overview
 
@@ -186,25 +172,13 @@ VITE_NODE_ENV=production
 - **Blog**: Articles and insights
 - **Contact**: Contact form and information
 
-### Admin Features
-- **Dashboard**: Overview and analytics
-- **User Management**: Add, edit, delete users with roles
-- **Blog Management**: Full CRUD for blog posts
-- **Contact Management**: Track leads with status
-- **Activity Logs**: Audit trail with filters
-- **Project Management**: Track project status and notes
-- **Team Management**: Manage team members and tasks
-- **Settings**: System configuration
+
 
 ## 🔒 Security Features
 
-- **JWT Authentication**: Secure token-based auth
-- **Role-based Access Control**: Granular permissions
-- **Password Hashing**: bcryptjs for secure passwords
 - **CORS Protection**: Configured for production domains
 - **Input Validation**: Server-side validation
 - **Rate Limiting**: Protection against abuse
-- **Activity Logging**: Comprehensive audit trail
 
 ## 📱 Responsive Design
 

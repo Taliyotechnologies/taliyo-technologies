@@ -37,7 +37,7 @@ const ErrorPage = ({ code = 404, message = "Sorry, the page you are looking for 
           message: "You don't have permission to access this page.",
           suggestions: [
             "Log in with proper credentials",
-            "Contact administrator for access",
+            "Contact support for access",
             "Go back to homepage"
           ]
         };

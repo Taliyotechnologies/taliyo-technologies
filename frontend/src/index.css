@@ -35,70 +35,9 @@
   --error-color: #ef4444;
 }
 
-/* Admin Panel Theme Styles */
-.admin-panel {
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-}
-
-.admin-panel .bg-gray-900 {
-  background-color: var(--bg-secondary) !important;
-}
-
-.admin-panel .bg-gray-800 {
-  background-color: var(--bg-tertiary) !important;
-}
-
-.admin-panel .bg-gray-700 {
-  background-color: var(--border-color) !important;
-}
-
-.admin-panel .text-gray-400 {
-  color: var(--text-muted) !important;
-}
-
-.admin-panel .text-gray-300 {
-  color: var(--text-secondary) !important;
-}
-
-.admin-panel .border-gray-700 {
-  border-color: var(--border-color) !important;
-}
-
-/* Light theme specific overrides */
-[data-theme="light"] .admin-panel {
-  background-color: var(--bg-primary);
-}
-
-[data-theme="light"] .admin-panel .text-white {
-  color: var(--text-primary) !important;
-}
-
-[data-theme="light"] .admin-panel .bg-black {
-  background-color: rgba(0, 0, 0, 0.5) !important;
-}
-
 /* Smooth theme transitions */
 * {
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-}
-
-/* Custom scrollbar for admin panel */
-.admin-panel ::-webkit-scrollbar {
-  width: 8px;
-}
-
-.admin-panel ::-webkit-scrollbar-track {
-  background: var(--bg-tertiary);
-}
-
-.admin-panel ::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 4px;
-}
-
-.admin-panel ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
 }
 
 @layer base {
@@ -112,9 +51,7 @@
     /* cursor: none !important; */
   }
   
-  body.admin-panel {
-    cursor: auto !important;
-  }
+
   
   /* Custom scrollbar */
   ::-webkit-scrollbar {

@@ -4,7 +4,7 @@ import { useLocation } from 'react-router-dom';
 const AnimatedCursor = () => {
   // Add state to detect mobile/tablet
   const [isTouchDevice, setIsTouchDevice] = useState(false);
-  // Remove the logic that disables the cursor for /admin pages
+
   const dotRef = useRef(null);
   const ringRef = useRef(null);
 
