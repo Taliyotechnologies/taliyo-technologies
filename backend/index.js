@@ -10,12 +10,14 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 
-// Validate environment variables
-if (!MONGO_URI) {
-  console.error('❌ MONGO_URI environment variable is not set');
-  console.error('🔧 Please set MONGO_URI in your environment variables');
-  console.error('🔧 Example: MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/database');
-  process.exit(1);
+// Check if MongoDB URI is provided
+const hasMongoDB = !!MONGO_URI;
+
+if (!hasMongoDB) {
+  console.warn('⚠️  MONGO_URI environment variable is not set');
+  console.warn('🔧 Some features (contact form, blog, analytics) will be disabled');
+  console.warn('🔧 To enable full functionality, set MONGO_URI in your environment variables');
+  console.warn('🔧 Example: MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/database');
 }
 
 // Middleware
@@ -36,63 +38,69 @@ app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    database: hasMongoDB ? 'connected' : 'not configured'
   });
 });
 
-// Schemas
-const contactSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true },
-  phone: String,
-  company: String,
-  service: String,
-  budget: String,
-  timeline: String,
-  subject: String,
-  message: { type: String, required: true },
-  status: { type: String, enum: ['done', 'not done'], default: 'not done' },
-  createdAt: { type: Date, default: Date.now }
-});
+// Only define schemas and models if MongoDB is available
+let Contact, Subscriber, Blog, PageView, ActivityLog;
 
-const subscriberSchema = new mongoose.Schema({
-  email: { type: String, required: true, unique: true },
-  createdAt: { type: Date, default: Date.now }
-});
+if (hasMongoDB) {
+  // Schemas
+  const contactSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    email: { type: String, required: true },
+    phone: String,
+    company: String,
+    service: String,
+    budget: String,
+    timeline: String,
+    subject: String,
+    message: { type: String, required: true },
+    status: { type: String, enum: ['done', 'not done'], default: 'not done' },
+    createdAt: { type: Date, default: Date.now }
+  });
 
-const blogSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  slug: { type: String, required: true, unique: true },
-  content: { type: String, required: true },
-  excerpt: { type: String, required: true },
-  author: { type: String, required: true },
-  image: { type: String, required: true },
-  category: { type: String, required: true },
-  tags: [String],
-  publishedAt: { type: Date, default: Date.now },
-  views: { type: Number, default: 0 },
-  featured: { type: Boolean, default: false }
-});
+  const subscriberSchema = new mongoose.Schema({
+    email: { type: String, required: true, unique: true },
+    createdAt: { type: Date, default: Date.now }
+  });
 
-const pageViewSchema = new mongoose.Schema({
-  page: { type: String, required: true },
-  userId: String,
-  timestamp: { type: Date, default: Date.now }
-});
+  const blogSchema = new mongoose.Schema({
+    title: { type: String, required: true },
+    slug: { type: String, required: true, unique: true },
+    content: { type: String, required: true },
+    excerpt: { type: String, required: true },
+    author: { type: String, required: true },
+    image: { type: String, required: true },
+    category: { type: String, required: true },
+    tags: [String],
+    publishedAt: { type: Date, default: Date.now },
+    views: { type: Number, default: 0 },
+    featured: { type: Boolean, default: false }
+  });
 
-const activityLogSchema = new mongoose.Schema({
-  user: { type: String, required: true },
-  action: { type: String, required: true },
-  details: String,
-  ip: String,
-  createdAt: { type: Date, default: Date.now }
-});
+  const pageViewSchema = new mongoose.Schema({
+    page: { type: String, required: true },
+    userId: String,
+    timestamp: { type: Date, default: Date.now }
+  });
 
-const Contact = mongoose.model('Contact', contactSchema);
-const Subscriber = mongoose.model('Subscriber', subscriberSchema);
-const Blog = mongoose.model('Blog', blogSchema);
-const PageView = mongoose.model('PageView', pageViewSchema);
-const ActivityLog = mongoose.model('ActivityLog', activityLogSchema);
+  const activityLogSchema = new mongoose.Schema({
+    user: { type: String, required: true },
+    action: { type: String, required: true },
+    details: String,
+    ip: String,
+    createdAt: { type: Date, default: Date.now }
+  });
+
+  Contact = mongoose.model('Contact', contactSchema);
+  Subscriber = mongoose.model('Subscriber', subscriberSchema);
+  Blog = mongoose.model('Blog', blogSchema);
+  PageView = mongoose.model('PageView', pageViewSchema);
+  ActivityLog = mongoose.model('ActivityLog', activityLogSchema);
+}
 
 // Email configuration
 const transporter = nodemailer.createTransport({
@@ -106,6 +114,13 @@ const transporter = nodemailer.createTransport({
 // Contact form endpoint
 app.post('/api/contact', async (req, res) => {
   try {
+    if (!hasMongoDB) {
+      return res.status(503).json({ 
+        success: false, 
+        message: 'Contact form is temporarily unavailable. Please try again later or contact us directly.' 
+      });
+    }
+
     const { name, email, phone, company, service, budget, timeline, subject, message } = req.body;
     const contact = new Contact({ name, email, phone, company, service, budget, timeline, subject, message });
     await contact.save();
@@ -118,6 +133,13 @@ app.post('/api/contact', async (req, res) => {
 // Subscribe endpoint
 app.post('/api/subscribe', async (req, res) => {
   try {
+    if (!hasMongoDB) {
+      return res.status(503).json({ 
+        success: false, 
+        message: 'Subscription service is temporarily unavailable. Please try again later.' 
+      });
+    }
+
     const { email } = req.body;
     if (!email) return res.status(400).json({ success: false, message: 'Email is required.' });
     
@@ -134,6 +156,13 @@ app.post('/api/subscribe', async (req, res) => {
 // Blog endpoints
 app.get('/api/blogs', async (req, res) => {
   try {
+    if (!hasMongoDB) {
+      return res.status(503).json({ 
+        success: false, 
+        message: 'Blog service is temporarily unavailable.' 
+      });
+    }
+
     const blogs = await Blog.find().sort({ publishedAt: -1 });
     res.json(blogs);
   } catch (err) {
@@ -143,6 +172,13 @@ app.get('/api/blogs', async (req, res) => {
 
 app.get('/api/blogs/:slug', async (req, res) => {
   try {
+    if (!hasMongoDB) {
+      return res.status(503).json({ 
+        success: false, 
+        message: 'Blog service is temporarily unavailable.' 
+      });
+    }
+
     const blog = await Blog.findOne({ slug: req.params.slug });
     if (!blog) return res.status(404).json({ message: 'Blog not found' });
     
@@ -155,23 +191,27 @@ app.get('/api/blogs/:slug', async (req, res) => {
   }
 });
 
-// Connect to MongoDB with proper error handling
-mongoose.connect(MONGO_URI, { 
-  useNewUrlParser: true, 
-  useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000,
-  socketTimeoutMS: 45000,
-  bufferCommands: false
-})
-.then(() => {
-  console.log('✅ MongoDB connected successfully');
-  console.log(`📊 Database: ${MONGO_URI.split('/').pop().split('?')[0]}`);
-})
-.catch(err => {
-  console.error('❌ MongoDB connection error:', err.message);
-  console.error('🔧 Please check your MONGO_URI environment variable');
-  process.exit(1);
-});
+// Connect to MongoDB only if URI is provided
+if (hasMongoDB) {
+  mongoose.connect(MONGO_URI, { 
+    useNewUrlParser: true, 
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
+    bufferCommands: false
+  })
+  .then(() => {
+    console.log('✅ MongoDB connected successfully');
+    console.log(`📊 Database: ${MONGO_URI.split('/').pop().split('?')[0]}`);
+  })
+  .catch(err => {
+    console.error('❌ MongoDB connection error:', err.message);
+    console.error('🔧 Please check your MONGO_URI environment variable');
+    // Don't exit process, just log the error
+  });
+} else {
+  console.log('ℹ️  MongoDB not configured - running in limited mode');
+}
 
 const server = http.createServer(app);
 const io = new SocketIOServer(server, { 
@@ -189,5 +229,7 @@ io.on('connection', (socket) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`📊 Database: ${hasMongoDB ? 'MongoDB configured' : 'No database configured'}`);
 }); 
