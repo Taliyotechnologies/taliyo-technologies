@@ -193,12 +193,22 @@ app.get('/api/blogs/:slug', async (req, res) => {
 
 // Connect to MongoDB only if URI is provided
 if (hasMongoDB) {
+  console.log('🔍 Attempting to connect to MongoDB...');
+  console.log(`🔍 MONGO_URI length: ${MONGO_URI.length}`);
+  console.log(`🔍 MONGO_URI starts with: ${MONGO_URI.substring(0, 20)}...`);
+  
   mongoose.connect(MONGO_URI, { 
     useNewUrlParser: true, 
     useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 5000,
+    serverSelectionTimeoutMS: 10000, // Increased timeout
     socketTimeoutMS: 45000,
-    bufferCommands: false
+    bufferCommands: false,
+    maxPoolSize: 10,
+    serverApi: {
+      version: '1',
+      strict: true,
+      deprecationErrors: true,
+    }
   })
   .then(() => {
     console.log('✅ MongoDB connected successfully');
@@ -206,11 +216,14 @@ if (hasMongoDB) {
   })
   .catch(err => {
     console.error('❌ MongoDB connection error:', err.message);
+    console.error('🔧 Error details:', err);
     console.error('🔧 Please check your MONGO_URI environment variable');
+    console.error('🔧 Make sure your MongoDB Atlas cluster is accessible');
     // Don't exit process, just log the error
   });
 } else {
   console.log('ℹ️  MongoDB not configured - running in limited mode');
+  console.log('🔍 MONGO_URI value:', MONGO_URI);
 }
 
 const server = http.createServer(app);
