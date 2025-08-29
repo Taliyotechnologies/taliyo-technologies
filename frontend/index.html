@@ -124,8 +124,22 @@
       }
     }
     </script>
+    <script>
+      (function() {
+        try {
+          var storageKey = 'theme';
+          var theme = localStorage.getItem(storageKey);
+          var mql = window.matchMedia('(prefers-color-scheme: dark)');
+          var systemPrefersDark = mql.matches;
+          var effectiveTheme = (theme === 'dark' || (!theme || theme === 'auto') && systemPrefersDark) ? 'dark' : 'light';
+          var root = document.documentElement;
+          if (effectiveTheme === 'dark') root.classList.add('dark'); else root.classList.remove('dark');
+          root.style.colorScheme = effectiveTheme;
+        } catch (e) { /* no-op */ }
+      })();
+    </script>
   </head>
-  <body class="bg-secondary-950 text-secondary-100 antialiased">
+  <body class="antialiased bg-white text-gray-900 dark:bg-secondary-950 dark:text-secondary-100">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
     
