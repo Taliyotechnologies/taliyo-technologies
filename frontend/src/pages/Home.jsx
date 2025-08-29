@@ -149,6 +149,39 @@ const Home = () => {
     'TechCorp', 'InnovateLabs', 'DigitalFlow', 'SmartSolutions', 'FutureTech'
   ]
 
+  const testimonials = [
+    {
+      name: "Amit Sharma",
+      company: "FinEdge Solutions",
+      quote: "Taliyo Technologies delivered our project on time with exceptional quality. Their team is highly professional and responsive!",
+      photo: "https://randomuser.me/api/portraits/men/32.jpg"
+    },
+    {
+      name: "Priya Verma",
+      company: "Verma Designs",
+      quote: "The best web development partner we've worked with. Creative, reliable, and always ahead of the curve.",
+      photo: "https://randomuser.me/api/portraits/women/44.jpg"
+    },
+    {
+      name: "John Lee",
+      company: "TechNova Inc.",
+      quote: "Their digital marketing strategies helped us grow our business online. Highly recommended!",
+      photo: "https://randomuser.me/api/portraits/men/65.jpg"
+    },
+    {
+      name: "Sara Ali",
+      company: "Ali Ventures",
+      quote: "Amazing UI/UX design and seamless app delivery. We loved working with Taliyo!",
+      photo: "https://randomuser.me/api/portraits/women/68.jpg"
+    },
+    {
+      name: "Rohit Singh",
+      company: "Singh Logistics",
+      quote: "Great support and communication throughout the project. Will definitely hire again.",
+      photo: "https://randomuser.me/api/portraits/men/77.jpg"
+    }
+  ]
+
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId)
     if (element) {
@@ -704,53 +737,12 @@ const Home = () => {
         <div className="container mx-auto px-4">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-10 text-center">What Our Clients Say</h2>
           <div className="relative overflow-hidden">
-            <motion.div
-              className="flex gap-8"
-              initial={{ x: 0 }}
-              animate={{ x: [0, -600, 0] }}
-              transition={{
-                duration: 30,
-                repeat: Infinity,
-                ease: "linear"
-              }}
-              style={{ width: 'max-content' }}
-            >
-              {/* Repeat testimonials twice for seamless loop */}
-              {Array(2).fill([
-                {
-                  name: "Amit Sharma",
-                  company: "FinEdge Solutions",
-                  quote: "Taliyo Technologies delivered our project on time with exceptional quality. Their team is highly professional and responsive!",
-                  photo: "https://randomuser.me/api/portraits/men/32.jpg"
-                },
-                {
-                  name: "Priya Verma",
-                  company: "Verma Designs",
-                  quote: "The best web development partner we've worked with. Creative, reliable, and always ahead of the curve.",
-                  photo: "https://randomuser.me/api/portraits/women/44.jpg"
-                },
-                {
-                  name: "John Lee",
-                  company: "TechNova Inc.",
-                  quote: "Their digital marketing strategies helped us grow our business online. Highly recommended!",
-                  photo: "https://randomuser.me/api/portraits/men/65.jpg"
-                },
-                {
-                  name: "Sara Ali",
-                  company: "Ali Ventures",
-                  quote: "Amazing UI/UX design and seamless app delivery. We loved working with Taliyo!",
-                  photo: "https://randomuser.me/api/portraits/women/68.jpg"
-                },
-                {
-                  name: "Rohit Singh",
-                  company: "Singh Logistics",
-                  quote: "Great support and communication throughout the project. Will definitely hire again.",
-                  photo: "https://randomuser.me/api/portraits/men/77.jpg"
-                }
-              ]).flat().map((testimonial, idx) => (
+            <div className="testimonials-marquee flex gap-8">
+              {[...testimonials, ...testimonials].map((testimonial, idx) => (
                 <div
                   key={idx}
                   className="min-w-[320px] max-w-xs bg-gray-900 border border-gray-800 rounded-2xl p-6 flex flex-col items-center shadow-lg mx-2"
+                  aria-hidden={idx >= testimonials.length}
                   aria-label={`Testimonial from ${testimonial.name}`}
                 >
                   <img
@@ -766,7 +758,7 @@ const Home = () => {
                   </div>
                 </div>
               ))}
-            </motion.div>
+            </div>
           </div>
         </div>
       </section>
