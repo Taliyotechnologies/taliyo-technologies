@@ -8,6 +8,7 @@ import useScrollToTop from './hooks/useScrollToTop'
 // Layout Components
 import Layout from './components/layout/Layout'
 import AdminLayout from './components/admin/AdminLayout'
+import RequireAuth from './components/auth/RequireAuth'
 
 // Lazy load Public Pages
 const Home = lazy(() => import('./pages/Home'))
@@ -39,6 +40,7 @@ const Projects = lazy(() => import('./pages/admin/Projects'))
 const SEO = lazy(() => import('./pages/admin/SEO'))
 const BlogManagement = lazy(() => import('./pages/admin/Blog'))
 const Settings = lazy(() => import('./pages/admin/Settings'))
+const AdminLogin = lazy(() => import('./pages/admin/Login'))
 
 function App() {
   // Use scroll to top hook
@@ -89,8 +91,11 @@ function App() {
             <Route path="terms-conditions" element={<TermsConditions />} />
           </Route>
 
-          {/* Admin Routes */}
-          <Route path="/admin" element={<AdminLayout />}>
+          {/* Admin Auth Route */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+
+          {/* Admin Protected Routes */}
+          <Route path="/admin" element={<RequireAuth><AdminLayout /></RequireAuth>}>
             <Route index element={<Dashboard />} />
             <Route path="team" element={<TeamManagement />} />
             <Route path="projects" element={<Projects />} />
@@ -98,7 +103,7 @@ function App() {
             <Route path="blog" element={<BlogManagement />} />
             <Route path="settings" element={<Settings />} />
           </Route>
-          
+
           {/* 404 Route */}
           <Route path="*" element={<Layout><div>404 - Page Not Found</div></Layout>} />
         </Routes>

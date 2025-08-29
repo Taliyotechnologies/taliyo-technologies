@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Link, useLocation, Outlet } from 'react-router-dom';
+import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
+
 import { 
   LayoutDashboard, 
   Users, 
@@ -19,6 +20,13 @@ import {
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/admin/login');
+  };
 
   const navigation = [
     {
@@ -162,7 +170,7 @@ const AdminLayout = () => {
               </button>
 
               {/* User menu */}
-              <div className="relative">
+              <div className="relative group">
                 <button className="flex items-center space-x-2 text-gray-700 hover:text-gray-900">
                   <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
                     <span className="text-white font-semibold text-sm">A</span>
@@ -188,7 +196,7 @@ const AdminLayout = () => {
                     Settings
                   </Link>
                   <hr className="my-1" />
-                  <button className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-50">
+                  <button onClick={handleLogout} className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-50">
                     <LogOut className="w-4 h-4 mr-2" />
                     Sign out
                   </button>

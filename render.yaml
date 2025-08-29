@@ -30,9 +30,13 @@ services:
         value: mongodb+srv://taliyo_user:Taliyo019@cluster0.kmbp5ro.mongodb.net/taliyo?retryWrites=true&w=majority&appName=Cluster0
       - key: JWT_SECRET
         value: your-super-secret-jwt-key-change-this-in-production
+      - key: ADMIN_EMAIL
+        value: admin@taliyotechnologies.com
+      - key: ADMIN_PASSWORD
+        value: changeme
       - key: EMAIL_USER
         value: your_gmail@gmail.com
       - key: EMAIL_PASS
         value: your_gmail_app_password
       - key: FRONTEND_URL
-        value: https://taliyo-frontend.onrender.com 
+        value: https://taliyo-frontend.onrender.com

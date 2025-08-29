@@ -6,6 +6,7 @@ const cors = require('cors');
 const nodemailer = require('nodemailer');
 const http = require('http');
 const { Server: SocketIOServer } = require('socket.io');
+const jwt = require('jsonwebtoken');
 
 // Debug environment variables
 console.log('🔍 Environment check at startup:');
@@ -17,6 +18,9 @@ console.log('🔍 PORT:', process.env.PORT);
 const app = express();
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI;
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@taliyotechnologies.com';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'changeme';
 
 // Check if MongoDB URI is provided
 const hasMongoDB = !!MONGO_URI;
@@ -41,7 +45,8 @@ app.use(cors({
     'http://localhost:5173',
     'http://localhost:3000'
   ],
-  credentials: true
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 
@@ -163,6 +168,57 @@ app.post('/api/subscribe', async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server error. Please try again later.' });
   }
+});
+
+// Auth endpoints (JWT-based, no DB required)
+const generateToken = (payload) => jwt.sign(payload, JWT_SECRET, { expiresIn: '1d' });
+
+const authMiddleware = (req, res, next) => {
+  const authHeader = req.headers['authorization'] || '';
+  if (!authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+  const token = authHeader.substring(7);
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    return res.status(401).json({ message: 'Invalid or expired token' });
+  }
+};
+
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body || {};
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    if (email !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    const user = { id: 'admin', email: ADMIN_EMAIL, role: 'admin', name: 'Admin' };
+    const token = generateToken(user);
+
+    // Optional: log activity if DB available
+    if (hasMongoDB && ActivityLog) {
+      try {
+        await ActivityLog.create({ user: ADMIN_EMAIL, action: 'login', details: 'Admin logged in', ip: req.ip });
+      } catch (e) {
+        // ignore logging failures
+      }
+    }
+
+    return res.json({ token, user });
+  } catch (err) {
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.get('/api/auth/me', authMiddleware, (req, res) => {
+  return res.json({ user: req.user });
 });
 
 // Blog endpoints
