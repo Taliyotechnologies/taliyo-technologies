@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { 
-  Settings, 
+  Settings as SettingsIcon, 
   User, 
   Shield, 
   Bell, 
@@ -26,7 +26,7 @@ const Settings = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
 
   const tabs = [
-    { id: 'general', name: 'General', icon: Settings },
+    { id: 'general', name: 'General', icon: SettingsIcon },
     { id: 'profile', name: 'Profile', icon: User },
     { id: 'security', name: 'Security', icon: Shield },
     { id: 'notifications', name: 'Notifications', icon: Bell },
