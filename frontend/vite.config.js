@@ -28,6 +28,10 @@ export default defineConfig({
       }
     })
   ],
+  resolve: {
+    // Ensure Rollup/Vercel resolves JSX files explicitly during dynamic imports
+    extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json']
+  },
   build: {
     outDir: 'dist',
     sourcemap: false,
