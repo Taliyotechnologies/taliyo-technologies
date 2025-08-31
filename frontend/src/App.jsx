@@ -95,16 +95,13 @@ function App() {
         <link rel="canonical" href="https://taliyo.com" />
         
         {/* Preload critical assets */}
-        <link rel="preload" href="/taliyo logo.png" as="image" />
-        <link rel="preload" href="/src/assets/hero-bg.jpg" as="image" />
+        <link rel="preload" href="/Taliyo technologies logo.png" as="image" />
         
         {/* Preconnect to important origins */}
         <link rel="preconnect" href="https://fonts.gstatic.com" />
         <link rel="preconnect" href="https://api.taliyo.com" />
       </Helmet>
-      
-      <Suspense fallback={null}>
-        <Routes>
+      <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
@@ -128,13 +125,29 @@ function App() {
             <Route path="faq" element={<FAQ />} />
             <Route path="privacy-policy" element={<PrivacyPolicy />} />
             <Route path="terms-conditions" element={<TermsConditions />} />
+            {/* 404 inside layout so header/footer stay visible */}
+            <Route path="*" element={<div className="min-h-[50vh] flex items-center justify-center text-gray-400">Page Not Found</div>} />
           </Route>
 
           {/* Admin Auth Route */}
-          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route
+            path="/admin/login"
+            element={
+              <Suspense fallback={<div className="min-h-[50vh]" />}> 
+                <AdminLogin />
+              </Suspense>
+            }
+          />
 
           {/* Admin Protected Routes */}
-          <Route path="/admin" element={<RequireAuth><AdminLayout /></RequireAuth>}>
+          <Route
+            path="/admin"
+            element={
+              <Suspense fallback={<div className="min-h-[50vh]" />}> 
+                <RequireAuth><AdminLayout /></RequireAuth>
+              </Suspense>
+            }
+          >
             <Route index element={<Dashboard />} />
             <Route path="team" element={<TeamManagement />} />
             <Route path="projects" element={<Projects />} />
@@ -142,11 +155,7 @@ function App() {
             <Route path="blog" element={<BlogManagement />} />
             <Route path="settings" element={<Settings />} />
           </Route>
-
-          {/* 404 Route */}
-          <Route path="*" element={<Layout><div>404 - Page Not Found</div></Layout>} />
-        </Routes>
-      </Suspense>
+      </Routes>
     </>
   )
 }

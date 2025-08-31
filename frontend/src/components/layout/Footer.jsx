@@ -41,9 +41,11 @@ const Footer = () => {
             <Link to="/" className="flex items-center space-x-3 mb-6 group">
               <div className="relative w-12 h-12 flex items-center justify-center rounded-xl overflow-hidden bg-gradient-to-br from-blue-500/30 to-purple-500/30 group-hover:from-blue-600/40 group-hover:to-purple-600/40 transition-all">
                 <img
-                  src="/taliyo logo.png"
+                  src="/Taliyo technologies logo.png"
                   alt="Taliyo Technologies Logo"
                   className="h-8 w-auto lg:h-9 object-contain drop-shadow-lg select-none"
+                  width="108"
+                  height="36"
                   loading="lazy"
                 />
               </div>

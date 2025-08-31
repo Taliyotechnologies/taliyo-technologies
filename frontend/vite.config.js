@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
-import { visualizer } from 'rollup-plugin-visualizer'
+ 
 import { splitVendorChunkPlugin } from 'vite'
 
 // https://vitejs.dev/config/
@@ -9,12 +9,6 @@ export default defineConfig({
   plugins: [
     react(),
     splitVendorChunkPlugin(),
-    visualizer({
-      open: false,
-      gzipSize: true,
-      brotliSize: true,
-      filename: 'bundle-analyzer-report.html'
-    }),
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {

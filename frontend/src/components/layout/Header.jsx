@@ -62,9 +62,11 @@ const Header = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center">
             <img
-              src="/taliyo logo.png"
+              src="/Taliyo technologies logo.png"
               alt="Taliyo Technologies Logo"
               className="h-10 w-auto md:h-11 lg:h-12 object-contain select-none block"
+              width="144"
+              height="48"
               loading="eager"
               decoding="async"
               fetchpriority="high"
