@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Facebook, Twitter, Linkedin, Instagram, Mail, Phone, MapPin } from 'lucide-react'
-import taliyoLogo from '../../assets/taliyo_technologies_logo.png';
+import taliyoLogo from '/Taliyo technologies logo.png';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear()
