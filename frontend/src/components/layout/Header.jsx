@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X, ChevronDown } from 'lucide-react'
-import taliyoLogo from '/Taliyo technologies logo.png';
 // import logoT from '../../assets/Untitled design.png';
 
 const Header = () => {
@@ -45,8 +44,9 @@ const Header = () => {
 
   const isActive = (path) => {
     if (path === '/') {
-      return location.pathname === '/'
-    return location.pathname.startsWith(path)
+      return location.pathname === '/';
+    }
+    return location.pathname.startsWith(path);
   }
 
   return (
@@ -62,7 +62,7 @@ const Header = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <img
-              src={taliyoLogo}
+              src="/Taliyo technologies logo.png"
               alt="Taliyo Technologies Logo"
               className="w-8 h-8 lg:w-10 lg:h-10 object-contain"
             />
