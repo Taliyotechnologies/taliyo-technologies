@@ -661,17 +661,19 @@ const Home = () => {
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-3xl blur-2xl"></div>
                 <div className="relative bg-gray-900 rounded-3xl p-8 border border-gray-800">
-                  <div className="aspect-video bg-gradient-to-br from-gray-800 to-gray-700 rounded-2xl flex items-center justify-center">
-                    <iframe
-                      src="https://www.canva.com/design/DAGsku9yL84/Qef2Lq6T1xg-HOj94rfF4g/watch?embed&autoplay=1"
-                      allow="autoplay; fullscreen"
-                      allowFullScreen
-                      frameBorder="0"
-                      width="100%"
-                      height="315"
+                  <div className="aspect-video bg-gradient-to-br from-gray-800 to-gray-700 rounded-2xl overflow-hidden">
+                    <video
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover"
                       style={{ borderRadius: '16px', boxShadow: '0 4px 24px rgba(0,0,0,0.2)' }}
                       title="Taliyo Technologies Video"
-                    ></iframe>
+                    >
+                      <source src="/videotali.mp4" type="video/mp4" />
+                      Your browser does not support the video tag.
+                    </video>
                   </div>
                 </div>
               </div>

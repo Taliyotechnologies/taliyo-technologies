@@ -9,21 +9,54 @@ const AnimatedCursor = () => {
   const ringRef = useRef(null);
 
   useEffect(() => {
-    // Detect mobile or tablet (touch device or small screen)
-    const checkTouch = () => {
-      const isTouch = (
-        'ontouchstart' in window ||
-        navigator.maxTouchPoints > 0 ||
-        window.innerWidth < 1024 // You can adjust this breakpoint as needed
-      );
-      setIsTouchDevice(isTouch);
+    // More reliable mobile/tablet detection
+    const checkDevice = () => {
+      // Check for touch support
+      const hasTouch = 'ontouchstart' in window || 
+                      navigator.maxTouchPoints > 0 || 
+                      navigator.msMaxTouchPoints > 0;
+      
+      // Check screen width (1024px is common breakpoint for tablets in landscape)
+      const isSmallScreen = window.innerWidth < 1024;
+      
+      // User agent detection as fallback
+      const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+      const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/i.test(userAgent);
+      
+      // If any condition is true, consider it a mobile/tablet device
+      const isTouchDevice = hasTouch && (isSmallScreen || isMobile);
+      
+      setIsTouchDevice(isTouchDevice);
+      
+      // Restore default cursor on touch devices
+      if (isTouchDevice) {
+        document.body.style.cursor = '';
+        const mainRoot = document.getElementById('root');
+        if (mainRoot) mainRoot.style.cursor = '';
+      } else {
+        document.body.style.cursor = 'none';
+        const mainRoot = document.getElementById('root');
+        if (mainRoot) mainRoot.style.cursor = 'none';
+      }
     };
-    checkTouch();
-    window.addEventListener('resize', checkTouch);
-    return () => window.removeEventListener('resize', checkTouch);
+    
+    // Run check on mount and window resize
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    
+    // Also check on orientation change for tablets
+    window.addEventListener('orientationchange', checkDevice);
+    
+    return () => {
+      window.removeEventListener('resize', checkDevice);
+      window.removeEventListener('orientationchange', checkDevice);
+    };
   }, []);
 
+  // Skip cursor setup if on touch device
   useEffect(() => {
+    if (isTouchDevice) return;
+    
     document.body.style.cursor = 'none';
     const mainRoot = document.getElementById('root');
     if (mainRoot) mainRoot.style.cursor = 'none';

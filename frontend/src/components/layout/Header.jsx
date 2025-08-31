@@ -60,11 +60,15 @@ const Header = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
+          <Link to="/" className="flex items-center">
             <img
-              src="/Taliyo technologies logo.png"
+              src="/taliyo logo.png"
               alt="Taliyo Technologies Logo"
-              className="w-8 h-8 lg:w-10 lg:h-10 object-contain"
+              className="h-10 w-auto md:h-11 lg:h-12 object-contain select-none block"
+              loading="eager"
+              decoding="async"
+              fetchpriority="high"
+              onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/Taliyo technologies logo.png'; }}
             />
             {/* brand text removed per request */}
           </Link>
