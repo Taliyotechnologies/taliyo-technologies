@@ -66,9 +66,7 @@ const Header = () => {
               alt="Taliyo Technologies Logo"
               className="w-8 h-8 lg:w-10 lg:h-10 object-contain"
             />
-            <span className="text-xl lg:text-2xl font-bold text-white">
-              Taliyo
-            </span>
+            {/* brand text removed per request */}
           </Link>
 
           {/* Desktop Navigation */}

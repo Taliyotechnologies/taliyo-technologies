@@ -47,7 +47,7 @@ const Footer = () => {
                   loading="lazy"
                 />
               </div>
-              <span className="text-2xl font-bold text-white tracking-wide">Taliyo Technologies</span>
+              {/* brand text removed per request */}
             </Link>
             <p className="text-gray-300 mb-6 leading-relaxed">
               Leading IT company in India offering innovative web development, 
