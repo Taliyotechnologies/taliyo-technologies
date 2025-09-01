@@ -101,7 +101,8 @@ function App() {
         <link rel="preconnect" href="https://fonts.gstatic.com" />
         <link rel="preconnect" href="https://api.taliyo.com" />
       </Helmet>
-      <Routes>
+      <Suspense fallback={<div className="min-h-[50vh]" />}>
+        <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
@@ -155,7 +156,8 @@ function App() {
             <Route path="blog" element={<BlogManagement />} />
             <Route path="settings" element={<Settings />} />
           </Route>
-      </Routes>
+        </Routes>
+      </Suspense>
     </>
   )
 }

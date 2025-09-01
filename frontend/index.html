@@ -142,6 +142,36 @@
   <body class="antialiased bg-white text-gray-900 dark:bg-secondary-950 dark:text-secondary-100">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      // Clean up any old service workers and stale caches that can cause a white screen
+      (function () {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations()
+            .then(function (regs) {
+              regs.forEach(function (reg) {
+                try {
+                  var url = (reg.active && reg.active.scriptURL) || '';
+                  if (!url.includes('/sw.js')) {
+                    reg.unregister().catch(function () { /* no-op */ });
+                  }
+                } catch (e) { /* no-op */ }
+              });
+            })
+            .catch(function () { /* no-op */ });
+
+          if (window.caches && caches.keys) {
+            caches.keys().then(function (keys) {
+              keys.forEach(function (k) {
+                if (/^(workbox-|vite-pwa|taliyo-cache-)/.test(k)) {
+                  caches.delete(k).catch(function () { /* no-op */ });
+                }
+              });
+            }).catch(function () { /* no-op */ });
+          }
+        }
+      })();
+    </script>
+    <!-- SW registration is handled by Vite PWA plugin in production build -->
     
     <!-- Google Analytics - Commented out until proper GA ID is configured -->
     <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>

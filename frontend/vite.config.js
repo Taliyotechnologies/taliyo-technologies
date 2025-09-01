@@ -109,7 +109,7 @@ export default defineConfig({
         drop_debugger: true
       }
     },
-    target: 'esnext',
+    target: 'es2018',
     modulePreload: {
       polyfill: false
     }
