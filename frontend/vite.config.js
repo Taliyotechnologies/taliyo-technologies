@@ -4,12 +4,16 @@ import { VitePWA } from 'vite-plugin-pwa'
  
 import { splitVendorChunkPlugin } from 'vite'
 
+// Toggle PWA via env. By default, disable to avoid SW-related blank screens in prod.
+// Enable by setting VITE_ENABLE_PWA=true at build time.
+const enablePWA = process.env.VITE_ENABLE_PWA === 'true'
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(),
     splitVendorChunkPlugin(),
-    VitePWA({
+    ...(enablePWA ? [VitePWA({
       registerType: 'autoUpdate',
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,gif,webp,woff,woff2,ttf,eot}'],
@@ -68,7 +72,7 @@ export default defineConfig({
           }
         ]
       }
-    })
+    })] : [])
   ],
   resolve: {
     extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json'],

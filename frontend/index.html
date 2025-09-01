@@ -150,10 +150,8 @@
             .then(function (regs) {
               regs.forEach(function (reg) {
                 try {
-                  var url = (reg.active && reg.active.scriptURL) || '';
-                  if (!url.includes('/sw.js')) {
-                    reg.unregister().catch(function () { /* no-op */ });
-                  }
+                  // Always unregister any existing SW to avoid stale caches during rollout
+                  reg.unregister().catch(function () { /* no-op */ });
                 } catch (e) { /* no-op */ }
               });
             })
