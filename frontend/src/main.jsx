@@ -57,18 +57,23 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   </React.StrictMode>,
 )
 
-// Hide splash overlay once the app is mounted
+// Hide splash overlay when GSAP timeline completes, with a fallback
+let splashHidden = false
 const hideSplash = () => {
+  if (splashHidden) return
   const el = document.getElementById('app-splash')
   if (!el) return
+  splashHidden = true
   el.classList.add('hide')
   el.addEventListener('transitionend', () => el.remove(), { once: true })
 }
 
-if (document.readyState === 'complete' || document.readyState === 'interactive') {
-  window.requestAnimationFrame(() => setTimeout(hideSplash, 900))
-} else {
-  window.addEventListener('DOMContentLoaded', () => {
-    window.requestAnimationFrame(() => setTimeout(hideSplash, 900))
-  })
+const onSplashDone = () => {
+  if (splashHidden) return
+  window.requestAnimationFrame(() => setTimeout(hideSplash, 150))
 }
+
+document.addEventListener('splash:done', onSplashDone, { once: true })
+
+// Fallback: ensure splash hides even if GSAP/CDN fails
+setTimeout(() => { if (!splashHidden) hideSplash() }, 3000)
