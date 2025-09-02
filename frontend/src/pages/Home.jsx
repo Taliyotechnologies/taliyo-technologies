@@ -146,10 +146,6 @@ const Home = () => {
     { name: 'Firebase', icon: Database, category: 'Backend' },
   ]
 
-  const trustedBy = [
-    'TechCorp', 'InnovateLabs', 'DigitalFlow', 'SmartSolutions', 'FutureTech'
-  ]
-
   const testimonials = [
     {
       name: "Amit Sharma",
@@ -335,26 +331,6 @@ const Home = () => {
                 <Play size={18} className="mr-2 group-hover:scale-110 transition-transform" />
                 Watch Demo
               </button>
-            </motion.div>
-
-            {/* Trusted By */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.8 }}
-              className="w-full"
-            >
-              <div className="flex items-center justify-center md:justify-start gap-6 md:gap-8 opacity-80">
-                {trustedBy.map((brand) => (
-                  <span
-                    key={brand}
-                    className="text-gray-400 hover:text-gray-300 transition-colors text-sm md:text-base font-medium tracking-wide"
-                    aria-label={`Trusted by ${brand}`}
-                  >
-                    {brand}
-                  </span>
-                ))}
-              </div>
             </motion.div>
           </div>
 
@@ -623,8 +599,10 @@ const Home = () => {
 
       {/* Why Choose Us Section */}
       <section className="py-20 bg-gray-950" aria-labelledby="why-choose-heading">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div className="container mx-auto px-4 relative">
+          {/* Anchor ensures scroll target exists even on mobile, without affecting grid layout */}
+          <div id="story-video" className="absolute -top-24 h-0" aria-hidden="true"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -669,8 +647,6 @@ const Home = () => {
             </motion.div>
 
             {/* Hide Watch Our Story box on mobile, show only on md and above */}
-            {/* Anchor ensures scroll target exists even on mobile */}
-            <div id="story-video" className="h-0" aria-hidden="true"></div>
             <div className="hidden md:block">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-3xl blur-2xl"></div>
