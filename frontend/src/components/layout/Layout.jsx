@@ -45,10 +45,10 @@ const Layout = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen bg-gray-950 text-white flex flex-col">
       <AnimatedCursor />
       <Header />
-      <main>
+      <main className="flex-1 bg-gray-950">
         <Suspense fallback={<div className="min-h-[50vh]" />}> 
           <Outlet />
         </Suspense>
@@ -59,4 +59,4 @@ const Layout = () => {
   )
 }
 
-export default Layout 
+export default Layout
