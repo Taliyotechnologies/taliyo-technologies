@@ -138,8 +138,34 @@
         } catch (e) { /* no-op */ }
       })();
     </script>
+  <style>
+    /* Splash screen styles */
+    #app-splash.app-splash { position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; background: radial-gradient(1200px 800px at 50% 20%, rgba(255,255,255,0.06), rgba(255,255,255,0) 40%) , linear-gradient(180deg, #0f172a 0%, #0b1220 100%); color: #e5e7eb; transition: opacity .5s ease, visibility .5s ease; }
+    #app-splash.app-splash.hide { opacity: 0; visibility: hidden; }
+    .app-splash .box { display:flex; align-items:center; gap:16px; transform: translateY(6px); animation: rise .7s cubic-bezier(.22,.9,.18,1) both; }
+    .app-splash .logo { width:64px; height:64px; border-radius:14px; overflow:hidden; box-shadow: 0 10px 30px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.06) inset; background: rgba(255,255,255,.06); display:grid; place-items:center; backdrop-filter: blur(6px); }
+    .app-splash .title { font-family: "Inter", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto; font-weight: 700; letter-spacing:.2px; font-size:18px; color:#f3f4f6; text-shadow: 0 1px 2px rgba(0,0,0,.3); }
+    .app-splash .loader { width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid rgba(255,255,255,.3); border-top-color: #22c55e; animation: spin 900ms linear infinite; box-shadow: 0 0 0 1px rgba(0,0,0,.15) inset; }
+    .app-splash .sub { margin-top:8px; opacity:.75; font-size:12px; letter-spacing:.2px; text-align:center; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes rise { from { opacity:0; transform: translateY(12px) scale(.98); } to { opacity:1; transform: translateY(0) scale(1); } }
+    @media (prefers-reduced-motion: reduce) { .app-splash .box { animation: none; } .app-splash .loader { animation-duration: 1.6s; } }
+  </style>
   </head>
   <body class="antialiased bg-white text-gray-900 dark:bg-secondary-950 dark:text-secondary-100">
+  <div id="app-splash" class="app-splash" aria-hidden="true">
+    <div class="box">
+      <div class="logo">
+        <img src="/favicon.png" alt="Taliyo" width="36" height="36" style="width:36px;height:36px;display:block;filter: drop-shadow(0 2px 6px rgba(0,0,0,.25));" />
+      </div>
+      <div>
+        <div class="title">Taliyo Technologies</div>
+        <div class="sub">Preparing experience…</div>
+      </div>
+      <div class="loader" role="presentation"></div>
+    </div>
+  </div>
+  <noscript><style>#app-splash{display:none!important}</style></noscript>
   <div id="root"></div>
   <script type="module" src="/src/main.jsx"></script>
   <script>

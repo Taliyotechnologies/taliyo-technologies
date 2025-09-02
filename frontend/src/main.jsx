@@ -55,4 +55,20 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       </QueryClientProvider>
     </HelmetProvider>
   </React.StrictMode>,
-) 
+)
+
+// Hide splash overlay once the app is mounted
+const hideSplash = () => {
+  const el = document.getElementById('app-splash')
+  if (!el) return
+  el.classList.add('hide')
+  el.addEventListener('transitionend', () => el.remove(), { once: true })
+}
+
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  window.requestAnimationFrame(() => setTimeout(hideSplash, 150))
+} else {
+  window.addEventListener('DOMContentLoaded', () => {
+    window.requestAnimationFrame(() => setTimeout(hideSplash, 150))
+  })
+}
