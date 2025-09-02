@@ -231,9 +231,8 @@
         });
       }
 
-      // Radial reveal of page
-      tl.to('#app-splash', { clipPath: 'circle(0% at 50% 50%)', webkitClipPath: 'circle(0% at 50% 50%)', duration: 0.55, ease: 'power4.in' }, ">-0.05")
-        .add(function(){ dispatchDone() }, "+=0.05");
+      // Radial reveal of page (smooth, no post-delay)
+      tl.to('#app-splash', { clipPath: 'circle(0% at 50% 50%)', webkitClipPath: 'circle(0% at 50% 50%)', duration: 0.55, ease: 'power2.inOut', onComplete: dispatchDone }, ">-0.05");
 
       // Skip button logic
       var skipBtn = document.getElementById('splash-skip');
@@ -241,7 +240,7 @@
         skipBtn.addEventListener('click', function(ev){
           ev.preventDefault();
           try { if (window.__splash_tl) window.__splash_tl.kill(); } catch(e) {}
-          gsap.to('#app-splash', { clipPath: 'circle(0% at 50% 50%)', webkitClipPath: 'circle(0% at 50% 50%)', duration: 0.35, ease: 'power4.in', onComplete: dispatchDone });
+          gsap.to('#app-splash', { clipPath: 'circle(0% at 50% 50%)', webkitClipPath: 'circle(0% at 50% 50%)', duration: 0.6, ease: 'power2.inOut', onComplete: dispatchDone });
         });
       }
     })();

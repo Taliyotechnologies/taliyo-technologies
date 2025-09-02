@@ -70,7 +70,7 @@ const hideSplash = () => {
 
 const onSplashDone = () => {
   if (splashHidden) return
-  window.requestAnimationFrame(() => setTimeout(hideSplash, 150))
+  window.requestAnimationFrame(hideSplash)
 }
 
 document.addEventListener('splash:done', onSplashDone, { once: true })
