@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, Suspense, lazy } from 'react'
 import { Helmet } from 'react-helmet-async'
 import AOS from 'aos'
@@ -30,6 +30,7 @@ const Contact = lazyWithPreload(() => import('./pages/Contact.jsx'));
 
 // Lazy load less critical pages
 const Testimonials = lazy(() => import('./pages/Testimonials.jsx'));
+const ErrorPage = lazy(() => import('./pages/ErrorPage.jsx'));
 const Blog = lazy(() => import('./pages/Blog.jsx'));
 const BlogDetailWebDev = lazy(() => import('./pages/blog/BlogDetailWebDev.jsx'));
 const EcommerceBlog = lazy(() => import('./pages/blog/EcommerceBlog.jsx'));
@@ -127,8 +128,11 @@ function App() {
             <Route path="privacy-policy" element={<PrivacyPolicy />} />
             <Route path="terms-conditions" element={<TermsConditions />} />
             {/* 404 inside layout so header/footer stay visible */}
-            <Route path="*" element={<div className="min-h-[50vh] flex items-center justify-center text-gray-400">Page Not Found</div>} />
+            <Route path="*" element={<ErrorPage status={404} />} />
           </Route>
+
+          {/* 404 for admin routes */}
+          <Route path="/admin/*" element={<ErrorPage status={404} title="Admin Page Not Found" message="The admin page you are looking for doesn't exist or you don't have permission to access it." />} />
 
           {/* Admin Auth Route */}
           <Route
@@ -156,6 +160,13 @@ function App() {
             <Route path="blog" element={<BlogManagement />} />
             <Route path="settings" element={<Settings />} />
           </Route>
+          
+          {/* Catch-all route for any other unmatched paths */}
+          <Route path="*" element={
+            <Layout>
+              <ErrorPage status={404} />
+            </Layout>
+          } />
         </Routes>
       </Suspense>
     </>

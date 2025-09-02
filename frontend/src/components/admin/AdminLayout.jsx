@@ -72,7 +72,7 @@ const AdminLayout = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
       {/* Mobile sidebar */}
       <div className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
         <div className="fixed inset-0 bg-gray-600 bg-opacity-75 dark:bg-black/60" onClick={() => setSidebarOpen(false)} />
@@ -143,7 +143,7 @@ const AdminLayout = () => {
       {/* Main content */}
       <div className="lg:pl-64">
         {/* Top header */}
-        <div className="sticky top-0 z-40 bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-800">
+        <div className="sticky top-0 z-40 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800 transition-colors duration-200">
           <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
             <div className="flex items-center">
               <button
@@ -158,11 +158,13 @@ const AdminLayout = () => {
               {/* Search */}
               <div className="hidden md:block">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5">
+                    <Search className="w-5 h-5" />
+                  </div>
                   <input
                     type="text"
                     placeholder="Search..."
-                    className="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-400"
+                    className="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 dark:border-gray-700 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 transition-colors duration-200"
                   />
                 </div>
               </div>
@@ -171,19 +173,19 @@ const AdminLayout = () => {
                 onClick={toggleTheme}
                 aria-label="Toggle theme"
                 title="Toggle theme"
-                className="p-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                className="p-2 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 transition-colors duration-200"
               >
                 {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
               {/* Notifications */}
-              <button className="relative p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+              <button className="relative p-2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors duration-200">
                 <Bell className="w-6 h-6" />
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
               </button>
 
               {/* User menu */}
               <div className="relative group">
-                <button className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 dark:text-gray-200 dark:hover:text-gray-100">
+                <button className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 dark:text-gray-200 dark:hover:text-gray-100 transition-colors duration-200">
                   <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
                     <span className="text-white font-semibold text-sm">A</span>
                   </div>
@@ -192,23 +194,23 @@ const AdminLayout = () => {
                 </button>
                 
                 {/* Dropdown menu */}
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 hidden group-hover:block dark:bg-gray-900 dark:border-gray-700">
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 hidden group-hover:block dark:bg-gray-800 dark:border-gray-700 transition-all duration-200">
                   <Link
                     to="/admin/settings"
-                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800"
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700/50 transition-colors duration-200"
                   >
                     <User className="w-4 h-4 mr-2" />
                     Profile
                   </Link>
                   <Link
                     to="/admin/settings"
-                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800"
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-700/50 transition-colors duration-200"
                   >
                     <Settings className="w-4 h-4 mr-2" />
                     Settings
                   </Link>
                   <hr className="my-1 dark:border-gray-700" />
-                  <button onClick={handleLogout} className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-50 dark:text-red-400 dark:hover:bg-gray-800">
+                  <button onClick={handleLogout} className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-50 dark:text-red-400 dark:hover:bg-gray-700/50 transition-colors duration-200">
                     <LogOut className="w-4 h-4 mr-2" />
                     Sign out
                   </button>
@@ -219,7 +221,7 @@ const AdminLayout = () => {
         </div>
 
         {/* Page content */}
-        <main className="flex-1">
+        <main className="flex-1 bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
           <Outlet />
         </main>
       </div>
