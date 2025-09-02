@@ -66,9 +66,9 @@ const hideSplash = () => {
 }
 
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
-  window.requestAnimationFrame(() => setTimeout(hideSplash, 150))
+  window.requestAnimationFrame(() => setTimeout(hideSplash, 900))
 } else {
   window.addEventListener('DOMContentLoaded', () => {
-    window.requestAnimationFrame(() => setTimeout(hideSplash, 150))
+    window.requestAnimationFrame(() => setTimeout(hideSplash, 900))
   })
 }
