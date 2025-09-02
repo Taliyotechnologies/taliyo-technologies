@@ -2,6 +2,7 @@ import { Helmet } from 'react-helmet-async'
 import { motion } from 'framer-motion'
 import { ArrowRight, Play, Star, Users, Award, Clock, CheckCircle, Zap, Shield, Globe, Smartphone, Palette, TrendingUp, ChevronDown, ExternalLink, Cpu, Code, Brain, Rocket, Target, BarChart3, Headphones, Brush, Database, Mail, Phone, MapPin } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import storyVideo from '../assets/videotaliyo.mp4'
 
 const Home = () => {
   const stats = [
@@ -327,6 +328,7 @@ const Home = () => {
                 <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
               </Link>
               <button 
+                onClick={() => scrollToSection('story-video')}
                 className="group w-full sm:w-auto px-6 py-3 md:px-8 md:py-4 lg:px-10 lg:py-5 border-2 border-gray-600 hover:border-gray-400 text-gray-300 hover:text-white font-semibold rounded-xl transition-all duration-300 backdrop-blur-sm flex items-center justify-center text-sm md:text-base lg:text-lg focus:outline-none focus:ring-4 focus:ring-gray-500/50"
                 aria-label="Watch our demo video"
               >
@@ -342,7 +344,17 @@ const Home = () => {
               transition={{ duration: 0.8, delay: 0.8 }}
               className="w-full"
             >
-              
+              <div className="flex items-center justify-center md:justify-start gap-6 md:gap-8 opacity-80">
+                {trustedBy.map((brand) => (
+                  <span
+                    key={brand}
+                    className="text-gray-400 hover:text-gray-300 transition-colors text-sm md:text-base font-medium tracking-wide"
+                    aria-label={`Trusted by ${brand}`}
+                  >
+                    {brand}
+                  </span>
+                ))}
+              </div>
             </motion.div>
           </div>
 
@@ -657,6 +669,8 @@ const Home = () => {
             </motion.div>
 
             {/* Hide Watch Our Story box on mobile, show only on md and above */}
+            {/* Anchor ensures scroll target exists even on mobile */}
+            <div id="story-video" className="h-0" aria-hidden="true"></div>
             <div className="hidden md:block">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-3xl blur-2xl"></div>
@@ -671,7 +685,7 @@ const Home = () => {
                       style={{ borderRadius: '16px', boxShadow: '0 4px 24px rgba(0,0,0,0.2)' }}
                       title="Taliyo Technologies Video"
                     >
-                      <source src="/videotali.mp4" type="video/mp4" />
+                      <source src={storyVideo} type="video/mp4" />
                       Your browser does not support the video tag.
                     </video>
                   </div>
@@ -707,10 +721,10 @@ const Home = () => {
               className="bg-gray-800/50 rounded-2xl p-6 text-center border border-blue-500/10"
             >
               <a
-                href="mailto:info@taliyotechnologies.com"
+                href="mailto:info@taliyo.com"
                 className="block focus:outline-none focus:ring-2 focus:ring-blue-400 rounded-2xl hover:bg-gray-700/40 transition-all duration-200"
                 tabIndex={0}
-                aria-label="Email info@taliyotechnologies.com"
+                aria-label="Email info@taliyo.com"
               >
                 <Mail className="text-blue-400 mx-auto mb-4" size={32} />
                 <h3 className="text-lg font-semibold text-white mb-2">info@taliyo.com</h3>
