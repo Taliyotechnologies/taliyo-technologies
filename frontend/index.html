@@ -140,34 +140,40 @@
     </script>
   </head>
   <body class="antialiased bg-white text-gray-900 dark:bg-secondary-950 dark:text-secondary-100">
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-    <script>
-      // Clean up any old service workers and stale caches that can cause a white screen
-      (function () {
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistrations()
-            .then(function (regs) {
-              regs.forEach(function (reg) {
-                try {
-                  // Always unregister any existing SW to avoid stale caches during rollout
-                  reg.unregister().catch(function () { /* no-op */ });
-                } catch (e) { /* no-op */ }
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+  <script>
+    // Clear existing service workers and caches
+    (function() {
+      if ('serviceWorker' in navigator) {
+        // Unregister all service workers
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          // Unregister all service workers
+          const unregisterPromises = registrations.map(registration => 
+            registration.unregister().catch(e => console.log('Failed to unregister service worker:', e))
+          );
+          
+          // Clear all caches
+          if (window.caches && typeof caches.keys === 'function') {
+            return caches.keys().then(cacheNames => {
+              const cacheDeletionPromises = cacheNames.map(cacheName => {
+                // Delete all caches, or be specific with: if (/^(workbox-|vite-pwa|taliyo-cache-)/.test(cacheName))
+                return caches.delete(cacheName)
+                  .catch(e => console.log(`Failed to delete cache ${cacheName}:`, e));
               });
-            })
-            .catch(function () { /* no-op */ });
-
-          if (window.caches && caches.keys) {
-            caches.keys().then(function (keys) {
-              keys.forEach(function (k) {
-                if (/^(workbox-|vite-pwa|taliyo-cache-)/.test(k)) {
-                  caches.delete(k).catch(function () { /* no-op */ });
-                }
-              });
-            }).catch(function () { /* no-op */ });
+              
+              return Promise.all([...unregisterPromises, ...cacheDeletionPromises]);
+            });
           }
-        }
-      })();
+          
+          return Promise.all(unregisterPromises);
+        }).then(() => {
+          console.log('Service workers and caches cleared successfully');
+        }).catch(error => {
+          console.log('Cache cleanup failed:', error);
+        });
+      }
+    })();
     </script>
     <!-- SW registration is handled by Vite PWA plugin in production build -->
     
