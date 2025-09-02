@@ -155,6 +155,13 @@
     .app-splash .particle { position:absolute; left:50%; top:50%; width:8px; height:8px; margin:-4px 0 0 -4px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 0 1px rgba(255,255,255,.25) inset, 0 8px 18px rgba(34,197,94,.35); opacity: 0; }
     /* .app-splash .shine removed visually */
     .app-splash .orb { position:absolute; left:50%; top:50%; width:6px; height:6px; margin:-3px 0 0 -3px; border-radius:50%; background:#22c55e; box-shadow: 0 0 0 1px rgba(255,255,255,.25) inset, 0 6px 14px rgba(34,197,94,.4); opacity:.85; transform: rotate(var(--a,0deg)) translateX(var(--d,120px)) rotate(calc(-1 * var(--a,0deg))); animation: orbit var(--t,12s) linear infinite; }
+    /* AI-style enhancements */
+    .app-splash .gridlines { position:absolute; inset:0; pointer-events:none; opacity:0; background-image: linear-gradient(to right, rgba(255,255,255,.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.06) 1px, transparent 1px); background-size: 28px 28px; -webkit-mask: radial-gradient(circle at 50% 50%, rgba(255,255,255,0) 0%, rgba(255,255,255,.9) 35%, rgba(255,255,255,0) 80%); mask: radial-gradient(circle at 50% 50%, rgba(255,255,255,0) 0%, rgba(255,255,255,.9) 35%, rgba(255,255,255,0) 80%); animation: gridMove 10s linear infinite; }
+    .app-splash .ring-progress { --p: 0; position:absolute; left:50%; top:50%; width:104px; height:104px; margin:-52px 0 0 -52px; border-radius:50%; background: conic-gradient(#22c55e calc(var(--p) * 1turn), rgba(255,255,255,.12) 0); -webkit-mask: radial-gradient(circle 42px, transparent 42px, #fff 43px); mask: radial-gradient(circle 42px, transparent 42px, #fff 43px); box-shadow: 0 0 0 1px rgba(255,255,255,.06) inset, 0 8px 24px rgba(34,197,94,.25); pointer-events:none; opacity:0; }
+    .app-splash .ring-scan { position:absolute; left:50%; top:50%; width:104px; height:104px; margin:-52px 0 0 -52px; border-radius:50%; background: conic-gradient(from 0deg, transparent 0deg 320deg, rgba(34,197,94,.45) 332deg 360deg); -webkit-mask: radial-gradient(circle 42px, transparent 42px, #fff 43px); mask: radial-gradient(circle 42px, transparent 42px, #fff 43px); filter: blur(.2px); animation: rotate360 4s linear infinite; opacity:0; pointer-events:none; }
+    .app-splash .logo-halo { position:absolute; left:50%; top:50%; width:84px; height:84px; margin:-42px 0 0 -42px; border-radius:50%; background: radial-gradient(circle, rgba(34,197,94,.35), rgba(34,197,94,0) 60%); filter: blur(12px); opacity:0; pointer-events:none; }
+    @keyframes rotate360 { to { transform: rotate(360deg); } }
+    @keyframes gridMove { to { background-position: 28px 28px; } }
     .splash-skip { position:absolute; right:18px; bottom:18px; padding:6px 10px; font-size:12px; color:#cbd5e1; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 999px; backdrop-filter: blur(6px); cursor: pointer; transition: all .2s ease; }
     .splash-skip:hover { color:#ffffff; border-color: rgba(255,255,255,.25); background: rgba(255,255,255,.10); }
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -162,12 +169,13 @@
     @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
     @keyframes pulse { 0% { transform: scale(.85); opacity:.0; } 50% { opacity:.5; } 100% { transform: scale(1.1); opacity:0; } }
     @keyframes orbit { to { transform: rotate(calc(var(--a,0deg) + 360deg)) translateX(var(--d,120px)) rotate(calc(-1 * (var(--a,0deg) + 360deg))); } }
-    @media (prefers-reduced-motion: reduce) { .app-splash .box { animation: none; } .app-splash .title { animation: none; } .app-splash .ring { animation: none; opacity:.15; } .app-splash .orb { animation: none; } }
+    @media (prefers-reduced-motion: reduce) { .app-splash .box { animation: none; } .app-splash .title { animation: none; } .app-splash .ring { animation: none; opacity:.15; } .app-splash .orb { animation: none; } .app-splash .ring-scan { animation: none; } .app-splash .gridlines { animation: none; } }
   </style>
   </head>
   <body class="antialiased bg-white text-gray-900 dark:bg-secondary-950 dark:text-secondary-100">
   <div id="app-splash" class="app-splash" aria-hidden="true">
     <div class="decor">
+      <span class="gridlines"></span>
       <span class="ring r1"></span>
       <span class="ring r2"></span>
       <span class="glow"></span>
@@ -185,6 +193,9 @@
       <span class="orb o3" style="--d:180px; --t:18s; --a:120deg;"></span>
       <span class="orb o4" style="--d:210px; --t:20s; --a:180deg;"></span>
     </div>
+    <span class="ring-progress" id="splash-progress"></span>
+    <span class="ring-scan"></span>
+    <span class="logo-halo"></span>
     <div class="box">
       <div class="logo-wrap">
         <div class="logo">
@@ -215,6 +226,13 @@
         .fromTo('.app-splash .ring.r2', { scale: 0.85, opacity: 0 }, { scale: 1.05, opacity: 0.35, duration: 0.95 }, 0.1)
         .to('.app-splash .ring.r1', { opacity: 0.25, duration: 0.5 }, 0.85)
         .to('.app-splash .ring.r2', { opacity: 0.15, duration: 0.5 }, 0.85)
+        // AI elements
+        .fromTo('.app-splash .gridlines', { opacity: 0 }, { opacity: 0.12, duration: 0.6 }, 0.05)
+        .fromTo('.app-splash .logo-halo', { opacity: 0, scale: 0.92 }, { opacity: 0.6, scale: 1, duration: 0.6 }, 0.08)
+        .fromTo('.app-splash .ring-scan', { opacity: 0 }, { opacity: 0.9, duration: 0.45 }, 0.15)
+        // Progress ring (CSS var --p from 0->1)
+        .fromTo('#splash-progress', { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0.12)
+        .to('#splash-progress', { duration: 1.05, ease: 'power2.out', onUpdate: function(){ try { var el = document.getElementById('splash-progress'); if (el) el.style.setProperty('--p', this.progress()); } catch(e){} } }, 0.2)
         // Orbiting dots entrance
         .fromTo('.app-splash .orb', { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4, stagger: 0.06, ease: 'back.out(2)' }, 0.22)
 
@@ -240,6 +258,7 @@
         skipBtn.addEventListener('click', function(ev){
           ev.preventDefault();
           try { if (window.__splash_tl) window.__splash_tl.kill(); } catch(e) {}
+          try { var el = document.getElementById('splash-progress'); if (el) el.style.setProperty('--p', 1); } catch(e){}
           gsap.to('#app-splash', { clipPath: 'circle(0% at 50% 50%)', webkitClipPath: 'circle(0% at 50% 50%)', duration: 0.6, ease: 'power2.inOut', onComplete: dispatchDone });
         });
       }
