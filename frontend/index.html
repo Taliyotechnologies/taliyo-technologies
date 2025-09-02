@@ -142,22 +142,27 @@
     /* Splash screen styles */
     #app-splash.app-splash { position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; background: radial-gradient(1200px 800px at 50% 20%, rgba(255,255,255,0.06), rgba(255,255,255,0) 40%) , linear-gradient(180deg, #0f172a 0%, #0b1220 100%); color: #e5e7eb; transition: opacity .6s ease, visibility .6s ease; clip-path: circle(100% at 50% 50%); -webkit-clip-path: circle(100% at 50% 50%); will-change: clip-path, opacity; }
     #app-splash.app-splash.hide { opacity: 0; visibility: hidden; }
-    .app-splash .box { position: relative; display:flex; align-items:center; gap:18px; transform: translateY(6px); padding: 14px 18px; border-radius: 16px; background: rgba(255,255,255,.04); box-shadow: 0 20px 50px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.06) inset; backdrop-filter: blur(8px); animation: rise .8s cubic-bezier(.22,.9,.18,1) both; }
+    .app-splash .box { position: relative; display:flex; align-items:center; gap:18px; transform: translateY(6px); padding: 16px 20px; border-radius: 16px; border: 1px solid transparent; background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.04)) padding-box, linear-gradient(90deg, #22c55e33, #60a5fa33, #a78bfa33) border-box; box-shadow: 0 20px 50px rgba(0,0,0,.35), 0 6px 30px rgba(34,197,94,.08); backdrop-filter: blur(8px); overflow: hidden; animation: rise .7s cubic-bezier(.22,.9,.18,1) both; }
     .app-splash .logo-wrap { position: relative; display: grid; place-items: center; }
     .app-splash .logo { width:64px; height:64px; border-radius:14px; overflow:hidden; box-shadow: 0 10px 30px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.06) inset; background: rgba(255,255,255,.06); display:grid; place-items:center; backdrop-filter: blur(6px); }
-    .app-splash .spinner { position:absolute; width:72px; height:72px; border-radius:50%; border:2.5px solid rgba(255,255,255,.25); border-top-color:#22c55e; filter: drop-shadow(0 2px 6px rgba(0,0,0,.25)); }
-    .app-splash .title { font-family: "Inter", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto; font-weight: 800; letter-spacing:.3px; font-size:18px; background: linear-gradient(100deg, #f3f4f6 20%, #22c55e 35%, #f3f4f6 60%); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shimmer 2.2s ease-in-out infinite; }
+    .app-splash .spinner { position:absolute; width:72px; height:72px; border-radius:50%; border:2.5px solid rgba(255,255,255,.18); border-top-color:#22c55e; box-shadow: 0 0 0 1px rgba(255,255,255,.05) inset, 0 6px 16px rgba(34,197,94,.25); }
+    .app-splash .title { font-family: "Inter", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto; font-weight: 800; letter-spacing:.3px; font-size:18px; background: linear-gradient(100deg, #f3f4f6 20%, #22c55e 35%, #f3f4f6 60%); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shimmer 2.8s ease-in-out infinite; }
     .app-splash .sub { margin-top:6px; opacity:.8; font-size:12px; letter-spacing:.2px; text-align:left; }
     .app-splash .decor { position:absolute; inset:0; pointer-events:none; }
     .app-splash .ring { position:absolute; left:50%; top:50%; width:220px; height:220px; margin:-110px 0 0 -110px; border-radius:50%; border:1.5px solid rgba(255,255,255,.12); transform: scale(0.9); opacity:.6; animation: pulse 2.4s ease-in-out infinite; }
     .app-splash .ring.r2 { width:300px; height:300px; margin:-150px 0 0 -150px; opacity:.35; animation-delay: .6s; }
     .app-splash .glow { position:absolute; left:50%; top:50%; width:180px; height:180px; margin:-90px 0 0 -90px; filter: blur(30px); background: radial-gradient(circle, rgba(34,197,94,.35), rgba(34,197,94,0) 60%); }
     .app-splash .particle { position:absolute; left:50%; top:50%; width:8px; height:8px; margin:-4px 0 0 -4px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 0 1px rgba(255,255,255,.25) inset, 0 8px 18px rgba(34,197,94,.35); opacity: 0; }
+    .app-splash .shine { position:absolute; inset:-40%; background: linear-gradient(100deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.14) 12%, rgba(255,255,255,0) 28%); transform: translateX(-60%); pointer-events: none; mix-blend-mode: screen; opacity: 0; }
+    .app-splash .orb { position:absolute; left:50%; top:50%; width:6px; height:6px; margin:-3px 0 0 -3px; border-radius:50%; background:#22c55e; box-shadow: 0 0 0 1px rgba(255,255,255,.25) inset, 0 6px 14px rgba(34,197,94,.4); opacity:.85; transform: rotate(var(--a,0deg)) translateX(var(--d,120px)) rotate(calc(-1 * var(--a,0deg))); animation: orbit var(--t,12s) linear infinite; }
+    .splash-skip { position:absolute; right:18px; bottom:18px; padding:6px 10px; font-size:12px; color:#cbd5e1; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 999px; backdrop-filter: blur(6px); cursor: pointer; transition: all .2s ease; }
+    .splash-skip:hover { color:#ffffff; border-color: rgba(255,255,255,.25); background: rgba(255,255,255,.10); }
     @keyframes spin { to { transform: rotate(360deg); } }
     @keyframes rise { from { opacity:0; transform: translateY(12px) scale(.98); } to { opacity:1; transform: translateY(0) scale(1); } }
     @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
     @keyframes pulse { 0% { transform: scale(.85); opacity:.0; } 50% { opacity:.5; } 100% { transform: scale(1.1); opacity:0; } }
-    @media (prefers-reduced-motion: reduce) { .app-splash .box { animation: none; } .app-splash .spinner { animation-duration: 1.6s; } .app-splash .title { animation: none; } .app-splash .ring { animation: none; opacity:.15; } }
+    @keyframes orbit { to { transform: rotate(calc(var(--a,0deg) + 360deg)) translateX(var(--d,120px)) rotate(calc(-1 * (var(--a,0deg) + 360deg))); } }
+    @media (prefers-reduced-motion: reduce) { .app-splash .box { animation: none; } .app-splash .title { animation: none; } .app-splash .ring { animation: none; opacity:.15; } .app-splash .orb { animation: none; } }
   </style>
   </head>
   <body class="antialiased bg-white text-gray-900 dark:bg-secondary-950 dark:text-secondary-100">
@@ -174,6 +179,11 @@
       <span class="particle p6"></span>
       <span class="particle p7"></span>
       <span class="particle p8"></span>
+      <!-- Orbiting dots -->
+      <span class="orb o1" style="--d:120px; --t:14s; --a:10deg;"></span>
+      <span class="orb o2" style="--d:150px; --t:16s; --a:60deg;"></span>
+      <span class="orb o3" style="--d:180px; --t:18s; --a:120deg;"></span>
+      <span class="orb o4" style="--d:210px; --t:20s; --a:180deg;"></span>
     </div>
     <div class="box">
       <div class="logo-wrap">
@@ -186,7 +196,9 @@
         <div class="title">Taliyo Technologies</div>
         <div class="sub">Crafting your experience…</div>
       </div>
+      <span class="shine" aria-hidden="true"></span>
     </div>
+    <button id="splash-skip" class="splash-skip" type="button" aria-label="Skip intro">Skip</button>
   </div>
   <noscript><style>#app-splash{display:none!important}</style></noscript>
   <div id="root"></div>
@@ -200,9 +212,10 @@
       }
       if (!window.gsap) { setTimeout(dispatchDone, 1000); return; }
       var tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+      window.__splash_tl = tl;
       // Core elements
       tl.fromTo('.app-splash .glow', { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.55 }, 0)
-        .from('.app-splash .box', { scale: 0.98, filter: 'blur(2px)', duration: 0.5 }, 0)
+        .from('.app-splash .box', { scale: 0.985, filter: 'blur(2px)', duration: 0.5 }, 0)
         .from('.app-splash .logo', { y: 18, opacity: 0, rotate: -8, duration: 0.6 }, 0.05)
         .from('.app-splash .title', { y: 16, opacity: 0, duration: 0.55 }, 0.2)
         .from('.app-splash .sub', { y: 12, opacity: 0, duration: 0.45 }, 0.35)
@@ -211,6 +224,9 @@
         .fromTo('.app-splash .ring.r2', { scale: 0.85, opacity: 0 }, { scale: 1.05, opacity: 0.35, duration: 0.95 }, 0.1)
         .to('.app-splash .ring.r1', { opacity: 0.25, duration: 0.5 }, 0.85)
         .to('.app-splash .ring.r2', { opacity: 0.15, duration: 0.5 }, 0.85)
+        // Shine sweep and orbiting dots entrance
+        .fromTo('.app-splash .shine', { x: '-60%', opacity: 0 }, { x: '40%', opacity: 0.8, duration: 0.7 }, 0.18)
+        .fromTo('.app-splash .orb', { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4, stagger: 0.06, ease: 'back.out(2)' }, 0.22)
 
       // Particles burst
       var nodes = document.querySelectorAll('.app-splash .particle');
@@ -226,8 +242,18 @@
       }
 
       // Radial reveal of page
-      tl.to('#app-splash', { clipPath: 'circle(0% at 50% 50%)', webkitClipPath: 'circle(0% at 50% 50%)', duration: 0.6, ease: 'power4.in' }, ">-0.05")
+      tl.to('#app-splash', { clipPath: 'circle(0% at 50% 50%)', webkitClipPath: 'circle(0% at 50% 50%)', duration: 0.55, ease: 'power4.in' }, ">-0.05")
         .add(function(){ dispatchDone() }, "+=0.05");
+
+      // Skip button logic
+      var skipBtn = document.getElementById('splash-skip');
+      if (skipBtn) {
+        skipBtn.addEventListener('click', function(ev){
+          ev.preventDefault();
+          try { if (window.__splash_tl) window.__splash_tl.kill(); } catch(e) {}
+          gsap.to('#app-splash', { clipPath: 'circle(0% at 50% 50%)', webkitClipPath: 'circle(0% at 50% 50%)', duration: 0.35, ease: 'power4.in', onComplete: dispatchDone });
+        });
+      }
     })();
   </script>
   <script>
