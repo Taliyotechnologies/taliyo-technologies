@@ -123,6 +123,57 @@ const stats = [
   { number: '99%', label: 'Client Satisfaction', icon: Star },
 ]
 
+const aboutTestimonials = [
+  {
+    name: "Amit Sharma",
+    company: "FinEdge Solutions",
+    role: "CEO",
+    quote: "Taliyo Technologies delivered our project on time with exceptional quality. Their team is highly professional and responsive. The website they built increased our conversions by 150%!",
+    photo: "https://randomuser.me/api/portraits/men/32.jpg",
+    rating: 5
+  },
+  {
+    name: "Priya Verma",
+    company: "Verma Designs",
+    role: "Founder",
+    quote: "The best web development partner we've worked with. Creative, reliable, and always ahead of the curve. They transformed our vision into a stunning digital experience.",
+    photo: "https://randomuser.me/api/portraits/women/44.jpg",
+    rating: 5
+  },
+  {
+    name: "John Lee",
+    company: "TechNova Inc.",
+    role: "Marketing Director",
+    quote: "Their digital marketing strategies helped us grow our business online. We saw a 200% increase in organic traffic within 6 months. Highly recommended!",
+    photo: "https://randomuser.me/api/portraits/men/65.jpg",
+    rating: 5
+  },
+  {
+    name: "Sara Ali",
+    company: "Ali Ventures",
+    role: "Product Manager",
+    quote: "Amazing UI/UX design and seamless app delivery. We loved working with Taliyo! Their attention to detail and user experience expertise is outstanding.",
+    photo: "https://randomuser.me/api/portraits/women/68.jpg",
+    rating: 5
+  },
+  {
+    name: "Rohit Singh",
+    company: "Singh Logistics",
+    role: "Operations Head",
+    quote: "Great support and communication throughout the project. Will definitely hire again. They understood our business needs perfectly and delivered beyond expectations.",
+    photo: "https://randomuser.me/api/portraits/men/77.jpg",
+    rating: 5
+  },
+  {
+    name: "Anjali Patel",
+    company: "Patel Enterprises",
+    role: "Founder & CEO",
+    quote: "Taliyo's team is incredibly talented and professional. They helped us build a comprehensive digital presence that drives real business results. Exceptional service!",
+    photo: "https://randomuser.me/api/portraits/women/89.jpg",
+    rating: 5
+  }
+]
+
 const About = () => (
   <>
     <Helmet>
@@ -378,6 +429,45 @@ const About = () => (
       </div>
     </section>
 
+    {/* Testimonials Section */}
+    <section className="py-20 bg-gray-900" aria-label="Client Testimonials">
+      <div className="container mx-auto px-4">
+        <motion.h2
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
+          className="text-3xl md:text-4xl font-bold text-white mb-12 text-center"
+        >
+          What Our Clients Say
+        </motion.h2>
+        <div className="relative overflow-hidden">
+          <div className="testimonials-marquee flex gap-8">
+            {[...aboutTestimonials, ...aboutTestimonials].map((testimonial, idx) => (
+              <div
+                key={idx}
+                className="min-w-[320px] max-w-xs bg-gray-900 border border-gray-800 rounded-2xl p-6 flex flex-col items-center shadow-lg mx-2"
+                aria-hidden={idx >= aboutTestimonials.length}
+                aria-label={`Testimonial from ${testimonial.name}`}
+              >
+                <img
+                  src={testimonial.photo}
+                  alt={`Photo of ${testimonial.name}`}
+                  className="w-16 h-16 rounded-full mb-4 object-cover border-2 border-blue-500 shadow"
+                  loading="lazy"
+                />
+                <p className="text-gray-200 text-base mb-4 text-center">"{testimonial.quote}"</p>
+                <div className="text-sm text-gray-400 font-semibold text-center">
+                  {testimonial.name}
+                  <span className="block text-xs text-blue-400 font-normal">{testimonial.company}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+
     {/* Contact Info Section */}
     <section className="py-16 bg-gray-950">
       <div className="container mx-auto px-4">
@@ -426,103 +516,6 @@ const About = () => (
             <p className="text-gray-300">Delhi, India</p>
             <p className="text-gray-400 text-sm">Main Office</p>
           </motion.div>
-        </div>
-      </div>
-    </section>
-
-    {/* Testimonials Section */}
-    <section className="py-20 bg-gray-900" aria-label="Client Testimonials">
-      <div className="container mx-auto px-4">
-        <motion.h2
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="text-3xl md:text-4xl font-bold text-white mb-12 text-center"
-        >
-          What Our Clients Say
-        </motion.h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {[
-            {
-              name: "Amit Sharma",
-              company: "FinEdge Solutions",
-              role: "CEO",
-              quote: "Taliyo Technologies delivered our project on time with exceptional quality. Their team is highly professional and responsive. The website they built increased our conversions by 150%!",
-              photo: "https://randomuser.me/api/portraits/men/32.jpg",
-              rating: 5
-            },
-            {
-              name: "Priya Verma",
-              company: "Verma Designs",
-              role: "Founder",
-              quote: "The best web development partner we've worked with. Creative, reliable, and always ahead of the curve. They transformed our vision into a stunning digital experience.",
-              photo: "https://randomuser.me/api/portraits/women/44.jpg",
-              rating: 5
-            },
-            {
-              name: "John Lee",
-              company: "TechNova Inc.",
-              role: "Marketing Director",
-              quote: "Their digital marketing strategies helped us grow our business online. We saw a 200% increase in organic traffic within 6 months. Highly recommended!",
-              photo: "https://randomuser.me/api/portraits/men/65.jpg",
-              rating: 5
-            },
-            {
-              name: "Sara Ali",
-              company: "Ali Ventures",
-              role: "Product Manager",
-              quote: "Amazing UI/UX design and seamless app delivery. We loved working with Taliyo! Their attention to detail and user experience expertise is outstanding.",
-              photo: "https://randomuser.me/api/portraits/women/68.jpg",
-              rating: 5
-            },
-            {
-              name: "Rohit Singh",
-              company: "Singh Logistics",
-              role: "Operations Head",
-              quote: "Great support and communication throughout the project. Will definitely hire again. They understood our business needs perfectly and delivered beyond expectations.",
-              photo: "https://randomuser.me/api/portraits/men/77.jpg",
-              rating: 5
-            },
-            {
-              name: "Anjali Patel",
-              company: "Patel Enterprises",
-              role: "Founder & CEO",
-              quote: "Taliyo's team is incredibly talented and professional. They helped us build a comprehensive digital presence that drives real business results. Exceptional service!",
-              photo: "https://randomuser.me/api/portraits/women/89.jpg",
-              rating: 5
-            }
-          ].map((testimonial, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: idx * 0.1 }}
-              viewport={{ once: true }}
-              className="bg-gray-800/70 rounded-2xl p-6 shadow-lg border border-blue-500/10 hover:border-blue-500/30 transition-all"
-              aria-label={`Testimonial from ${testimonial.name}`}
-            >
-              <div className="flex items-center mb-4">
-                <img
-                  src={testimonial.photo}
-                  alt={`Photo of ${testimonial.name}`}
-                  className="w-16 h-16 rounded-full object-cover border-2 border-blue-500 shadow mr-4"
-                  loading="lazy"
-                />
-                <div>
-                  <div className="text-lg font-semibold text-white">{testimonial.name}</div>
-                  <div className="text-blue-400 text-sm">{testimonial.role}</div>
-                  <div className="text-gray-400 text-xs">{testimonial.company}</div>
-                </div>
-              </div>
-              <div className="flex items-center mb-3">
-                {[...Array(testimonial.rating)].map((_, i) => (
-                  <Star key={i} className="text-yellow-400" size={16} fill="currentColor" />
-                ))}
-              </div>
-              <p className="text-gray-200 text-sm leading-relaxed">"{testimonial.quote}"</p>
-            </motion.div>
-          ))}
         </div>
       </div>
     </section>
