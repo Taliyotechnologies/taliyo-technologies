@@ -7,6 +7,9 @@ const nodemailer = require('nodemailer');
 const http = require('http');
 const { Server: SocketIOServer } = require('socket.io');
 const jwt = require('jsonwebtoken');
+const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
 
 // Debug environment variables
 console.log('🔍 Environment check at startup:');
@@ -49,6 +52,13 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
+
+// Static uploads directory for images
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+app.use('/uploads', express.static(uploadDir));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -223,6 +233,47 @@ const authMiddleware = (req, res, next) => {
     return res.status(401).json({ message: 'Invalid or expired token' });
   }
 };
+
+// Multer configuration for image uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    const base = path
+      .basename(file.originalname, ext)
+      .replace(/[^a-z0-9-_]/gi, '')
+      .toLowerCase()
+      .slice(0, 50) || 'image';
+    cb(null, `${Date.now()}-${base}${ext}`);
+  }
+});
+
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype && file.mimetype.startsWith('image/')) return cb(null, true);
+  return cb(new Error('Only image files are allowed'));
+};
+
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB
+});
+
+// Protected image upload endpoint
+app.post('/api/admin/upload', authMiddleware, (req, res) => {
+  upload.single('image')(req, res, function(err) {
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({ success: false, message: err.message });
+    } else if (err) {
+      return res.status(400).json({ success: false, message: err.message });
+    }
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    return res.json({ success: true, url: fileUrl, filename: req.file.filename });
+  });
+});
 
 app.post('/api/auth/login', async (req, res) => {
   try {
