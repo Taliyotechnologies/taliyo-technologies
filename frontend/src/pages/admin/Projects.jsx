@@ -157,14 +157,14 @@ const Projects = () => {
         <meta name="description" content="Manage your projects and track progress" />
       </Helmet>
       
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         {/* Header */}
-        <div className="bg-white shadow-sm border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-6">
+        <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Project Management</h1>
-                <p className="text-gray-600 mt-1">Track and manage all your projects</p>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Projects</h1>
+                <p className="text-gray-600 dark:text-gray-300 mt-1">Manage your projects and track their progress</p>
               </div>
               <button
                 onClick={() => setShowAddModal(true)}
@@ -177,54 +177,55 @@ const Projects = () => {
           </div>
         </div>
 
+        {/* Main content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
               <div className="flex items-center">
                 <div className="bg-blue-500 p-3 rounded-lg">
                   <FileText className="w-6 h-6 text-white" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Projects</p>
-                  <p className="text-2xl font-bold text-gray-900">{projects.length}</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Projects</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{projects.length}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
               <div className="flex items-center">
                 <div className="bg-green-500 p-3 rounded-lg">
                   <CheckCircle className="w-6 h-6 text-white" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Completed</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Completed</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
                     {projects.filter(p => p.status === 'completed').length}
                   </p>
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
               <div className="flex items-center">
                 <div className="bg-blue-500 p-3 rounded-lg">
                   <Play className="w-6 h-6 text-white" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">In Progress</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">In Progress</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
                     {projects.filter(p => p.status === 'in-progress').length}
                   </p>
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
               <div className="flex items-center">
                 <div className="bg-orange-500 p-3 rounded-lg">
                   <DollarSign className="w-6 h-6 text-white" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Budget</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Budget</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
                     ${projects.reduce((sum, p) => sum + parseInt(p.budget.replace('$', '').replace(',', '')), 0).toLocaleString()}
                   </p>
                 </div>
@@ -233,7 +234,7 @@ const Projects = () => {
           </div>
 
           {/* Filters */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8 border border-gray-200 dark:border-gray-700">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1">
                 <div className="relative">
@@ -269,11 +270,14 @@ const Projects = () => {
           {/* Projects Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProjects.map((project) => (
-              <div key={project.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+              <div 
+                key={project.id} 
+                className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden hover:shadow-md transition-all border border-gray-200 dark:border-gray-700"
+              >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 mb-1">{project.title}</h3>
-                    <p className="text-sm text-gray-600">{project.client}</p>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{project.title}</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{project.client}</p>
                   </div>
                   <div className="flex items-center space-x-2">
                     <button className="text-blue-600 hover:text-blue-900">
@@ -288,17 +292,21 @@ const Projects = () => {
                   </div>
                 </div>
 
-                <p className="text-sm text-gray-600 mb-4">{project.description}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">{project.description}</p>
 
                 {/* Progress Bar */}
                 <div className="mb-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-600">Progress</span>
-                    <span className="text-sm font-medium text-gray-900">{project.progress}%</span>
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Progress</span>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">{project.progress}%</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div 
+                      className={`h-full rounded-full ${
+                        project.status === 'completed' ? 'bg-green-500' : 
+                        project.status === 'on-hold' ? 'bg-yellow-500' : 
+                        project.status === 'pending' ? 'bg-orange-500' : 'bg-blue-500'
+                      }`}
                       style={{ width: `${project.progress}%` }}
                     ></div>
                   </div>
@@ -308,11 +316,20 @@ const Projects = () => {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-2">
                     {getStatusIcon(project.status)}
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>
-                      {project.status}
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      project.status === 'completed' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' :
+                      project.status === 'in-progress' ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' :
+                      project.status === 'on-hold' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' :
+                      'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+                    }`}>
+                      {project.status.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
                     </span>
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(project.priority)}`}>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    project.priority === 'high' ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' :
+                    project.priority === 'medium' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200' :
+                    'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+                  }`}>
                     {project.priority} priority
                   </span>
                 </div>

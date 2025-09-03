@@ -71,12 +71,24 @@ const AdminLayout = () => {
     }
   ];
 
+  // Ensure dark mode class is applied to body when in dark mode
+  useEffect(() => {
+    if (isDark) {
+      document.body.classList.add('dark');
+    } else {
+      document.body.classList.remove('dark');
+    }
+    return () => {
+      document.body.classList.remove('dark');
+    };
+  }, [isDark]);
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
       {/* Mobile sidebar */}
       <div className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
         <div className="fixed inset-0 bg-gray-600 bg-opacity-75 dark:bg-black/60" onClick={() => setSidebarOpen(false)} />
-        <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-white dark:bg-gray-900">
+        <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
           <div className="flex h-16 items-center justify-between px-4">
             <div className="flex items-center">
               <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
@@ -91,7 +103,7 @@ const AdminLayout = () => {
               <X className="w-6 h-6" />
             </button>
           </div>
-          <nav className="flex-1 px-4 py-4 space-y-1">
+          <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
             {navigation.map((item) => (
               <Link
                 key={item.name}
@@ -121,7 +133,7 @@ const AdminLayout = () => {
               <span className="ml-2 text-lg font-semibold text-gray-900 dark:text-gray-100">Taliyo Admin</span>
             </div>
           </div>
-          <nav className="flex-1 px-4 py-4 space-y-1">
+          <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
             {navigation.map((item) => (
               <Link
                 key={item.name}
@@ -141,9 +153,9 @@ const AdminLayout = () => {
       </div>
 
       {/* Main content */}
-      <div className="lg:pl-64">
+      <div className="lg:pl-64 bg-gray-50 dark:bg-gray-900 min-h-screen">
         {/* Top header */}
-        <div className="sticky top-0 z-40 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800 transition-colors duration-200">
+        <div className="sticky top-0 z-40 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
           <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
             <div className="flex items-center">
               <button
@@ -221,7 +233,7 @@ const AdminLayout = () => {
         </div>
 
         {/* Page content */}
-        <main className="flex-1 bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+        <main className="flex-1 bg-white dark:bg-gray-800 transition-colors duration-200 p-6 rounded-lg m-4 shadow-sm">
           <Outlet />
         </main>
       </div>

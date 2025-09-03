@@ -124,14 +124,14 @@ const TeamManagement = () => {
         <meta name="description" content="Manage your team members" />
       </Helmet>
       
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         {/* Header */}
-        <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Team Management</h1>
-                <p className="text-gray-600 mt-1">Manage your team members and their roles</p>
+                <h2 className="text-xl font-semibold text-gray-800 dark:text-white">Team Members</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Manage your team members and their roles</p>
               </div>
               <button
                 onClick={() => setShowAddModal(true)}
@@ -147,54 +147,54 @@ const TeamManagement = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
               <div className="flex items-center">
                 <div className="bg-blue-500 p-3 rounded-lg">
                   <Users className="w-6 h-6 text-white" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Members</p>
-                  <p className="text-2xl font-bold text-gray-900">{teamMembers.length}</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Members</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{teamMembers.length}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
               <div className="flex items-center">
                 <div className="bg-green-500 p-3 rounded-lg">
                   <Users className="w-6 h-6 text-white" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Active Members</p>
-                  <p className="text-2xl font-bold text-gray-900">{teamMembers.filter(m => m.status === 'active').length}</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Members</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{teamMembers.filter(m => m.status === 'active').length}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
               <div className="flex items-center">
                 <div className="bg-purple-500 p-3 rounded-lg">
                   <Users className="w-6 h-6 text-white" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Roles</p>
-                  <p className="text-2xl font-bold text-gray-900">{roles.length}</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Roles</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{roles.length}</p>
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
               <div className="flex items-center">
                 <div className="bg-orange-500 p-3 rounded-lg">
                   <Users className="w-6 h-6 text-white" />
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Projects</p>
-                  <p className="text-2xl font-bold text-gray-900">{teamMembers.reduce((sum, member) => sum + member.projects, 0)}</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Projects</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">{teamMembers.reduce((sum, member) => sum + member.projects, 0)}</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Filters */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700 mb-8">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1">
                 <div className="relative">
@@ -208,8 +208,8 @@ const TeamManagement = () => {
                   />
                 </div>
               </div>
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
+                <div className="relative w-full sm:max-w-md">
                   <Filter className="w-5 h-5 text-gray-400" />
                   <select
                     value={filterRole}
@@ -229,15 +229,15 @@ const TeamManagement = () => {
           {/* Team Members Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredMembers.map((member) => (
-              <div key={member.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+              <div key={member.id} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center space-x-3">
                     <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
                       <span className="text-white font-semibold">{member.avatar}</span>
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">{member.name}</h3>
-                      <p className="text-sm text-gray-600">{member.role}</p>
+                      <h3 className="font-semibold text-gray-900 dark:text-white">{member.name}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{member.role}</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -253,42 +253,42 @@ const TeamManagement = () => {
                 <div className="space-y-3">
                   <div className="flex items-center space-x-2">
                     <Mail className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">{member.email}</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">{member.email}</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Phone className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">{member.phone}</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">{member.phone}</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <MapPin className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">{member.location}</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">{member.location}</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Calendar className="w-4 h-4 text-gray-400" />
-                    <span className="text-sm text-gray-600">Joined {member.joinDate}</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Joined {member.joinDate}</span>
                   </div>
                 </div>
 
-                <div className="mt-4 pt-4 border-t border-gray-100">
+                <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-600">Projects</span>
-                    <span className="text-sm font-semibold text-gray-900">{member.projects}</span>
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Projects</span>
+                    <span className="text-sm font-semibold text-gray-900 dark:text-white">{member.projects}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-600">Status</span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(member.status)}`}>
-                      {member.status}
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Status</span>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${member.status === 'active' ? 'bg-green-500 text-green-800' : 'bg-red-500 text-red-800'}`}>
+                      {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
                     </span>
                   </div>
                 </div>
 
-                <div className="mt-4 pt-4 border-t border-gray-100">
-                  <p className="text-sm font-medium text-gray-600 mb-2">Skills</p>
+                <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">Skills</p>
                   <div className="flex flex-wrap gap-1">
                     {member.skills.map((skill, index) => (
                       <span
                         key={index}
-                        className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                        className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-full"
                       >
                         {skill}
                       </span>
@@ -303,11 +303,23 @@ const TeamManagement = () => {
         {/* Add Member Modal */}
         {showAddModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Add New Team Member</h3>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mt-6 border border-gray-200 dark:border-gray-700">
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">Add New Team Member</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Fill in the details to add a new team member</p>
+                </div>
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Add Member
+                </button>
+              </div>
               <form className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
                   <input
                     type="text"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -315,7 +327,7 @@ const TeamManagement = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Role</label>
                   <select className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     {roles.map(role => (
                       <option key={role} value={role}>{role}</option>
