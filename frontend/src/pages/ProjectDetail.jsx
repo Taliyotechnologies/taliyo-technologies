@@ -1,101 +1,119 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Calendar, Users, Globe, Code, CheckCircle, TrendingUp, Clock, Award } from 'lucide-react';
+import { ArrowLeft, Calendar, Users, Globe, Code, CheckCircle, TrendingUp } from 'lucide-react';
 
 const ProjectDetail = () => {
   const { slug } = useParams();
+  const [project, setProject] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [relatedProjects, setRelatedProjects] = useState([]);
 
-  // Mock project data - in real app, this would come from API
-  const project = {
-    title: "E-Commerce Platform for Fashion Retailer",
-    client: "StyleHub India",
-    category: "Web Development",
-    duration: "3 months",
-    team: "5 developers",
-    liveUrl: "https://stylehub-india.com",
-    githubUrl: "https://github.com/taliyo/stylehub",
-    image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&h=500&fit=crop",
-    overview: "A comprehensive e-commerce platform built for a leading fashion retailer in India. The platform handles thousands of daily transactions and provides a seamless shopping experience across all devices.",
-    challenge: "The client needed a scalable e-commerce solution that could handle high traffic during sales events, integrate with multiple payment gateways, and provide real-time inventory management.",
-    solution: "We built a modern, responsive e-commerce platform using React, Node.js, and MongoDB. The solution includes advanced features like real-time inventory tracking, multiple payment gateways, and comprehensive analytics.",
-    technologies: ["React", "Node.js", "MongoDB", "Express", "Stripe", "AWS", "Docker", "Redis"],
-    features: [
-      "Responsive design for all devices",
-      "Advanced product filtering and search",
-      "Real-time inventory management",
-      "Multiple payment gateways",
-      "Order tracking and notifications",
-      "Advanced analytics dashboard",
-      "SEO optimized product pages",
-      "Mobile app integration"
-    ],
-    results: [
-      "300% increase in online sales",
-      "50% reduction in cart abandonment",
-      "99.9% uptime during peak traffic",
-      "4.8/5 customer satisfaction rating"
-    ],
-    process: [
-      {
-        phase: "Discovery & Planning",
-        description: "Analyzed business requirements, user personas, and technical constraints.",
-        duration: "2 weeks"
-      },
-      {
-        phase: "Design & Prototyping",
-        description: "Created wireframes, UI/UX designs, and interactive prototypes.",
-        duration: "3 weeks"
-      },
-      {
-        phase: "Development",
-        description: "Built the platform using modern technologies and best practices.",
-        duration: "8 weeks"
-      },
-      {
-        phase: "Testing & QA",
-        description: "Comprehensive testing including performance, security, and user acceptance.",
-        duration: "2 weeks"
-      },
-      {
-        phase: "Deployment & Launch",
-        description: "Deployed to production with monitoring and support setup.",
-        duration: "1 week"
+  useEffect(() => {
+    let isCancelled = false;
+    const fetchProject = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+        const res = await fetch(`${baseUrl}/api/projects/${slug}`);
+        if (!res.ok) {
+          let msg = `Failed to load project (${res.status})`;
+          try {
+            const err = await res.json();
+            if (err?.message) msg = err.message;
+          } catch (e) {}
+          throw new Error(msg);
+        }
+        const data = await res.json();
+        if (!isCancelled) setProject(data);
+      } catch (e) {
+        if (!isCancelled) setError(e?.message || 'Failed to load project');
+      } finally {
+        if (!isCancelled) setLoading(false);
       }
-    ],
-    gallery: [
-      "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=300&fit=crop",
-      "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=300&fit=crop",
-      "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=300&fit=crop"
-    ]
-  };
+    };
+    fetchProject();
+    return () => { isCancelled = true; };
+  }, [slug]);
 
-  const relatedProjects = [
-    {
-      title: "Healthcare Management System",
-      category: "Web Development",
-      image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400&h=250&fit=crop",
-      slug: "healthcare-management"
-    },
-    {
-      title: "Food Delivery App",
-      category: "App Development",
-      image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=250&fit=crop",
-      slug: "food-delivery-app"
-    },
-    {
-      title: "Real Estate Portal",
-      category: "Web Development",
-      image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&h=250&fit=crop",
-      slug: "real-estate-portal"
-    }
-  ];
+  useEffect(() => {
+    const baseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+    const loadRelated = async () => {
+      if (!project?.category) { setRelatedProjects([]); return; }
+      try {
+        const params = new URLSearchParams({ category: project.category, limit: '6' });
+        const res = await fetch(`${baseUrl}/api/projects?${params.toString()}`);
+        if (!res.ok) { setRelatedProjects([]); return; }
+        const list = await res.json();
+        const items = Array.isArray(list?.items) ? list.items : [];
+        const filtered = items.filter(p => p.slug !== project.slug).slice(0, 3);
+        setRelatedProjects(filtered);
+      } catch {
+        setRelatedProjects([]);
+      }
+    };
+    loadRelated();
+  }, [project?.category, project?.slug]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
+        <Helmet>
+          <title>Loading project... | Taliyo Technologies Portfolio</title>
+        </Helmet>
+        <p className="text-gray-400">Loading project...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-950 text-white">
+        <Helmet>
+          <title>Project - Error | Taliyo Technologies Portfolio</title>
+          <meta name="description" content="Error loading project" />
+        </Helmet>
+        <section className="py-20">
+          <div className="container mx-auto px-4 text-center">
+            <Link to="/projects" className="inline-flex items-center text-blue-400 hover:text-blue-300 mb-8 transition-colors">
+              <ArrowLeft size={20} className="mr-2" />
+              Back to Projects
+            </Link>
+            <h1 className="text-3xl font-bold mb-4">Unable to load project</h1>
+            <p className="text-gray-400">{error}</p>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  if (!project) {
+    return (
+      <div className="min-h-screen bg-gray-950 text-white">
+        <Helmet>
+          <title>Project Not Found | Taliyo Technologies Portfolio</title>
+        </Helmet>
+        <section className="py-20">
+          <div className="container mx-auto px-4 text-center">
+            <Link to="/projects" className="inline-flex items-center text-blue-400 hover:text-blue-300 mb-8 transition-colors">
+              <ArrowLeft size={20} className="mr-2" />
+              Back to Projects
+            </Link>
+            <h1 className="text-3xl font-bold mb-4">Project not found</h1>
+            <p className="text-gray-400">The project you're looking for doesn't exist.</p>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
       <Helmet>
         <title>{project.title} | Taliyo Technologies Portfolio</title>
-        <meta name="description" content={project.overview} />
+        <meta name="description" content={project.overview || project.description || ''} />
       </Helmet>
 
       {/* Hero Section */}
@@ -112,11 +130,11 @@ const ProjectDetail = () => {
                 <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full">{project.category}</span>
                 <div className="flex items-center gap-2 text-gray-400">
                   <Calendar size={16} />
-                  {project.duration}
+                  {project.duration || '—'}
                 </div>
                 <div className="flex items-center gap-2 text-gray-400">
                   <Users size={16} />
-                  {project.team}
+                  {Array.isArray(project.team) ? `${project.team.length} ${project.team.length === 1 ? 'member' : 'members'}` : (project.team || '—')}
                 </div>
               </div>
               
@@ -125,7 +143,7 @@ const ProjectDetail = () => {
               </h1>
               
               <p className="text-xl text-gray-300 mb-8 leading-relaxed">
-                {project.overview}
+                {project.overview || project.description}
               </p>
               
               <div className="flex flex-wrap gap-4">
@@ -155,11 +173,17 @@ const ProjectDetail = () => {
             </div>
             
             <div>
-              <img 
-                src={project.image} 
-                alt={project.title}
-                className="w-full rounded-2xl shadow-2xl"
-              />
+              {project.image ? (
+                <img 
+                  src={project.image} 
+                  alt={project.title}
+                  className="w-full rounded-2xl shadow-2xl"
+                />
+              ) : (
+                <div className="w-full h-64 bg-gray-800 rounded-2xl flex items-center justify-center">
+                  <span className="text-gray-500">No image available</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -186,7 +210,7 @@ const ProjectDetail = () => {
             <div>
               <h2 className="text-3xl font-bold text-white mb-8">Technologies Used</h2>
               <div className="flex flex-wrap gap-3 mb-8">
-                {project.technologies.map(tech => (
+                {(project.technologies || []).map(tech => (
                   <span key={tech} className="px-4 py-2 bg-gray-800 text-blue-300 rounded-lg font-medium">
                     {tech}
                   </span>
@@ -195,7 +219,7 @@ const ProjectDetail = () => {
               
               <h2 className="text-3xl font-bold text-white mb-8">Key Features</h2>
               <div className="space-y-4">
-                {project.features.map((feature, index) => (
+                {(project.features || []).map((feature, index) => (
                   <div key={index} className="flex items-start gap-3">
                     <CheckCircle className="text-green-400 mt-1 flex-shrink-0" size={20} />
                     <span className="text-gray-300">{feature}</span>
@@ -213,7 +237,7 @@ const ProjectDetail = () => {
           <h2 className="text-3xl font-bold text-white mb-12 text-center">Development Process</h2>
           <div className="max-w-4xl mx-auto">
             <div className="space-y-8">
-              {project.process.map((phase, index) => (
+              {(project.process || []).map((phase, index) => (
                 <div key={index} className="flex items-start gap-6">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
                     {index + 1}
@@ -235,7 +259,7 @@ const ProjectDetail = () => {
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-white mb-12 text-center">Results & Impact</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {project.results.map((result, index) => (
+            {(project.results || []).map((result, index) => (
               <div key={index} className="bg-gray-900 rounded-2xl p-8 text-center border border-blue-500/10">
                 <TrendingUp className="text-blue-400 mx-auto mb-4" size={32} />
                 <p className="text-white text-lg font-semibold">{result}</p>
@@ -250,7 +274,7 @@ const ProjectDetail = () => {
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-white mb-12 text-center">Project Gallery</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {project.gallery.map((image, index) => (
+            {(project.gallery || []).map((image, index) => (
               <img 
                 key={index}
                 src={image} 
@@ -263,32 +287,38 @@ const ProjectDetail = () => {
       </section>
 
       {/* Related Projects */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-white mb-12 text-center">Related Projects</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {relatedProjects.map(relatedProject => (
-              <Link key={relatedProject.slug} to={`/projects/${relatedProject.slug}`} className="group">
-                <div className="bg-gray-800 rounded-2xl overflow-hidden hover:bg-gray-700 transition-colors">
-                  <img 
-                    src={relatedProject.image} 
-                    alt={relatedProject.title}
-                    className="w-full h-48 object-cover group-hover:scale-105 transition-transform"
-                  />
-                  <div className="p-6">
-                    <span className="text-blue-400 text-sm font-medium">{relatedProject.category}</span>
-                    <h3 className="text-xl font-bold text-white mt-2 group-hover:text-blue-400 transition-colors">
-                      {relatedProject.title}
-                    </h3>
+      {relatedProjects.length > 0 && (
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold text-white mb-12 text-center">Related Projects</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {relatedProjects.map(relatedProject => (
+                <Link key={relatedProject.slug} to={`/projects/${relatedProject.slug}`} className="group">
+                  <div className="bg-gray-800 rounded-2xl overflow-hidden hover:bg-gray-700 transition-colors">
+                    {relatedProject.image ? (
+                      <img 
+                        src={relatedProject.image} 
+                        alt={relatedProject.title}
+                        className="w-full h-48 object-cover group-hover:scale-105 transition-transform"
+                      />
+                    ) : (
+                      <div className="w-full h-48 bg-gray-700" />
+                    )}
+                    <div className="p-6">
+                      <span className="text-blue-400 text-sm font-medium">{relatedProject.category || 'Project'}</span>
+                      <h3 className="text-xl font-bold text-white mt-2 group-hover:text-blue-400 transition-colors">
+                        {relatedProject.title}
+                      </h3>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </div>
   );
 };
 
-export default ProjectDetail; 
+export default ProjectDetail;

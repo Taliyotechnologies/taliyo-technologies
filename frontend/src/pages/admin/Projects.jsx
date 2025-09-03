@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { useNavigate, Link } from 'react-router-dom';
 import { 
   FileText, 
   Plus, 
@@ -19,83 +20,109 @@ import {
   Filter
 } from 'lucide-react';
 
+const API = import.meta.env.VITE_API_URL || 'https://taliyo-backend.onrender.com';
+
 const Projects = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [newProject, setNewProject] = useState({
+    title: '',
+    client: '',
+    description: '',
+    startDate: '',
+    endDate: '',
+    budget: '',
+    status: 'planning',
+    priority: 'medium'
+  });
+  const navigate = useNavigate();
 
-  const projects = [
-    {
-      id: 1,
-      title: 'E-commerce Website',
-      client: 'ABC Company',
-      description: 'Modern e-commerce platform with payment integration',
-      status: 'in-progress',
-      progress: 75,
-      startDate: '2024-01-15',
-      endDate: '2024-03-15',
-      budget: '$15,000',
-      team: ['John Doe', 'Sarah Wilson'],
-      technologies: ['React', 'Node.js', 'MongoDB'],
-      priority: 'high'
-    },
-    {
-      id: 2,
-      title: 'Mobile App Development',
-      client: 'XYZ Corporation',
-      description: 'Cross-platform mobile application for iOS and Android',
-      status: 'completed',
-      progress: 100,
-      startDate: '2023-11-01',
-      endDate: '2024-01-30',
-      budget: '$25,000',
-      team: ['Mike Johnson', 'David Lee'],
-      technologies: ['React Native', 'Firebase'],
-      priority: 'medium'
-    },
-    {
-      id: 3,
-      title: 'SEO Optimization',
-      client: 'Tech Solutions',
-      description: 'Complete SEO overhaul and optimization',
-      status: 'planning',
-      progress: 25,
-      startDate: '2024-02-01',
-      endDate: '2024-04-01',
-      budget: '$8,000',
-      team: ['Emily Brown'],
-      technologies: ['SEO', 'Google Analytics'],
-      priority: 'low'
-    },
-    {
-      id: 4,
-      title: 'Corporate Website',
-      client: 'Global Industries',
-      description: 'Professional corporate website with CMS',
-      status: 'on-hold',
-      progress: 50,
-      startDate: '2024-01-01',
-      endDate: '2024-02-28',
-      budget: '$12,000',
-      team: ['John Doe', 'Mike Johnson'],
-      technologies: ['WordPress', 'PHP', 'MySQL'],
-      priority: 'medium'
-    },
-    {
-      id: 5,
-      title: 'Digital Marketing Campaign',
-      client: 'Startup Inc',
-      description: 'Comprehensive digital marketing strategy',
-      status: 'in-progress',
-      progress: 60,
-      startDate: '2024-01-20',
-      endDate: '2024-03-20',
-      budget: '$10,000',
-      team: ['Emily Brown', 'David Lee'],
-      technologies: ['Google Ads', 'Social Media'],
-      priority: 'high'
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          navigate('/admin/login', { replace: true });
+          return;
+        }
+        const res = await fetch(`${API}/api/admin/projects`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.status === 401) {
+          navigate('/admin/login', { replace: true });
+          return;
+        }
+        const data = await res.json();
+        if (!res.ok || data.success === false) throw new Error(data.message || 'Failed to load projects');
+        setProjects(Array.isArray(data.items) ? data.items : []);
+      } catch (e) {
+        setError(e.message || 'Something went wrong');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProjects();
+  }, [navigate]);
+
+  const handleAddSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/admin/login', { replace: true });
+        return;
+      }
+      const body = {
+        title: newProject.title,
+        client: newProject.client,
+        description: newProject.description,
+        startDate: newProject.startDate || undefined,
+        endDate: newProject.endDate || undefined,
+        budget: newProject.budget,
+        status: newProject.status,
+        priority: newProject.priority,
+      };
+      const res = await fetch(`${API}/api/admin/projects`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (!res.ok || data.success === false) throw new Error(data.message || 'Failed to add project');
+      setProjects(prev => [data.item, ...prev]);
+      setShowAddModal(false);
+      setNewProject({ title: '', client: '', description: '', startDate: '', endDate: '', budget: '', status: 'planning', priority: 'medium' });
+    } catch (e) {
+      setError(e.message || 'Something went wrong');
     }
-  ];
+  };
+
+  const handleDelete = async (p) => {
+    if (!window.confirm(`Delete project "${p.title}"?`)) return;
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/admin/login', { replace: true });
+        return;
+      }
+      const res = await fetch(`${API}/api/admin/projects/${p._id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.success === false) throw new Error(data.message || 'Failed to delete project');
+      setProjects(prev => prev.filter(x => x._id !== p._id));
+    } catch (e) {
+      setError(e.message || 'Something went wrong');
+    }
+  };
 
   const statuses = ['all', 'planning', 'in-progress', 'on-hold', 'completed'];
   const priorities = ['low', 'medium', 'high'];
@@ -179,6 +206,14 @@ const Projects = () => {
 
         {/* Main content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {error && (
+            <div className="p-3 rounded border border-red-200 bg-red-50 text-red-600 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400 mb-4">
+              {error}
+            </div>
+          )}
+          {loading && (
+            <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">Loading projects...</div>
+          )}
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
@@ -226,7 +261,7 @@ const Projects = () => {
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Budget</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    ${projects.reduce((sum, p) => sum + parseInt(p.budget.replace('$', '').replace(',', '')), 0).toLocaleString()}
+                    ${projects.reduce((sum, p) => sum + (typeof p.budget === 'number' ? p.budget : 0), 0).toLocaleString()}
                   </p>
                 </div>
               </div>
@@ -271,7 +306,7 @@ const Projects = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProjects.map((project) => (
               <div 
-                key={project.id} 
+                key={project._id || project.id} 
                 className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden hover:shadow-md transition-all border border-gray-200 dark:border-gray-700"
               >
                 <div className="flex items-start justify-between mb-4">
@@ -280,14 +315,16 @@ const Projects = () => {
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{project.client}</p>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <button className="text-blue-600 hover:text-blue-900">
+                    <button className="text-blue-600 hover:text-blue-900" title="Edit">
                       <Edit className="w-4 h-4" />
                     </button>
-                    <button className="text-gray-600 hover:text-gray-900">
-                      <Eye className="w-4 h-4" />
-                    </button>
-                    <button className="text-gray-600 hover:text-gray-900">
-                      <MoreVertical className="w-4 h-4" />
+                    {project.slug && (
+                      <Link to={`/projects/${project.slug}`} target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-gray-900" title="View">
+                        <Eye className="w-4 h-4" />
+                      </Link>
+                    )}
+                    <button className="text-red-600 hover:text-red-800" onClick={() => handleDelete(project)} title="Delete">
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -338,17 +375,17 @@ const Projects = () => {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Budget</span>
-                    <span className="text-sm font-medium text-gray-900">{project.budget}</span>
+                    <span className="text-sm font-medium text-gray-900">${typeof project.budget === 'number' ? project.budget.toLocaleString() : 0}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Timeline</span>
                     <span className="text-sm font-medium text-gray-900">
-                      {new Date(project.startDate).toLocaleDateString()} - {new Date(project.endDate).toLocaleDateString()}
+                      {project.startDate ? new Date(project.startDate).toLocaleDateString() : '—'} - {project.endDate ? new Date(project.endDate).toLocaleDateString() : '—'}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Team</span>
-                    <span className="text-sm font-medium text-gray-900">{project.team.length} members</span>
+                    <span className="text-sm font-medium text-gray-900">{Array.isArray(project.team) ? project.team.length : 0} members</span>
                   </div>
                 </div>
 
@@ -356,7 +393,7 @@ const Projects = () => {
                 <div className="mt-4 pt-4 border-t border-gray-100">
                   <p className="text-sm font-medium text-gray-600 mb-2">Technologies</p>
                   <div className="flex flex-wrap gap-1">
-                    {project.technologies.map((tech, index) => (
+                    {(project.technologies || []).map((tech, index) => (
                       <span
                         key={index}
                         className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
@@ -376,13 +413,15 @@ const Projects = () => {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Add New Project</h3>
-              <form className="space-y-4">
+              <form className="space-y-4" onSubmit={handleAddSubmit}>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Project Title</label>
                   <input
                     type="text"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Enter project title"
+                    value={newProject.title}
+                    onChange={(e) => setNewProject(v => ({ ...v, title: e.target.value }))}
                   />
                 </div>
                 <div>
@@ -391,6 +430,8 @@ const Projects = () => {
                     type="text"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Enter client name"
+                    value={newProject.client}
+                    onChange={(e) => setNewProject(v => ({ ...v, client: e.target.value }))}
                   />
                 </div>
                 <div>
@@ -399,6 +440,8 @@ const Projects = () => {
                     rows={3}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="Enter project description"
+                    value={newProject.description}
+                    onChange={(e) => setNewProject(v => ({ ...v, description: e.target.value }))}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -407,6 +450,8 @@ const Projects = () => {
                     <input
                       type="date"
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      value={newProject.startDate}
+                      onChange={(e) => setNewProject(v => ({ ...v, startDate: e.target.value }))}
                     />
                   </div>
                   <div>
@@ -414,6 +459,8 @@ const Projects = () => {
                     <input
                       type="date"
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      value={newProject.endDate}
+                      onChange={(e) => setNewProject(v => ({ ...v, endDate: e.target.value }))}
                     />
                   </div>
                 </div>
@@ -423,12 +470,14 @@ const Projects = () => {
                     type="text"
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="$0"
+                    value={newProject.budget}
+                    onChange={(e) => setNewProject(v => ({ ...v, budget: e.target.value }))}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                    <select className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <select className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" value={newProject.status} onChange={(e) => setNewProject(v => ({ ...v, status: e.target.value }))}>
                       <option value="planning">Planning</option>
                       <option value="in-progress">In Progress</option>
                       <option value="on-hold">On Hold</option>
@@ -437,7 +486,7 @@ const Projects = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
-                    <select className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <select className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" value={newProject.priority} onChange={(e) => setNewProject(v => ({ ...v, priority: e.target.value }))}>
                       <option value="low">Low</option>
                       <option value="medium">Medium</option>
                       <option value="high">High</option>

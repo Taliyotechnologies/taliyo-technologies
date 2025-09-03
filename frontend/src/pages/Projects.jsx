@@ -1,64 +1,38 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Helmet } from 'react-helmet-async'
+import { Link } from 'react-router-dom'
 
-const projects = [
-  {
-    title: 'FinEdge Banking App',
-    image: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=600&q=80',
-    tags: ['Fintech', 'Mobile', 'React Native'],
-    description: 'A secure, scalable mobile banking platform for a leading financial company.',
-    link: '#',
-    year: 2023,
-  },
-  {
-    title: 'Verma Designs Portfolio',
-    image: 'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=600&q=80',
-    tags: ['Web', 'Design', 'Next.js'],
-    description: 'A creative portfolio and e-commerce site for a top design agency.',
-    link: '#',
-    year: 2022,
-  },
-  {
-    title: 'TechNova SaaS Dashboard',
-    image: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=600&q=80',
-    tags: ['SaaS', 'Dashboard', 'React'],
-    description: 'A real-time analytics dashboard for a global SaaS provider.',
-    link: '#',
-    year: 2023,
-  },
-  {
-    title: 'Ali Ventures App',
-    image: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=600&q=80',
-    tags: ['Startup', 'App', 'Flutter'],
-    description: 'A cross-platform app for a fast-growing startup.',
-    link: '#',
-    year: 2021,
-  },
-  {
-    title: 'Singh Logistics Platform',
-    image: 'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=600&q=80',
-    tags: ['Logistics', 'Web', 'Node.js'],
-    description: 'A logistics management platform for a national transport company.',
-    link: '#',
-    year: 2022,
-  },
-  {
-    title: 'Smart Solutions AI',
-    image: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=600&q=80',
-    tags: ['AI', 'Web', 'Python'],
-    description: 'An AI-powered web platform for smart business automation.',
-    link: '#',
-    year: 2023,
-  },
-]
-
-const allTags = Array.from(new Set(projects.flatMap(p => p.tags)))
+const API = import.meta.env.VITE_API_URL || 'https://taliyo-backend.onrender.com'
 
 const Projects = () => {
+  const [projects, setProjects] = useState([])
+  const [allTags, setAllTags] = useState([])
   const [selectedTag, setSelectedTag] = useState('All')
   const [modal, setModal] = useState(null)
-  const filtered = selectedTag === 'All' ? projects : projects.filter(p => p.tags.includes(selectedTag))
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch(`${API}/api/projects?limit=100`)
+        const data = await res.json()
+        if (!res.ok || data.success === false) throw new Error(data.message || 'Failed to load projects')
+        const items = Array.isArray(data.items) ? data.items : (Array.isArray(data) ? data : [])
+        setProjects(items)
+        const tags = Array.from(new Set(items.flatMap(p => Array.isArray(p.tags) ? p.tags : [])))
+        setAllTags(tags)
+      } catch (e) {
+        setError(e.message || 'Something went wrong')
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [])
+
+  const filtered = selectedTag === 'All' ? projects : projects.filter(p => Array.isArray(p.tags) && p.tags.includes(selectedTag))
 
   return (
     <>
@@ -131,39 +105,53 @@ const Projects = () => {
       {/* Projects Grid */}
       <section className="py-20 bg-gray-900">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-            {filtered.map((project, i) => (
-              <motion.div
-                key={project.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: i * 0.1 }}
-                viewport={{ once: true }}
-                whileHover={{ y: -10, scale: 1.02 }}
-                className="group bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-2xl p-6 flex flex-col shadow-lg border border-blue-500/10 cursor-pointer hover:shadow-blue-500/20 transition-shadow duration-300"
-                onClick={() => setModal(project)}
-              >
-                <img src={project.image} alt={project.title} className="w-full h-48 object-cover rounded-xl mb-5 border border-blue-500/10" />
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {project.tags.map(tag => (
-                    <span key={tag} className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-medium">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                <h3 className="text-xl font-bold text-white mb-2 group-hover:text-blue-300 transition-colors">
-                  {project.title}
-                </h3>
-                <p className="text-gray-300 mb-3 flex-1">
-                  {project.description}
-                </p>
-                <div className="flex items-center text-blue-400 group-hover:text-blue-300 transition-colors mt-2">
-                  <span className="text-sm font-medium">View Details</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-2 group-hover:translate-x-1 transition-transform"><path d="m18 15-6-6-6 6"/></svg>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+          {loading ? (
+            <div className="text-gray-300">Loading projects...</div>
+          ) : error ? (
+            <div className="p-4 rounded border border-red-500/30 text-red-300 bg-red-500/10">{error}</div>
+          ) : filtered.length === 0 ? (
+            <div className="text-gray-400">No projects found.</div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+              {filtered.map((project, i) => (
+                <motion.div
+                  key={project._id || project.slug || project.title}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: i * 0.1 }}
+                  viewport={{ once: true }}
+                  whileHover={{ y: -10, scale: 1.02 }}
+                  className="group bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-2xl p-6 flex flex-col shadow-lg border border-blue-500/10 cursor-pointer hover:shadow-blue-500/20 transition-shadow duration-300"
+                  onClick={() => setModal(project)}
+                >
+                  <img src={project.image || 'https://via.placeholder.com/800x600?text=Project'} alt={project.title} className="w-full h-48 object-cover rounded-xl mb-5 border border-blue-500/10" />
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {(project.tags || []).map(tag => (
+                      <span key={tag} className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-medium">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-blue-300 transition-colors">
+                    {project.title}
+                  </h3>
+                  <p className="text-gray-300 mb-3 flex-1">
+                    {project.description}
+                  </p>
+                  {project.slug && (
+                    <Link
+                      to={`/projects/${project.slug}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex items-center text-blue-400 group-hover:text-blue-300 transition-colors mt-2"
+                    >
+                      <span className="text-sm font-medium">View Details</span>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-2 group-hover:translate-x-1 transition-transform"><path d="m18 15-6-6-6 6"/></svg>
+                    </Link>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -179,9 +167,9 @@ const Projects = () => {
             onClick={e => e.stopPropagation()}
           >
             <button className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl font-bold" onClick={() => setModal(null)}>&times;</button>
-            <img src={modal.image} alt={modal.title} className="w-full h-48 object-cover rounded-xl mb-5 border border-blue-500/10" />
+            <img src={modal.image || 'https://via.placeholder.com/800x600?text=Project'} alt={modal.title} className="w-full h-48 object-cover rounded-xl mb-5 border border-blue-500/10" />
             <div className="flex flex-wrap gap-2 mb-3">
-              {modal.tags.map(tag => (
+              {(modal.tags || []).map(tag => (
                 <span key={tag} className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-medium">
                   {tag}
                 </span>
@@ -191,8 +179,8 @@ const Projects = () => {
             <p className="text-gray-300 mb-4">{modal.description}</p>
             <div className="flex items-center gap-3">
               <span className="text-sm text-gray-400">Year: {modal.year}</span>
-              {modal.link && (
-                <a href={modal.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-blue-400 hover:text-blue-300 transition-colors text-sm font-medium">
+              {modal.liveUrl && (
+                <a href={modal.liveUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-blue-400 hover:text-blue-300 transition-colors text-sm font-medium">
                   Live Project <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1"><path d="m18 15-6-6-6 6"/></svg>
                 </a>
               )}

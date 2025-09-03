@@ -61,7 +61,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Only define schemas and models if MongoDB is available
-let Contact, Subscriber, Blog, PageView, ActivityLog;
+let Contact, Subscriber, Blog, Project, PageView, ActivityLog;
 
 if (hasMongoDB) {
   // Schemas
@@ -112,9 +112,45 @@ if (hasMongoDB) {
     createdAt: { type: Date, default: Date.now }
   });
 
+  const projectSchema = new mongoose.Schema({
+    title: { type: String, required: true },
+    slug: { type: String, required: true, unique: true, index: true },
+    client: String,
+    description: String,
+    status: { type: String, enum: ['planning', 'in-progress', 'on-hold', 'completed'], default: 'planning' },
+    progress: { type: Number, min: 0, max: 100, default: 0 },
+    startDate: Date,
+    endDate: Date,
+    budget: { type: Number, default: 0 },
+    team: [String],
+    technologies: [String],
+    priority: { type: String, enum: ['low', 'medium', 'high'], default: 'medium' },
+    category: String,
+    duration: String,
+    liveUrl: String,
+    githubUrl: String,
+    image: String,
+    overview: String,
+    challenge: String,
+    solution: String,
+    features: [String],
+    results: [String],
+    process: [{
+      phase: String,
+      description: String,
+      duration: String
+    }],
+    gallery: [String],
+    tags: [String],
+    year: Number,
+    isPublished: { type: Boolean, default: true },
+    publishedAt: { type: Date, default: Date.now }
+  }, { timestamps: true });
+
   Contact = mongoose.model('Contact', contactSchema);
   Subscriber = mongoose.model('Subscriber', subscriberSchema);
   Blog = mongoose.model('Blog', blogSchema);
+  Project = mongoose.model('Project', projectSchema);
   PageView = mongoose.model('PageView', pageViewSchema);
   ActivityLog = mongoose.model('ActivityLog', activityLogSchema);
 }
@@ -221,6 +257,39 @@ app.get('/api/auth/me', authMiddleware, (req, res) => {
   return res.json({ user: req.user });
 });
 
+// Utilities for Projects
+const slugify = (str = '') =>
+  String(str)
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+
+const parseBudget = (val) => {
+  if (typeof val === 'number') return val;
+  if (typeof val === 'string') {
+    const num = Number(val.replace(/[^0-9.-]+/g, ''));
+    return Number.isFinite(num) ? num : 0;
+  }
+  return 0;
+};
+
+const generateUniqueSlug = async (base, idToExclude) => {
+  if (!hasMongoDB) return base || `project-${Date.now()}`;
+  let slug = base || `project-${Date.now()}`;
+  let i = 1;
+  const queryOf = (s) => idToExclude ? { slug: s, _id: { $ne: idToExclude } } : { slug: s };
+  // Ensure uniqueness by appending incrementing suffixes
+  // Limit loop to avoid infinite attempts
+  while (await Project.findOne(queryOf(slug))) {
+    i += 1;
+    slug = `${base}-${i}`;
+    if (i > 1000) break;
+  }
+  return slug;
+};
+
 // Blog endpoints
 app.get('/api/blogs', async (req, res) => {
   try {
@@ -235,6 +304,155 @@ app.get('/api/blogs', async (req, res) => {
     res.json(blogs);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Projects - Public Endpoints
+app.get('/api/projects', async (req, res) => {
+  try {
+    if (!hasMongoDB) {
+      return res.status(503).json({ success: false, message: 'Project service is temporarily unavailable.' });
+    }
+
+    const { status, tag, category, search } = req.query;
+    const limit = Math.min(parseInt(req.query.limit) || 50, 100);
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const skip = (page - 1) * limit;
+
+    const filter = { isPublished: true };
+    if (status) filter.status = status;
+    if (category) filter.category = category;
+    if (tag) filter.tags = { $in: [tag] };
+    if (search) {
+      const r = new RegExp(search, 'i');
+      filter.$or = [
+        { title: r },
+        { description: r },
+        { client: r },
+        { technologies: r },
+        { tags: r }
+      ];
+    }
+
+    const [items, total] = await Promise.all([
+      Project.find(filter)
+        .sort({ publishedAt: -1, createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Project.countDocuments(filter)
+    ]);
+
+    return res.json({ success: true, items, total, page, limit });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+app.get('/api/projects/:slug', async (req, res) => {
+  try {
+    if (!hasMongoDB) {
+      return res.status(503).json({ success: false, message: 'Project service is temporarily unavailable.' });
+    }
+
+    const project = await Project.findOne({ slug: req.params.slug, isPublished: true });
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+    return res.json(project);
+  } catch (err) {
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Projects - Admin (JWT protected)
+app.get('/api/admin/projects', authMiddleware, async (req, res) => {
+  try {
+    if (!hasMongoDB) {
+      return res.status(503).json({ success: false, message: 'Project service is temporarily unavailable.' });
+    }
+    const items = await Project.find().sort({ createdAt: -1 });
+    return res.json({ success: true, items });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+app.post('/api/admin/projects', authMiddleware, async (req, res) => {
+  try {
+    if (!hasMongoDB) {
+      return res.status(503).json({ success: false, message: 'Project service is temporarily unavailable.' });
+    }
+
+    const body = req.body || {};
+    if (!body.title) {
+      return res.status(400).json({ message: 'Title is required' });
+    }
+    body.budget = body.budget !== undefined ? parseBudget(body.budget) : 0;
+
+    const baseSlug = slugify(body.slug || body.title) || `project-${Date.now()}`;
+    const slug = await generateUniqueSlug(baseSlug);
+
+    const created = await Project.create({ ...body, slug });
+
+    if (ActivityLog) {
+      ActivityLog.create({ user: req.user?.email || 'admin', action: 'create_project', details: `Created project "${created.title}"`, ip: req.ip }).catch(() => {});
+    }
+
+    return res.status(201).json({ success: true, item: created });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+app.put('/api/admin/projects/:id', authMiddleware, async (req, res) => {
+  try {
+    if (!hasMongoDB) {
+      return res.status(503).json({ success: false, message: 'Project service is temporarily unavailable.' });
+    }
+    const { id } = req.params;
+    const body = req.body || {};
+    if (body.budget !== undefined) body.budget = parseBudget(body.budget);
+
+    const existing = await Project.findById(id);
+    if (!existing) return res.status(404).json({ message: 'Project not found' });
+
+    // Handle slug change if title or slug updated
+    let needSlugUpdate = false;
+    let newBaseSlug = existing.slug;
+    if (typeof body.slug === 'string' && slugify(body.slug) !== existing.slug) {
+      needSlugUpdate = true;
+      newBaseSlug = slugify(body.slug);
+    } else if (typeof body.title === 'string' && slugify(body.title) !== slugify(existing.title)) {
+      needSlugUpdate = true;
+      newBaseSlug = slugify(body.title);
+    }
+
+    if (needSlugUpdate) {
+      body.slug = await generateUniqueSlug(newBaseSlug, existing._id);
+    }
+
+    const updated = await Project.findByIdAndUpdate(id, body, { new: true, runValidators: true });
+    if (ActivityLog) {
+      ActivityLog.create({ user: req.user?.email || 'admin', action: 'update_project', details: `Updated project "${updated.title}"`, ip: req.ip }).catch(() => {});
+    }
+    return res.json({ success: true, item: updated });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+app.delete('/api/admin/projects/:id', authMiddleware, async (req, res) => {
+  try {
+    if (!hasMongoDB) {
+      return res.status(503).json({ success: false, message: 'Project service is temporarily unavailable.' });
+    }
+    const { id } = req.params;
+    const deleted = await Project.findByIdAndDelete(id);
+    if (!deleted) return res.status(404).json({ message: 'Project not found' });
+    if (ActivityLog) {
+      ActivityLog.create({ user: req.user?.email || 'admin', action: 'delete_project', details: `Deleted project "${deleted.title}"`, ip: req.ip }).catch(() => {});
+    }
+    return res.json({ success: true });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Server error' });
   }
 });
 
