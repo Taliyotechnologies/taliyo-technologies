@@ -1,83 +1,102 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { useNavigate } from 'react-router-dom';
 import { 
   Users, 
   FileText, 
   TrendingUp, 
-  MessageSquare, 
-  DollarSign
+  MessageSquare
 } from 'lucide-react';
 
+const API = import.meta.env.VITE_API_URL || 'https://taliyo-backend.onrender.com';
+
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const [summary, setSummary] = useState(null);
+  const [changes, setChanges] = useState(null);
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const fmt = (n) => typeof n === 'number' ? n.toLocaleString() : '0';
+  const fmtChange = (v) => typeof v === 'number' ? `${v >= 0 ? '+' : ''}${v}%` : '0%';
+
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setError('Not authenticated');
+          setLoading(false);
+          navigate('/admin/login', { replace: true });
+          return;
+        }
+        const res = await fetch(`${API}/api/admin/dashboard/summary`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (res.status === 401) {
+          setError('Session expired. Please login again.');
+          navigate('/admin/login', { replace: true });
+          return;
+        }
+        const data = await res.json();
+        if (!res.ok || data.success === false) {
+          throw new Error(data.message || 'Failed to load dashboard summary');
+        }
+        setSummary(data.summary || null);
+        setChanges(data.changes || null);
+        setRecentActivities(Array.isArray(data.recentActivities) ? data.recentActivities : []);
+      } catch (e) {
+        setError(e.message || 'Something went wrong');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSummary();
+  }, [navigate]);
+
   const stats = [
     {
-      title: 'Total Users',
-      value: '1,234',
-      change: '+12%',
+      title: 'Subscribers',
+      value: fmt(summary?.totalSubscribers ?? 0),
+      change: fmtChange(changes?.subscribers ?? 0),
       icon: Users,
       color: 'bg-blue-500',
       bgColor: 'bg-blue-50',
       textColor: 'text-blue-600'
     },
     {
-      title: 'Total Projects',
-      value: '89',
-      change: '+8%',
-      icon: FileText,
+      title: 'Contact Requests',
+      value: fmt(summary?.totalContacts ?? 0),
+      change: fmtChange(changes?.contacts ?? 0),
+      icon: MessageSquare,
       color: 'bg-green-500',
       bgColor: 'bg-green-50',
       textColor: 'text-green-600'
     },
     {
-      title: 'Active SEO',
-      value: '45',
-      change: '+15%',
-      icon: TrendingUp,
+      title: 'Blogs',
+      value: fmt(summary?.totalBlogs ?? 0),
+      change: fmtChange(changes?.blogs ?? 0),
+      icon: FileText,
       color: 'bg-purple-500',
       bgColor: 'bg-purple-50',
       textColor: 'text-purple-600'
     },
     {
-      title: 'Total Revenue',
-      value: '$45,678',
-      change: '+23%',
-      icon: DollarSign,
+      title: 'Page Views',
+      value: fmt(summary?.totalPageViews ?? 0),
+      change: fmtChange(changes?.pageViews ?? 0),
+      icon: TrendingUp,
       color: 'bg-orange-500',
       bgColor: 'bg-orange-50',
       textColor: 'text-orange-600'
     }
   ];
 
-  const recentActivities = [
-    {
-      id: 1,
-      action: 'New project created',
-      description: 'E-commerce website for ABC Company',
-      time: '2 hours ago',
-      type: 'project'
-    },
-    {
-      id: 2,
-      action: 'SEO report generated',
-      description: 'Monthly SEO performance report',
-      time: '4 hours ago',
-      type: 'seo'
-    },
-    {
-      id: 3,
-      action: 'New team member added',
-      description: 'John Doe joined as Frontend Developer',
-      time: '1 day ago',
-      type: 'team'
-    },
-    {
-      id: 4,
-      action: 'Blog post published',
-      description: 'Web Development Trends 2024',
-      time: '2 days ago',
-      type: 'blog'
-    }
-  ];
+  // recentActivities is populated from API
 
   const quickActions = [
     {
@@ -141,6 +160,14 @@ const Dashboard = () => {
 
         {/* Main content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+          {error && (
+            <div className="p-3 rounded border border-red-200 bg-red-50 text-red-600 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+              {error}
+            </div>
+          )}
+          {loading && (
+            <div className="text-sm text-gray-500 dark:text-gray-400">Loading dashboard data...</div>
+          )}
           {/* Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {stats.map((item, idx) => {
@@ -190,12 +217,12 @@ const Dashboard = () => {
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Activity</h2>
               <ul className="space-y-4">
                 {recentActivities.map((a) => (
-                  <li key={a.id} className="flex items-start justify-between">
+                  <li key={a.id || a._id} className="flex items-start justify-between">
                     <div>
                       <p className="font-medium text-gray-900 dark:text-white">{a.action}</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{a.description}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{a.details || a.description}</p>
                     </div>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">{a.time}</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">{a.createdAt ? new Date(a.createdAt).toLocaleString() : ''}</span>
                   </li>
                 ))}
               </ul>

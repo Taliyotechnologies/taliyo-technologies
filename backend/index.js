@@ -259,6 +259,104 @@ app.get('/api/blogs/:slug', async (req, res) => {
   }
 });
 
+// Admin dashboard summary
+app.get('/api/admin/dashboard/summary', authMiddleware, async (req, res) => {
+  try {
+    if (!hasMongoDB) {
+      return res.json({
+        success: true,
+        dbConfigured: false,
+        summary: {
+          totalSubscribers: 0,
+          totalContacts: 0,
+          totalBlogs: 0,
+          totalPageViews: 0,
+          totalActivity: 0,
+          revenueTotal: 0
+        },
+        changes: {
+          subscribers: 0,
+          contacts: 0,
+          blogs: 0,
+          pageViews: 0,
+          activity: 0,
+          revenue: 0
+        },
+        recentActivities: []
+      });
+    }
+
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const prevSevenDaysStart = new Date(sevenDaysAgo.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const prevSevenDaysEnd = sevenDaysAgo;
+
+    const countInRange = (Model, field, start, end) =>
+      Model ? Model.countDocuments({ [field]: { $gte: start, $lt: end } }) : Promise.resolve(0);
+
+    const [
+      totalSubscribers,
+      totalContacts,
+      totalBlogs,
+      totalPageViews,
+      totalActivity
+    ] = await Promise.all([
+      Subscriber ? Subscriber.countDocuments() : 0,
+      Contact ? Contact.countDocuments() : 0,
+      Blog ? Blog.countDocuments() : 0,
+      PageView ? PageView.countDocuments() : 0,
+      ActivityLog ? ActivityLog.countDocuments() : 0
+    ]);
+
+    const [
+      subs7, subsPrev7,
+      contacts7, contactsPrev7,
+      blogs7, blogsPrev7,
+      views7, viewsPrev7,
+      activity7, activityPrev7
+    ] = await Promise.all([
+      countInRange(Subscriber, 'createdAt', sevenDaysAgo, now), countInRange(Subscriber, 'createdAt', prevSevenDaysStart, prevSevenDaysEnd),
+      countInRange(Contact, 'createdAt', sevenDaysAgo, now), countInRange(Contact, 'createdAt', prevSevenDaysStart, prevSevenDaysEnd),
+      countInRange(Blog, 'publishedAt', sevenDaysAgo, now), countInRange(Blog, 'publishedAt', prevSevenDaysStart, prevSevenDaysEnd),
+      countInRange(PageView, 'timestamp', sevenDaysAgo, now), countInRange(PageView, 'timestamp', prevSevenDaysStart, prevSevenDaysEnd),
+      countInRange(ActivityLog, 'createdAt', sevenDaysAgo, now), countInRange(ActivityLog, 'createdAt', prevSevenDaysStart, prevSevenDaysEnd)
+    ]);
+
+    const pctChange = (curr, prev) => {
+      if (prev === 0) return curr > 0 ? 100 : 0;
+      return Math.round(((curr - prev) / prev) * 100);
+    };
+
+    const recentActivities = ActivityLog
+      ? await ActivityLog.find().sort({ createdAt: -1 }).limit(10).select('user action details createdAt')
+      : [];
+
+    return res.json({
+      success: true,
+      dbConfigured: true,
+      summary: {
+        totalSubscribers,
+        totalContacts,
+        totalBlogs,
+        totalPageViews,
+        totalActivity,
+        revenueTotal: 0
+      },
+      changes: {
+        subscribers: pctChange(subs7, subsPrev7),
+        contacts: pctChange(contacts7, contactsPrev7),
+        blogs: pctChange(blogs7, blogsPrev7),
+        pageViews: pctChange(views7, viewsPrev7),
+        activity: pctChange(activity7, activityPrev7),
+        revenue: 0
+      },
+      recentActivities
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 // Connect to MongoDB only if URI is provided
 if (hasMongoDB) {
   console.log('🔍 Attempting to connect to MongoDB...');
