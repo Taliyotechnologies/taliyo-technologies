@@ -3,16 +3,9 @@ import { Helmet } from 'react-helmet-async';
 import { 
   Users, 
   FileText, 
-  Settings, 
   TrendingUp, 
-  Eye, 
   MessageSquare, 
-  Calendar,
-  DollarSign,
-  Activity,
-  Target,
-  BarChart3,
-  Globe
+  DollarSign
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -124,39 +117,88 @@ const Dashboard = () => {
         <meta name="description" content="Admin dashboard for Taliyo Technologies" />
       </Helmet>
       
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
         {/* Header */}
-        <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="bg-white shadow-sm border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center py-6">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-                <p className="text-gray-600 mt-1">Welcome back! Here's what's happening today.</p>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+                <p className="text-gray-600 dark:text-gray-300 mt-1">Welcome back! Here's what's happening today.</p>
               </div>
               <div className="flex items-center space-x-4">
                 <div className="text-right">
-                  <p className="text-sm text-gray-600">Last updated</p>
-                  <p className="text-sm font-medium text-gray-900">Just now</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Last updated</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">Just now</p>
                 </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
-                <p className="text-sm text-gray-600 dark:text-gray-400">Last updated</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-white">Just now</p>
-              </div>
-              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-                <span className="text-white font-semibold">A</span>
+                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                  <span className="text-white font-semibold">A</span>
+                </div>
               </div>
             </div>
           </div>
-                  <span className="text-sm text-gray-600">SEO Score</span>
-                  <span className="text-sm font-medium text-green-600">92/100</span>
+        </div>
+
+        {/* Main content */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+          {/* Stats */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {stats.map((item, idx) => {
+              const Icon = item.icon;
+              return (
+                <div key={idx} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-5">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{item.title}</p>
+                      <p className="text-2xl font-semibold text-gray-900 dark:text-white">{item.value}</p>
+                      <p className="text-sm text-green-600">{item.change}</p>
+                    </div>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${item.color}`}>
+                      <Icon className="w-5 h-5 text-white" />
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Uptime</span>
-                  <span className="text-sm font-medium text-green-600">99.9%</span>
-                </div>
-              </div>
+              );
+            })}
+          </div>
+
+          {/* Quick Actions + Recent Activity */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {quickActions.map((action, idx) => {
+                const Icon = action.icon;
+                return (
+                  <a
+                    key={idx}
+                    href={action.href}
+                    className="block bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-5 hover:shadow transition"
+                  >
+                    <div className="flex items-center">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white ${action.color}`}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <div className="ml-3">
+                        <p className="font-medium text-gray-900 dark:text-white">{action.title}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{action.description}</p>
+                      </div>
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-5">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Activity</h2>
+              <ul className="space-y-4">
+                {recentActivities.map((a) => (
+                  <li key={a.id} className="flex items-start justify-between">
+                    <div>
+                      <p className="font-medium text-gray-900 dark:text-white">{a.action}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{a.description}</p>
+                    </div>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">{a.time}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         </div>

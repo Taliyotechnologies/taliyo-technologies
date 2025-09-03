@@ -5,19 +5,11 @@ import {
   User, 
   Shield, 
   Bell, 
-  Globe, 
   Palette,
   Save,
   Eye,
   EyeOff,
-  Camera,
-  Key,
-  Mail,
-  Phone,
-  MapPin,
-  Calendar,
-  Lock,
-  Unlock
+  Camera
 } from 'lucide-react';
 import useTheme from '../../hooks/useTheme';
 
@@ -218,8 +210,10 @@ const Settings = () => {
                   </div>
                 )}
 
-                {/* removed duplicate/incorrect security block */}
-
+                {activeTab === 'security' && (
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Security Settings</h3>
+                    <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                           Current Password
@@ -238,10 +232,52 @@ const Settings = () => {
                           </button>
                         </div>
                       </div>
-                      
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                          New Password
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showNewPassword ? "text" : "password"}
+                            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                            placeholder="Enter new password"
+                          />
+                          <button
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                          >
+                            {showNewPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                          Confirm New Password
+                        </label>
+                        <input
+                          type="password"
+                          className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                          placeholder="Re-enter new password"
+                        />
+                      </div>
+
+                      <div className="pt-2">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium text-gray-900 dark:text-white">Two-Factor Authentication</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">Add an extra layer of security to your account</p>
+                          </div>
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" className="sr-only peer" />
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-500 peer-checked:bg-blue-600"></div>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
               {activeTab === 'notifications' && (
                 <div className="space-y-6">
@@ -343,9 +379,9 @@ const Settings = () => {
                         </button>
                         
                         <button
-                          onClick={() => setTheme('system')}
+                          onClick={() => setTheme('auto')}
                           className={`p-4 border rounded-lg text-center transition-colors ${
-                            theme === 'system'
+                            theme === 'auto'
                               ? 'border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800 bg-blue-50 dark:bg-blue-900/30'
                               : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-400 bg-white dark:bg-gray-700'
                           }`}
@@ -368,10 +404,11 @@ const Settings = () => {
                           Font Size
                         </label>
                         <select 
+                          defaultValue="medium"
                           className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
                         >
                           <option value="small">Small</option>
-                          <option value="medium" selected>Medium</option>
+                          <option value="medium">Medium</option>
                           <option value="large">Large</option>
                         </select>
                       </div>
