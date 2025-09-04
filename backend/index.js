@@ -341,6 +341,20 @@ const generateUniqueSlug = async (base, idToExclude) => {
   return slug;
 };
 
+// Helper to generate unique slug for Blogs
+const generateUniqueBlogSlug = async (base, idToExclude) => {
+  if (!hasMongoDB) return base || `blog-${Date.now()}`;
+  let slug = base || `blog-${Date.now()}`;
+  let i = 1;
+  const queryOf = (s) => idToExclude ? { slug: s, _id: { $ne: idToExclude } } : { slug: s };
+  while (await Blog.findOne(queryOf(slug))) {
+    i += 1;
+    slug = `${base}-${i}`;
+    if (i > 1000) break;
+  }
+  return slug;
+};
+
 // Blog endpoints
 app.get('/api/blogs', async (req, res) => {
   try {
@@ -355,6 +369,101 @@ app.get('/api/blogs', async (req, res) => {
     res.json(blogs);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Blogs - Admin (JWT protected)
+app.get('/api/admin/blogs', authMiddleware, async (req, res) => {
+  try {
+    if (!hasMongoDB) {
+      return res.status(503).json({ success: false, message: 'Blog service is temporarily unavailable.' });
+    }
+    const items = await Blog.find().sort({ publishedAt: -1 });
+    return res.json({ success: true, items });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+app.post('/api/admin/blogs', authMiddleware, async (req, res) => {
+  try {
+    if (!hasMongoDB) {
+      return res.status(503).json({ success: false, message: 'Blog service is temporarily unavailable.' });
+    }
+
+    const body = req.body || {};
+    const required = ['title', 'content', 'excerpt', 'author', 'image', 'category'];
+    for (const field of required) {
+      if (!body[field]) {
+        return res.status(400).json({ message: `${field} is required` });
+      }
+    }
+
+    const baseSlug = slugify(body.slug || body.title) || `blog-${Date.now()}`;
+    const slug = await generateUniqueBlogSlug(baseSlug);
+
+    const created = await Blog.create({ ...body, slug });
+
+    if (ActivityLog) {
+      ActivityLog.create({ user: req.user?.email || 'admin', action: 'create_blog', details: `Created blog "${created.title}"`, ip: req.ip }).catch(() => {});
+    }
+
+    return res.status(201).json({ success: true, item: created });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+app.put('/api/admin/blogs/:id', authMiddleware, async (req, res) => {
+  try {
+    if (!hasMongoDB) {
+      return res.status(503).json({ success: false, message: 'Blog service is temporarily unavailable.' });
+    }
+    const { id } = req.params;
+    const body = req.body || {};
+
+    const existing = await Blog.findById(id);
+    if (!existing) return res.status(404).json({ message: 'Blog not found' });
+
+    // Handle slug change if title or slug updated
+    let needSlugUpdate = false;
+    let newBaseSlug = existing.slug;
+    if (typeof body.slug === 'string' && slugify(body.slug) !== existing.slug) {
+      needSlugUpdate = true;
+      newBaseSlug = slugify(body.slug);
+    } else if (typeof body.title === 'string' && slugify(body.title) !== slugify(existing.title)) {
+      needSlugUpdate = true;
+      newBaseSlug = slugify(body.title);
+    }
+
+    if (needSlugUpdate) {
+      body.slug = await generateUniqueBlogSlug(newBaseSlug, existing._id);
+    }
+
+    const updated = await Blog.findByIdAndUpdate(id, body, { new: true, runValidators: true });
+    if (ActivityLog) {
+      ActivityLog.create({ user: req.user?.email || 'admin', action: 'update_blog', details: `Updated blog "${updated.title}"`, ip: req.ip }).catch(() => {});
+    }
+    return res.json({ success: true, item: updated });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+app.delete('/api/admin/blogs/:id', authMiddleware, async (req, res) => {
+  try {
+    if (!hasMongoDB) {
+      return res.status(503).json({ success: false, message: 'Blog service is temporarily unavailable.' });
+    }
+    const { id } = req.params;
+    const deleted = await Blog.findByIdAndDelete(id);
+    if (!deleted) return res.status(404).json({ message: 'Blog not found' });
+    if (ActivityLog) {
+      ActivityLog.create({ user: req.user?.email || 'admin', action: 'delete_blog', details: `Deleted blog "${deleted.title}"`, ip: req.ip }).catch(() => {});
+    }
+    return res.json({ success: true });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Server error' });
   }
 });
 
@@ -500,6 +609,101 @@ app.delete('/api/admin/projects/:id', authMiddleware, async (req, res) => {
     if (!deleted) return res.status(404).json({ message: 'Project not found' });
     if (ActivityLog) {
       ActivityLog.create({ user: req.user?.email || 'admin', action: 'delete_project', details: `Deleted project "${deleted.title}"`, ip: req.ip }).catch(() => {});
+    }
+    return res.json({ success: true });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Blogs - Admin (JWT protected)
+app.get('/api/admin/blogs', authMiddleware, async (req, res) => {
+  try {
+    if (!hasMongoDB) {
+      return res.status(503).json({ success: false, message: 'Blog service is temporarily unavailable.' });
+    }
+    const items = await Blog.find().sort({ publishedAt: -1 });
+    return res.json({ success: true, items });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+app.post('/api/admin/blogs', authMiddleware, async (req, res) => {
+  try {
+    if (!hasMongoDB) {
+      return res.status(503).json({ success: false, message: 'Blog service is temporarily unavailable.' });
+    }
+
+    const body = req.body || {};
+    const required = ['title', 'content', 'excerpt', 'author', 'image', 'category'];
+    for (const field of required) {
+      if (!body[field]) {
+        return res.status(400).json({ message: `${field} is required` });
+      }
+    }
+
+    const baseSlug = slugify(body.slug || body.title) || `blog-${Date.now()}`;
+    const slug = await generateUniqueBlogSlug(baseSlug);
+
+    const created = await Blog.create({ ...body, slug });
+
+    if (ActivityLog) {
+      ActivityLog.create({ user: req.user?.email || 'admin', action: 'create_blog', details: `Created blog "${created.title}"`, ip: req.ip }).catch(() => {});
+    }
+
+    return res.status(201).json({ success: true, item: created });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+app.put('/api/admin/blogs/:id', authMiddleware, async (req, res) => {
+  try {
+    if (!hasMongoDB) {
+      return res.status(503).json({ success: false, message: 'Blog service is temporarily unavailable.' });
+    }
+    const { id } = req.params;
+    const body = req.body || {};
+
+    const existing = await Blog.findById(id);
+    if (!existing) return res.status(404).json({ message: 'Blog not found' });
+
+    // Handle slug change if title or slug updated
+    let needSlugUpdate = false;
+    let newBaseSlug = existing.slug;
+    if (typeof body.slug === 'string' && slugify(body.slug) !== existing.slug) {
+      needSlugUpdate = true;
+      newBaseSlug = slugify(body.slug);
+    } else if (typeof body.title === 'string' && slugify(body.title) !== slugify(existing.title)) {
+      needSlugUpdate = true;
+      newBaseSlug = slugify(body.title);
+    }
+
+    if (needSlugUpdate) {
+      body.slug = await generateUniqueBlogSlug(newBaseSlug, existing._id);
+    }
+
+    const updated = await Blog.findByIdAndUpdate(id, body, { new: true, runValidators: true });
+    if (ActivityLog) {
+      ActivityLog.create({ user: req.user?.email || 'admin', action: 'update_blog', details: `Updated blog "${updated.title}"`, ip: req.ip }).catch(() => {});
+    }
+    return res.json({ success: true, item: updated });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+app.delete('/api/admin/blogs/:id', authMiddleware, async (req, res) => {
+  try {
+    if (!hasMongoDB) {
+      return res.status(503).json({ success: false, message: 'Blog service is temporarily unavailable.' });
+    }
+    const { id } = req.params;
+    const deleted = await Blog.findByIdAndDelete(id);
+    if (!deleted) return res.status(404).json({ message: 'Blog not found' });
+    if (ActivityLog) {
+      ActivityLog.create({ user: req.user?.email || 'admin', action: 'delete_blog', details: `Deleted blog "${deleted.title}"`, ip: req.ip }).catch(() => {});
     }
     return res.json({ success: true });
   } catch (err) {
