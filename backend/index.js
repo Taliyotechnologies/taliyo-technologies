@@ -24,6 +24,8 @@ const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI;
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@taliyotechnologies.com';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'changeme';
+// Socket.IO instance holder (assigned after server creation)
+let io;
 
 // Check if MongoDB URI is provided
 const hasMongoDB = !!MONGO_URI;
@@ -187,6 +189,15 @@ app.post('/api/contact', async (req, res) => {
     const { name, email, phone, company, service, budget, timeline, subject, message } = req.body;
     const contact = new Contact({ name, email, phone, company, service, budget, timeline, subject, message });
     await contact.save();
+    // Emit real-time event for new contact
+    try {
+      if (io) {
+        const payload = contact?.toObject ? contact.toObject() : contact;
+        io.emit('newContact', { item: payload });
+      }
+    } catch (e) {
+      // ignore socket errors
+    }
     res.status(201).json({ success: true, message: 'Contact form submitted successfully.' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server error. Please try again later.' });
@@ -209,7 +220,16 @@ app.post('/api/subscribe', async (req, res) => {
     const exists = await Subscriber.findOne({ email });
     if (exists) return res.status(409).json({ success: false, message: 'Already subscribed.' });
     
-    await Subscriber.create({ email });
+    const created = await Subscriber.create({ email });
+    // Emit real-time event for new subscriber
+    try {
+      if (io) {
+        const payload = created?.toObject ? created.toObject() : created;
+        io.emit('newSubscriber', { item: payload });
+      }
+    } catch (e) {
+      // ignore socket errors
+    }
     res.status(201).json({ success: true, message: 'Subscribed successfully.' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server error. Please try again later.' });
@@ -616,6 +636,32 @@ app.delete('/api/admin/projects/:id', authMiddleware, async (req, res) => {
   }
 });
 
+// Contacts - Admin (JWT protected)
+app.get('/api/admin/contacts', authMiddleware, async (req, res) => {
+  try {
+    if (!hasMongoDB) {
+      return res.status(503).json({ success: false, message: 'Contact service is temporarily unavailable.' });
+    }
+    const items = await Contact.find().sort({ createdAt: -1 });
+    return res.json({ success: true, items });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Subscribers - Admin (JWT protected)
+app.get('/api/admin/subscribers', authMiddleware, async (req, res) => {
+  try {
+    if (!hasMongoDB) {
+      return res.status(503).json({ success: false, message: 'Subscription service is temporarily unavailable.' });
+    }
+    const items = await Subscriber.find().sort({ createdAt: -1 });
+    return res.json({ success: true, items });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 // Blogs - Admin (JWT protected)
 app.get('/api/admin/blogs', authMiddleware, async (req, res) => {
   try {
@@ -866,9 +912,9 @@ if (hasMongoDB) {
 }
 
 const server = http.createServer(app);
-const io = new SocketIOServer(server, { 
+io = new SocketIOServer(server, { 
   cors: { 
-    origin: ['https://taliyotechnologies.com', 'https://taliyo-technologies.vercel.app', 'http://localhost:5173'] 
+    origin: ['https://taliyotechnologies.com', 'https://taliyo-technologies.vercel.app', 'https://taliyo-frontend.onrender.com', 'http://localhost:5173'] 
   } 
 });
 

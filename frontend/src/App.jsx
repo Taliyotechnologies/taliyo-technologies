@@ -53,6 +53,8 @@ const SEO = lazy(() => import('./pages/admin/SEO.jsx'));
 const BlogManagement = lazy(() => import('./pages/admin/Blog.jsx'));
 const Settings = lazy(() => import('./pages/admin/Settings.jsx'));
 const AdminLogin = lazy(() => import('./pages/admin/Login.jsx'));
+const ContactsAdmin = lazy(() => import('./pages/admin/Contacts.jsx'));
+const SubscribersAdmin = lazy(() => import('./pages/admin/Subscribers.jsx'));
 
 function App() {
   // Use scroll to top hook
@@ -158,6 +160,8 @@ function App() {
             <Route path="projects" element={<Projects />} />
             <Route path="seo" element={<SEO />} />
             <Route path="blog" element={<BlogManagement />} />
+            <Route path="contacts" element={<ContactsAdmin />} />
+            <Route path="subscribers" element={<SubscribersAdmin />} />
             <Route path="settings" element={<Settings />} />
           </Route>
           

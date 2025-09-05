@@ -8,6 +8,7 @@ import {
   TrendingUp, 
   Settings, 
   MessageSquare,
+  Mail,
   Menu,
   X,
   Bell,
@@ -16,7 +17,8 @@ import {
   LogOut,
   ChevronDown,
   Sun,
-  Moon
+  Moon,
+  UserPlus
 } from 'lucide-react';
 import useTheme from '../../hooks/useTheme';
 
@@ -62,6 +64,18 @@ const AdminLayout = () => {
       href: '/admin/blog',
       icon: MessageSquare,
       current: location.pathname === '/admin/blog'
+    },
+    {
+      name: 'Contacts',
+      href: '/admin/contacts',
+      icon: Mail,
+      current: location.pathname === '/admin/contacts'
+    },
+    {
+      name: 'Subscribers',
+      href: '/admin/subscribers',
+      icon: UserPlus,
+      current: location.pathname === '/admin/subscribers'
     },
     {
       name: 'Settings',
