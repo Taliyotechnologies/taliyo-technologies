@@ -10,7 +10,9 @@ import {
   Eye,
   EyeOff,
   Camera,
-  RotateCcw
+  RotateCcw,
+  CheckCircle2,
+  AlertTriangle
 } from 'lucide-react';
 import useTheme from '../../hooks/useTheme';
 import useAppearance from '../../hooks/useAppearance';
@@ -22,6 +24,38 @@ const Settings = () => {
   const [twoFactor, setTwoFactor] = useState(false);
   const { theme, setTheme } = useTheme();
   const { fontSize, setFontSize, compact, setCompact, reduceMotion, setReduceMotion, highContrast, setHighContrast, resetAppearance } = useAppearance();
+
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [applyReport, setApplyReport] = useState({});
+
+  const handleSave = () => {
+    try {
+      // Force re-apply current values and persist
+      setTheme(theme);
+      setFontSize(fontSize);
+      setCompact(compact);
+      setReduceMotion(reduceMotion);
+      setHighContrast(highContrast);
+    } catch {}
+
+    // Verify applied to document
+    try {
+      const root = document.documentElement;
+      const prefersDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const expectedDark = theme === 'dark' || (theme === 'auto' && prefersDark);
+      const report = {
+        theme: !!root.classList.contains('dark') === !!expectedDark,
+        font: root.getAttribute('data-font') === fontSize,
+        compact: root.getAttribute('data-compact') === String(!!compact),
+        reduceMotion: root.getAttribute('data-reduce-motion') === String(!!reduceMotion),
+        contrast: root.getAttribute('data-contrast') === (highContrast ? 'high' : 'normal'),
+      };
+      setApplyReport(report);
+    } catch {
+      setApplyReport({});
+    }
+    setShowSaveModal(true);
+  };
 
   const tabs = [
     { id: 'general', name: 'General', icon: SettingsIcon },
@@ -47,7 +81,7 @@ const Settings = () => {
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
                 <p className="text-gray-600 mt-1 dark:text-gray-300">Manage your account and preferences</p>
               </div>
-              <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors dark:bg-blue-600 dark:hover:bg-blue-700">
+              <button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors dark:bg-blue-600 dark:hover:bg-blue-700">
                 <Save className="w-5 h-5" />
                 <span>Save Changes</span>
               </button>
@@ -475,6 +509,29 @@ const Settings = () => {
             </div>
           </div>
         </div>
+
+        {showSaveModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/40" onClick={() => setShowSaveModal(false)} />
+            <div className="relative z-10 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 w-full max-w-md shadow-lg">
+              <div className="flex items-center gap-3 mb-2">
+                <CheckCircle2 className="w-5 h-5 text-green-500" />
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Appearance saved</h4>
+              </div>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">Your appearance settings have been applied across the website.</p>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-center gap-2">{applyReport.font ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <AlertTriangle className="w-4 h-4 text-yellow-500" />} <span>Font size</span></li>
+                <li className="flex items-center gap-2">{applyReport.compact ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <AlertTriangle className="w-4 h-4 text-yellow-500" />} <span>Compact mode</span></li>
+                <li className="flex items-center gap-2">{applyReport.reduceMotion ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <AlertTriangle className="w-4 h-4 text-yellow-500" />} <span>Reduced motion</span></li>
+                <li className="flex items-center gap-2">{applyReport.contrast ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <AlertTriangle className="w-4 h-4 text-yellow-500" />} <span>High contrast</span></li>
+                <li className="flex items-center gap-2">{applyReport.theme ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <AlertTriangle className="w-4 h-4 text-yellow-500" />} <span>Theme</span></li>
+              </ul>
+              <div className="mt-5 flex justify-end">
+                <button onClick={() => setShowSaveModal(false)} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50">OK</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
