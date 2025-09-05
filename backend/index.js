@@ -534,16 +534,30 @@ app.post('/api/track', async (req, res) => {
     const ua = String(req.headers['user-agent'] || '');
     const { deviceType, os, browser } = parseUA(ua);
     const ip = getIp(req);
-    const {
-      path = req.body.page || '/',
-      clientId,
-      referrer,
-      utmSource, utmMedium, utmCampaign, utmTerm, utmContent,
-      language, timezone, screenWidth, screenHeight
-    } = req.body || {};
+    const body = req.body && typeof req.body === 'object' ? req.body : {};
+    const path = body.path || body.page || '/';
+    const clientId = body.clientId;
+    const referrer = body.referrer;
+    const utmSource = body.utmSource;
+    const utmMedium = body.utmMedium;
+    const utmCampaign = body.utmCampaign;
+    const utmTerm = body.utmTerm;
+    const utmContent = body.utmContent;
+    const language = body.language;
+    const timezone = body.timezone;
+    const screenWidth = body.screenWidth;
+    const screenHeight = body.screenHeight;
 
-    const url = new URL(referrer || 'http://null');
-    const referrerHost = referrer ? url.hostname : '';
+    let referrerHost = '';
+    if (typeof referrer === 'string' && referrer) {
+      try {
+        const parsed = new URL(referrer);
+        referrerHost = parsed.hostname || '';
+      } catch {
+        const m = referrer.match(/^https?:\/\/([^/]+)/i);
+        referrerHost = m ? m[1] : '';
+      }
+    }
     const { category: sourceCategory, socialNetwork, isOrganic } = categorizeSource({ referrerHost, utmSource, utmMedium });
 
     const geo = await geoLookup(ip);
@@ -580,84 +594,104 @@ app.get('/api/admin/analytics/summary', authMiddleware, async (req, res) => {
     if (!hasMongoDB) {
       return res.json({ success: true, dbConfigured: false, summary: {}, breakdowns: {} });
     }
+    // If DB is still connecting (cold start), avoid 500 and return empty summary
+    if (!mongoose?.connection || mongoose.connection.readyState !== 1) {
+      return res.json({
+        success: true,
+        dbConfigured: true,
+        range: {},
+        summary: { totalVisitors: 0, totalPageViews: 0 },
+        breakdowns: {
+          byDevice: [], byCountry: [], byCity: [], inStates: [], usStates: [],
+          sources: [], social: [], topReferrers: [], topPages: [], organic: 0, nonOrganic: 0
+        },
+        timeseries: []
+      });
+    }
     const now = new Date();
     const defaultStart = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    const start = req.query.start ? new Date(req.query.start) : defaultStart;
-    const end = req.query.end ? new Date(req.query.end) : now;
+    let start = req.query.start ? new Date(req.query.start) : defaultStart;
+    let end = req.query.end ? new Date(req.query.end) : now;
+    if (isNaN(start.getTime())) start = defaultStart;
+    if (isNaN(end.getTime())) end = now;
 
     const match = { createdAt: { $gte: start, $lt: end } };
 
+    const safe = async (p, fallback) => {
+      try { return await p; } catch (e) { console.error('Analytics error:', e?.message || e); return fallback; }
+    };
+
     const [totalPageViews, clientIds, ips] = await Promise.all([
-      PageView.countDocuments(match),
-      PageView.distinct('clientId', match),
-      PageView.distinct('ip', match),
+      safe(PageView.countDocuments(match), 0),
+      safe(PageView.distinct('clientId', match), []),
+      safe(PageView.distinct('ip', match), []),
     ]);
     const totalVisitors = (clientIds.filter(Boolean).length) || (ips.filter(Boolean).length);
 
-    const byDevice = await PageView.aggregate([
+    const byDevice = await safe(PageView.aggregate([
       { $match: match },
       { $group: { _id: '$deviceType', count: { $sum: 1 } } }
-    ]);
+    ]), []);
 
-    const byCountry = await PageView.aggregate([
+    const byCountry = await safe(PageView.aggregate([
       { $match: match },
       { $group: { _id: '$country', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
       { $limit: 10 }
-    ]);
+    ]), []);
 
-    const byCity = await PageView.aggregate([
+    const byCity = await safe(PageView.aggregate([
       { $match: match },
       { $group: { _id: '$city', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
       { $limit: 15 }
-    ]);
+    ]), []);
 
-    const topReferrers = await PageView.aggregate([
+    const topReferrers = await safe(PageView.aggregate([
       { $match: match },
       { $group: { _id: '$referrerHost', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
       { $limit: 10 }
-    ]);
+    ]), []);
 
-    const topPages = await PageView.aggregate([
+    const topPages = await safe(PageView.aggregate([
       { $match: match },
       { $group: { _id: '$path', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
       { $limit: 10 }
-    ]);
+    ]), []);
 
-    const sources = await PageView.aggregate([
+    const sources = await safe(PageView.aggregate([
       { $match: match },
       { $group: { _id: '$sourceCategory', count: { $sum: 1 } } },
       { $sort: { count: -1 } }
-    ]);
+    ]), []);
 
-    const social = await PageView.aggregate([
+    const social = await safe(PageView.aggregate([
       { $match: { ...match, socialNetwork: { $exists: true, $ne: null } } },
       { $group: { _id: '$socialNetwork', count: { $sum: 1 } } },
       { $sort: { count: -1 } }
-    ]);
+    ]), []);
 
-    const organicCount = await PageView.countDocuments({ ...match, isOrganic: true });
+    const organicCount = await safe(PageView.countDocuments({ ...match, isOrganic: true }), 0);
     const nonOrganicCount = Math.max(totalPageViews - organicCount, 0);
 
     // States for India and USA
-    const inStates = await PageView.aggregate([
+    const inStates = await safe(PageView.aggregate([
       { $match: { ...match, countryCode: 'IN' } },
       { $group: { _id: '$region', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
       { $limit: 15 }
-    ]);
-    const usStates = await PageView.aggregate([
+    ]), []);
+    const usStates = await safe(PageView.aggregate([
       { $match: { ...match, countryCode: 'US' } },
       { $group: { _id: '$region', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
       { $limit: 15 }
-    ]);
+    ]), []);
 
     // Timeseries by day
-    const timeseries = await PageView.aggregate([
+    const timeseries = await safe(PageView.aggregate([
       { $match: match },
       {
         $group: {
@@ -666,7 +700,7 @@ app.get('/api/admin/analytics/summary', authMiddleware, async (req, res) => {
         }
       },
       { $sort: { _id: 1 } }
-    ]);
+    ]), []);
 
     return res.json({
       success: true,

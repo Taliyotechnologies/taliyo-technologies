@@ -69,11 +69,24 @@ const Analytics = () => {
         navigate('/admin/login', { replace: true });
         return;
       }
-      const json = await res.json();
-      if (!res.ok || json.success === false) throw new Error(json.message || 'Failed to load analytics');
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || json.success === false) {
+        throw new Error(json.message || `Failed to load analytics (${res.status})`);
+      }
       setData(json);
     } catch (e) {
       setError(e.message || 'Something went wrong');
+      // Fallback empty dataset so UI still renders
+      setData({
+        success: true,
+        dbConfigured: false,
+        summary: { totalVisitors: 0, totalPageViews: 0 },
+        breakdowns: {
+          byDevice: [], byCountry: [], byCity: [], inStates: [], usStates: [],
+          sources: [], social: [], topReferrers: [], topPages: [], organic: 0, nonOrganic: 0
+        },
+        timeseries: []
+      });
     } finally {
       setLoading(false);
     }
