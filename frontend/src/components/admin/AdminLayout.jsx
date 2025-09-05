@@ -22,12 +22,15 @@ import {
   BarChart3
 } from 'lucide-react';
 import useTheme from '../../hooks/useTheme';
+import useAppearance from '../../hooks/useAppearance';
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useTheme();
+  // Mount appearance hook to apply saved preferences globally (font size, compact, contrast, motion)
+  useAppearance();
 
   const handleLogout = () => {
     localStorage.removeItem('token');
