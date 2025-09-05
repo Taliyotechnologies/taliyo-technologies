@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import useTheme from '../../hooks/useTheme';
 import useAppearance from '../../hooks/useAppearance';
+import usePushNotifications from '../../hooks/usePushNotifications';
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState('general');
@@ -24,6 +25,7 @@ const Settings = () => {
   const [twoFactor, setTwoFactor] = useState(false);
   const { theme, setTheme } = useTheme();
   const { fontSize, setFontSize, compact, setCompact, reduceMotion, setReduceMotion, highContrast, setHighContrast, resetAppearance } = useAppearance();
+  const { isSupported, permission, isSubscribed, loading: pushLoading, error: pushError, enablePush, disablePush, sendTest } = usePushNotifications();
 
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [applyReport, setApplyReport] = useState({});
@@ -332,15 +334,37 @@ const Settings = () => {
                       </label>
                     </div>
                     
-                    <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                      <div>
-                        <p className="font-medium text-gray-900 dark:text-white">Push Notifications</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">Receive push alerts on this device</p>
+                    <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">Push Notifications</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-300">Receive system notifications on this device (site-wide)</p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            className="sr-only peer"
+                            checked={!!isSubscribed}
+                            onChange={(e) => e.target.checked ? enablePush() : disablePush()}
+                            disabled={!isSupported || pushLoading}
+                          />
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-500 peer-checked:bg-blue-600"></div>
+                        </label>
                       </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" className="sr-only peer" defaultChecked />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-500 peer-checked:bg-blue-600"></div>
-                      </label>
+                      <div className="mt-3 flex items-center gap-3">
+                        <span className="text-xs px-2 py-1 rounded-full border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300">{isSupported ? 'Supported' : 'Not supported'}</span>
+                        <span className="text-xs px-2 py-1 rounded-full border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300">Permission: {permission}</span>
+                        {pushLoading && <span className="text-xs text-blue-500">Working...</span>}
+                        {pushError && <span className="text-xs text-red-500">{pushError}</span>}
+                        <div className="flex-1" />
+                        <button
+                          onClick={async () => { await sendTest(); }}
+                          disabled={!isSubscribed || pushLoading}
+                          className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600/50 disabled:opacity-50"
+                        >
+                          Send Test
+                        </button>
+                      </div>
                     </div>
                     
                     <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">

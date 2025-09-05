@@ -77,3 +77,10 @@ document.addEventListener('splash:done', onSplashDone, { once: true })
 
 // Fallback: ensure splash hides even if GSAP/CDN fails
 setTimeout(() => { if (!splashHidden) hideSplash() }, 3000)
+
+// Register service worker globally so push notifications work site-wide
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {})
+  })
+}

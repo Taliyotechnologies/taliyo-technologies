@@ -10,6 +10,7 @@ const jwt = require('jsonwebtoken');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
+const webpush = require('web-push');
 
 // Debug environment variables
 console.log('🔍 Environment check at startup:');
@@ -26,6 +27,24 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@taliyotechnologies.com';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'changeme';
 // Socket.IO instance holder (assigned after server creation)
 let io;
+
+// Web Push (VAPID) setup
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || '';
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
+let EPHEMERAL_VAPID = null;
+if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(`mailto:${ADMIN_EMAIL}`, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+} else {
+  try {
+    EPHEMERAL_VAPID = webpush.generateVAPIDKeys();
+    webpush.setVapidDetails(`mailto:${ADMIN_EMAIL}`, EPHEMERAL_VAPID.publicKey, EPHEMERAL_VAPID.privateKey);
+    console.warn('⚠️  VAPID keys not set in env. Generated ephemeral keys for this process.');
+  } catch (e) {
+    console.warn('⚠️  Failed to generate VAPID keys:', e?.message || e);
+  }
+}
+// In-memory subscription store when DB is unavailable
+const memorySubscriptions = new Map(); // endpoint -> subscription JSON
 
 // Check if MongoDB URI is provided
 const hasMongoDB = !!MONGO_URI;
@@ -72,8 +91,92 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Push Notifications endpoints
+app.get('/api/push/public-key', (req, res) => {
+  try {
+    const pub = VAPID_PUBLIC_KEY || EPHEMERAL_VAPID?.publicKey || '';
+    return res.json({ publicKey: pub });
+  } catch (e) {
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.post('/api/push/subscribe', async (req, res) => {
+  try {
+    const sub = req.body || {};
+    if (!sub || !sub.endpoint) {
+      return res.status(400).json({ message: 'Invalid subscription' });
+    }
+    if (hasMongoDB && PushSubscription) {
+      await PushSubscription.updateOne(
+        { endpoint: sub.endpoint },
+        { $set: { endpoint: sub.endpoint, keys: sub.keys || {} } },
+        { upsert: true }
+      );
+    } else {
+      memorySubscriptions.set(sub.endpoint, sub);
+    }
+    return res.json({ success: true });
+  } catch (e) {
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.delete('/api/push/subscribe', async (req, res) => {
+  try {
+    const { endpoint } = req.body || {};
+    if (!endpoint) return res.status(400).json({ message: 'Endpoint required' });
+    if (hasMongoDB && PushSubscription) {
+      await PushSubscription.deleteOne({ endpoint }).catch(() => {});
+    }
+    memorySubscriptions.delete(endpoint);
+    return res.json({ success: true });
+  } catch (e) {
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.post('/api/admin/push/test', authMiddleware, async (req, res) => {
+  try {
+    const payload = req.body && typeof req.body === 'object' ? req.body : {};
+    const notification = {
+      title: payload.title || 'Taliyo Notification',
+      body: payload.body || 'This is a test notification from Admin Settings',
+      data: { url: payload.url || '/' }
+    };
+
+    let subs = [];
+    if (hasMongoDB && PushSubscription) {
+      subs = await PushSubscription.find().limit(100).lean();
+    } else {
+      subs = Array.from(memorySubscriptions.values()).slice(0, 100);
+    }
+
+    let sent = 0, removed = 0, failed = 0;
+    const deletions = [];
+    await Promise.all(subs.map(async (s) => {
+      try {
+        await webpush.sendNotification(s, JSON.stringify(notification));
+        sent += 1;
+      } catch (err) {
+        failed += 1;
+        const statusCode = err?.statusCode || err?.status || 0;
+        if (statusCode === 404 || statusCode === 410) {
+          removed += 1;
+          if (hasMongoDB && PushSubscription) deletions.push(PushSubscription.deleteOne({ endpoint: s.endpoint }).catch(() => {}));
+          memorySubscriptions.delete(s.endpoint);
+        }
+      }
+    }));
+    await Promise.all(deletions);
+    return res.json({ success: true, sent, removed, failed, total: subs.length });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 // Only define schemas and models if MongoDB is available
-let Contact, Subscriber, Blog, Project, PageView, ActivityLog;
+let Contact, Subscriber, Blog, Project, PageView, ActivityLog, PushSubscription;
 
 if (hasMongoDB) {
   // Schemas
@@ -158,6 +261,15 @@ if (hasMongoDB) {
     createdAt: { type: Date, default: Date.now }
   });
 
+  const pushSubscriptionSchema = new mongoose.Schema({
+    endpoint: { type: String, required: true, unique: true, index: true },
+    keys: {
+      p256dh: String,
+      auth: String
+    },
+    createdAt: { type: Date, default: Date.now }
+  });
+
   const projectSchema = new mongoose.Schema({
     title: { type: String, required: true },
     slug: { type: String, required: true, unique: true, index: true },
@@ -199,6 +311,7 @@ if (hasMongoDB) {
   Project = mongoose.model('Project', projectSchema);
   PageView = mongoose.model('PageView', pageViewSchema);
   ActivityLog = mongoose.model('ActivityLog', activityLogSchema);
+  PushSubscription = mongoose.model('PushSubscription', pushSubscriptionSchema);
 }
 
 // Email configuration
