@@ -10,7 +10,12 @@ const jwt = require('jsonwebtoken');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
-const webpush = require('web-push');
+let webpush = null;
+try {
+  webpush = require('web-push');
+} catch (e) {
+  console.warn('⚠️  web-push module not available:', e?.message || e);
+}
 
 // Debug environment variables
 console.log('🔍 Environment check at startup:');
@@ -32,16 +37,24 @@ let io;
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || '';
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || '';
 let EPHEMERAL_VAPID = null;
-if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
-  webpush.setVapidDetails(`mailto:${ADMIN_EMAIL}`, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
-} else {
-  try {
-    EPHEMERAL_VAPID = webpush.generateVAPIDKeys();
-    webpush.setVapidDetails(`mailto:${ADMIN_EMAIL}`, EPHEMERAL_VAPID.publicKey, EPHEMERAL_VAPID.privateKey);
-    console.warn('⚠️  VAPID keys not set in env. Generated ephemeral keys for this process.');
-  } catch (e) {
-    console.warn('⚠️  Failed to generate VAPID keys:', e?.message || e);
+if (webpush) {
+  if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+    try {
+      webpush.setVapidDetails(`mailto:${ADMIN_EMAIL}`, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
+    } catch (e) {
+      console.warn('⚠️  Failed to set VAPID details from env:', e?.message || e);
+    }
+  } else {
+    try {
+      EPHEMERAL_VAPID = webpush.generateVAPIDKeys();
+      webpush.setVapidDetails(`mailto:${ADMIN_EMAIL}`, EPHEMERAL_VAPID.publicKey, EPHEMERAL_VAPID.privateKey);
+      console.warn('⚠️  VAPID keys not set in env. Generated ephemeral keys for this process.');
+    } catch (e) {
+      console.warn('⚠️  Failed to generate VAPID keys:', e?.message || e);
+    }
   }
+} else {
+  console.warn('⚠️  Push notifications disabled: web-push unavailable');
 }
 // In-memory subscription store when DB is unavailable
 const memorySubscriptions = new Map(); // endpoint -> subscription JSON
@@ -103,6 +116,14 @@ app.get('/api/push/public-key', (req, res) => {
   }
 });
 
+// Global error handlers to avoid crashing without logs
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err?.stack || err);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled Rejection:', reason);
+});
+
 app.post('/api/push/subscribe', async (req, res) => {
   try {
     const sub = req.body || {};
@@ -140,6 +161,9 @@ app.delete('/api/push/subscribe', async (req, res) => {
 
 app.post('/api/admin/push/test', authMiddleware, async (req, res) => {
   try {
+    if (!webpush) {
+      return res.status(503).json({ success: false, message: 'Push service unavailable on server (web-push not installed)' });
+    }
     const payload = req.body && typeof req.body === 'object' ? req.body : {};
     const notification = {
       title: payload.title || 'Taliyo Notification',
