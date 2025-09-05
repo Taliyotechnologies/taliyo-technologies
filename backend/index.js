@@ -64,6 +64,8 @@ if (!hasMongoDB) {
 app.use(cors({
   origin: [
     'https://taliyotechnologies.com',
+    'https://taliyo.com',
+    'https://www.taliyo.com',
     'https://taliyo-technologies.vercel.app',
     'https://taliyo-frontend.onrender.com',
     'http://localhost:5173',
