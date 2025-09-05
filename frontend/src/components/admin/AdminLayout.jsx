@@ -18,7 +18,8 @@ import {
   ChevronDown,
   Sun,
   Moon,
-  UserPlus
+  UserPlus,
+  BarChart3
 } from 'lucide-react';
 import useTheme from '../../hooks/useTheme';
 
@@ -58,6 +59,12 @@ const AdminLayout = () => {
       href: '/admin/seo',
       icon: TrendingUp,
       current: location.pathname === '/admin/seo'
+    },
+    {
+      name: 'Analytics',
+      href: '/admin/analytics',
+      icon: BarChart3,
+      current: location.pathname === '/admin/analytics'
     },
     {
       name: 'Blog',

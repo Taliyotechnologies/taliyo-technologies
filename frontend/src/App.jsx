@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async'
 import AOS from 'aos'
 import 'aos/dist/aos.css'
 import useScrollToTop from './hooks/useScrollToTop'
+import useAnalyticsTracker from './hooks/useAnalyticsTracker'
 
 // Layout Components
 import Layout from './components/layout/Layout'
@@ -55,10 +56,13 @@ const Settings = lazy(() => import('./pages/admin/Settings.jsx'));
 const AdminLogin = lazy(() => import('./pages/admin/Login.jsx'));
 const ContactsAdmin = lazy(() => import('./pages/admin/Contacts.jsx'));
 const SubscribersAdmin = lazy(() => import('./pages/admin/Subscribers.jsx'));
+const Analytics = lazy(() => import('./pages/admin/Analytics.jsx'));
 
 function App() {
   // Use scroll to top hook
   useScrollToTop()
+  // Track page views
+  useAnalyticsTracker()
 
   useEffect(() => {
     // Initialize AOS
@@ -159,6 +163,7 @@ function App() {
             <Route path="team" element={<TeamManagement />} />
             <Route path="projects" element={<Projects />} />
             <Route path="seo" element={<SEO />} />
+            <Route path="analytics" element={<Analytics />} />
             <Route path="blog" element={<BlogManagement />} />
             <Route path="contacts" element={<ContactsAdmin />} />
             <Route path="subscribers" element={<SubscribersAdmin />} />

@@ -111,9 +111,43 @@ if (hasMongoDB) {
   });
 
   const pageViewSchema = new mongoose.Schema({
-    page: { type: String, required: true },
-    userId: String,
-    timestamp: { type: Date, default: Date.now }
+    // Basic
+    path: { type: String, required: true },
+    page: { type: String }, // legacy alias
+    clientId: { type: String },
+    createdAt: { type: Date, default: Date.now, index: true },
+
+    // Referrer & UTM
+    referrer: String,
+    referrerHost: String,
+    utmSource: String,
+    utmMedium: String,
+    utmCampaign: String,
+    utmTerm: String,
+    utmContent: String,
+    sourceCategory: { type: String, enum: ['direct', 'organic', 'social', 'referral', 'paid', 'email', 'unknown'], default: 'unknown' },
+    socialNetwork: String,
+    isOrganic: { type: Boolean, default: false },
+
+    // Device & agent
+    userAgent: String,
+    deviceType: { type: String, enum: ['desktop', 'mobile', 'tablet', 'unknown'], default: 'unknown' },
+    os: String,
+    browser: String,
+
+    // Client hints
+    language: String,
+    timezone: String,
+    screenWidth: Number,
+    screenHeight: Number,
+
+    // IP & Geo
+    ip: String,
+    country: String,
+    countryCode: String,
+    region: String, // state/province
+    regionCode: String,
+    city: String
   });
 
   const activityLogSchema = new mongoose.Schema({
@@ -400,6 +434,260 @@ app.get('/api/admin/blogs', authMiddleware, async (req, res) => {
     }
     const items = await Blog.find().sort({ publishedAt: -1 });
     return res.json({ success: true, items });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// --- Analytics Tracking & Summary ---
+// Helper: categorize source
+const categorizeSource = ({ referrerHost = '', utmSource = '', utmMedium = '' }) => {
+  const host = (referrerHost || '').toLowerCase();
+  const medium = (utmMedium || '').toLowerCase();
+  const source = (utmSource || '').toLowerCase();
+
+  const isDirect = !host && !source;
+  const organicHosts = ['google.', 'bing.', 'yahoo.', 'duckduckgo'];
+  const socialHosts = ['facebook.', 'fb.', 'instagram.', 'ig.', 'linkedin.', 'lnkd.', 'x.com', 'twitter.', 't.co', 'youtube.', 'pinterest.', 'reddit.'];
+
+  let category = 'unknown';
+  if (isDirect) category = 'direct';
+  else if (organicHosts.some(h => host.includes(h))) category = 'organic';
+  else if (socialHosts.some(h => host.includes(h))) category = 'social';
+  else if (['cpc','ppc','paid','ads','sem','display'].some(k => medium.includes(k))) category = 'paid';
+  else if (medium === 'email') category = 'email';
+  else if (host) category = 'referral';
+
+  let socialNetwork = undefined;
+  if (category === 'social') {
+    if (host.includes('linkedin.')) socialNetwork = 'linkedin';
+    else if (host.includes('facebook.') || host.includes('fb.')) socialNetwork = 'facebook';
+    else if (host.includes('instagram.') || host.includes('ig.')) socialNetwork = 'instagram';
+    else if (host.includes('twitter.') || host.includes('x.com') || host.includes('t.co')) socialNetwork = 'twitter';
+    else if (host.includes('youtube.')) socialNetwork = 'youtube';
+    else if (host.includes('pinterest.')) socialNetwork = 'pinterest';
+    else if (host.includes('reddit.')) socialNetwork = 'reddit';
+    else socialNetwork = 'other';
+  }
+
+  const isOrganic = category === 'organic' || (source === 'google' && medium === 'organic');
+  return { category, socialNetwork, isOrganic };
+};
+
+// Helper: naive user-agent parsing
+const parseUA = (ua = '') => {
+  const s = ua.toLowerCase();
+  let deviceType = 'unknown';
+  if (/mobile|iphone|android.+mobile/.test(s)) deviceType = 'mobile';
+  else if (/ipad|tablet/.test(s)) deviceType = 'tablet';
+  else if (s) deviceType = 'desktop';
+
+  let os = 'unknown';
+  if (s.includes('windows')) os = 'windows';
+  else if (s.includes('mac os') || s.includes('macintosh')) os = 'macos';
+  else if (s.includes('android')) os = 'android';
+  else if (s.includes('ios') || s.includes('iphone') || s.includes('ipad')) os = 'ios';
+  else if (s.includes('linux')) os = 'linux';
+
+  let browser = 'unknown';
+  if (s.includes('edg/')) browser = 'edge';
+  else if (s.includes('chrome/')) browser = 'chrome';
+  else if (s.includes('safari') && !s.includes('chrome')) browser = 'safari';
+  else if (s.includes('firefox')) browser = 'firefox';
+
+  return { deviceType, os, browser };
+};
+
+// Helper: best-effort IP extraction
+const getIp = (req) => {
+  const xf = (req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+  return xf || req.socket?.remoteAddress || req.ip || '';
+};
+
+// Helper: optional geo-lookup (best-effort, timeout)
+const shouldGeoLookup = (process.env.ENABLE_GEOIP || 'true') === 'true';
+const geoLookup = async (ip) => {
+  if (!ip || !shouldGeoLookup || typeof fetch !== 'function') return {};
+  try {
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 1500);
+    const resp = await fetch(`https://ipapi.co/${encodeURIComponent(ip)}/json/`, { signal: controller.signal });
+    clearTimeout(t);
+    if (!resp.ok) return {};
+    const d = await resp.json();
+    return {
+      country: d.country_name,
+      countryCode: d.country,
+      region: d.region,
+      regionCode: d.region_code,
+      city: d.city
+    };
+  } catch {
+    return {};
+  }
+};
+
+// Public tracking endpoint
+app.post('/api/track', async (req, res) => {
+  try {
+    if (!hasMongoDB) return res.json({ success: true, skipped: true });
+    const ua = String(req.headers['user-agent'] || '');
+    const { deviceType, os, browser } = parseUA(ua);
+    const ip = getIp(req);
+    const {
+      path = req.body.page || '/',
+      clientId,
+      referrer,
+      utmSource, utmMedium, utmCampaign, utmTerm, utmContent,
+      language, timezone, screenWidth, screenHeight
+    } = req.body || {};
+
+    const url = new URL(referrer || 'http://null');
+    const referrerHost = referrer ? url.hostname : '';
+    const { category: sourceCategory, socialNetwork, isOrganic } = categorizeSource({ referrerHost, utmSource, utmMedium });
+
+    const geo = await geoLookup(ip);
+
+    const payload = {
+      path,
+      page: path,
+      clientId,
+      createdAt: new Date(),
+      referrer,
+      referrerHost,
+      utmSource, utmMedium, utmCampaign, utmTerm, utmContent,
+      sourceCategory,
+      socialNetwork,
+      isOrganic,
+      userAgent: ua,
+      deviceType, os, browser,
+      language, timezone, screenWidth, screenHeight,
+      ip,
+      ...geo
+    };
+
+    const created = await PageView.create(payload);
+    try { if (io) io.emit('pageView', { item: created.toObject ? created.toObject() : created }); } catch {}
+    return res.json({ success: true });
+  } catch (err) {
+    return res.status(200).json({ success: true }); // never break pages due to analytics
+  }
+});
+
+// Admin analytics summary (JWT)
+app.get('/api/admin/analytics/summary', authMiddleware, async (req, res) => {
+  try {
+    if (!hasMongoDB) {
+      return res.json({ success: true, dbConfigured: false, summary: {}, breakdowns: {} });
+    }
+    const now = new Date();
+    const defaultStart = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const start = req.query.start ? new Date(req.query.start) : defaultStart;
+    const end = req.query.end ? new Date(req.query.end) : now;
+
+    const match = { createdAt: { $gte: start, $lt: end } };
+
+    const [totalPageViews, clientIds, ips] = await Promise.all([
+      PageView.countDocuments(match),
+      PageView.distinct('clientId', match),
+      PageView.distinct('ip', match),
+    ]);
+    const totalVisitors = (clientIds.filter(Boolean).length) || (ips.filter(Boolean).length);
+
+    const byDevice = await PageView.aggregate([
+      { $match: match },
+      { $group: { _id: '$deviceType', count: { $sum: 1 } } }
+    ]);
+
+    const byCountry = await PageView.aggregate([
+      { $match: match },
+      { $group: { _id: '$country', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 10 }
+    ]);
+
+    const byCity = await PageView.aggregate([
+      { $match: match },
+      { $group: { _id: '$city', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 15 }
+    ]);
+
+    const topReferrers = await PageView.aggregate([
+      { $match: match },
+      { $group: { _id: '$referrerHost', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 10 }
+    ]);
+
+    const topPages = await PageView.aggregate([
+      { $match: match },
+      { $group: { _id: '$path', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 10 }
+    ]);
+
+    const sources = await PageView.aggregate([
+      { $match: match },
+      { $group: { _id: '$sourceCategory', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+
+    const social = await PageView.aggregate([
+      { $match: { ...match, socialNetwork: { $exists: true, $ne: null } } },
+      { $group: { _id: '$socialNetwork', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+
+    const organicCount = await PageView.countDocuments({ ...match, isOrganic: true });
+    const nonOrganicCount = Math.max(totalPageViews - organicCount, 0);
+
+    // States for India and USA
+    const inStates = await PageView.aggregate([
+      { $match: { ...match, countryCode: 'IN' } },
+      { $group: { _id: '$region', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 15 }
+    ]);
+    const usStates = await PageView.aggregate([
+      { $match: { ...match, countryCode: 'US' } },
+      { $group: { _id: '$region', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 15 }
+    ]);
+
+    // Timeseries by day
+    const timeseries = await PageView.aggregate([
+      { $match: match },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    return res.json({
+      success: true,
+      dbConfigured: true,
+      range: { start, end },
+      summary: { totalVisitors, totalPageViews },
+      breakdowns: {
+        byDevice,
+        byCountry,
+        byCity,
+        inStates,
+        usStates,
+        sources,
+        social,
+        topReferrers,
+        topPages,
+        organic: organicCount,
+        nonOrganic: nonOrganicCount
+      },
+      timeseries
+    });
   } catch (err) {
     return res.status(500).json({ success: false, message: 'Server error' });
   }
@@ -872,7 +1160,7 @@ app.get('/api/admin/dashboard/summary', authMiddleware, async (req, res) => {
       countInRange(Subscriber, 'createdAt', sevenDaysAgo, now), countInRange(Subscriber, 'createdAt', prevSevenDaysStart, prevSevenDaysEnd),
       countInRange(Contact, 'createdAt', sevenDaysAgo, now), countInRange(Contact, 'createdAt', prevSevenDaysStart, prevSevenDaysEnd),
       countInRange(Blog, 'publishedAt', sevenDaysAgo, now), countInRange(Blog, 'publishedAt', prevSevenDaysStart, prevSevenDaysEnd),
-      countInRange(PageView, 'timestamp', sevenDaysAgo, now), countInRange(PageView, 'timestamp', prevSevenDaysStart, prevSevenDaysEnd),
+      countInRange(PageView, 'createdAt', sevenDaysAgo, now), countInRange(PageView, 'createdAt', prevSevenDaysStart, prevSevenDaysEnd),
       countInRange(ActivityLog, 'createdAt', sevenDaysAgo, now), countInRange(ActivityLog, 'createdAt', prevSevenDaysStart, prevSevenDaysEnd)
     ]);
 
