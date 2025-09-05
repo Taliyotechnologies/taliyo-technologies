@@ -62,11 +62,17 @@ export default function useAppearance() {
     setAppearance((prev) => ({ ...prev, highContrast: !!v }));
   }, []);
 
+  const resetAppearance = useCallback(() => {
+    setAppearance({ ...defaultState });
+    try { localStorage.removeItem(STORAGE_KEY); } catch {}
+  }, []);
+
   return {
     ...appearance,
     setFontSize,
     setCompact,
     setReduceMotion,
     setHighContrast,
+    resetAppearance,
   };
 }

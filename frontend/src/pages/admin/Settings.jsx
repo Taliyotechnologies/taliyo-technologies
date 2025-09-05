@@ -9,7 +9,8 @@ import {
   Save,
   Eye,
   EyeOff,
-  Camera
+  Camera,
+  RotateCcw
 } from 'lucide-react';
 import useTheme from '../../hooks/useTheme';
 import useAppearance from '../../hooks/useAppearance';
@@ -20,7 +21,7 @@ const Settings = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [twoFactor, setTwoFactor] = useState(false);
   const { theme, setTheme } = useTheme();
-  const { fontSize, setFontSize, compact, setCompact, reduceMotion, setReduceMotion, highContrast, setHighContrast } = useAppearance();
+  const { fontSize, setFontSize, compact, setCompact, reduceMotion, setReduceMotion, highContrast, setHighContrast, resetAppearance } = useAppearance();
 
   const tabs = [
     { id: 'general', name: 'General', icon: SettingsIcon },
@@ -346,7 +347,16 @@ const Settings = () => {
 
               {activeTab === 'appearance' && (
                 <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Appearance Settings</h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Appearance Settings</h3>
+                    <button
+                      onClick={() => { resetAppearance(); setTheme('auto'); }}
+                      className="inline-flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-200"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      Reset to defaults
+                    </button>
+                  </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Theme Selection */}

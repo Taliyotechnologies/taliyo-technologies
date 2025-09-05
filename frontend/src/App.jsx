@@ -1,6 +1,8 @@
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, Suspense, lazy } from 'react'
 import { Helmet } from 'react-helmet-async'
+import useAppearance from './hooks/useAppearance'
+import useTheme from './hooks/useTheme'
 import AOS from 'aos'
 import 'aos/dist/aos.css'
 import useScrollToTop from './hooks/useScrollToTop'
@@ -63,6 +65,10 @@ function App() {
   useScrollToTop()
   // Track page views
   useAnalyticsTracker()
+  // Apply theme (dark/light/auto) globally
+  useTheme()
+  // Apply appearance (font size, compact, contrast, reduced motion) globally
+  useAppearance()
 
   useEffect(() => {
     // Initialize AOS
