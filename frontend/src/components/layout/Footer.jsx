@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Facebook, Twitter, Linkedin, Instagram, Mail, Phone, MapPin } from 'lucide-react'
+import SubscribeForm from '../forms/SubscribeForm.jsx'
 
 const Footer = () => {
   const currentYear = new Date().getFullYear()
@@ -70,6 +71,12 @@ const Footer = () => {
                 <MapPin size={18} className="text-blue-500" />
                 <span>Delhi, India</span>
               </div>
+            </div>
+
+            {/* Newsletter */}
+            <div className="mt-6">
+              <h4 className="text-sm font-semibold text-white mb-3">Subscribe to our newsletter</h4>
+              <SubscribeForm compact />
             </div>
           </div>
 

@@ -26,6 +26,18 @@ const ContactForm = () => {
         body: JSON.stringify(data),
       });
       if (!response.ok) throw new Error('Failed to send');
+      // If user opted to subscribe, attempt subscription (best-effort)
+      try {
+        if (data.subscribeNewsletter && data.email) {
+          await fetch(`${API}/api/subscribe`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: data.email })
+          });
+        }
+      } catch (e) {
+        // ignore subscription failures silently
+      }
       setSubmitted(true)
       reset()
       setTimeout(() => setSubmitted(false), 15000)
@@ -175,6 +187,20 @@ const ContactForm = () => {
               </select>
             </div>
 
+            {/* Subject */}
+            <div>
+              <label htmlFor="subject" className="block text-sm font-medium text-white mb-2">
+                Subject
+              </label>
+              <input
+                id="subject"
+                type="text"
+                {...register('subject')}
+                className="input"
+                placeholder="What is this about?"
+              />
+            </div>
+
             {/* Budget */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -235,6 +261,19 @@ const ContactForm = () => {
               {errors.message && (
                 <p className="text-error-500 text-sm mt-1">{errors.message.message}</p>
               )}
+            </div>
+
+            {/* Newsletter Opt-in */}
+            <div className="flex items-center space-x-2">
+              <input
+                id="subscribeNewsletter"
+                type="checkbox"
+                {...register('subscribeNewsletter')}
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <label htmlFor="subscribeNewsletter" className="text-sm text-gray-200">
+                Subscribe me to the newsletter
+              </label>
             </div>
 
             {/* Submit Button */}

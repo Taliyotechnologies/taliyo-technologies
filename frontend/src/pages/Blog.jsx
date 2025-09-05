@@ -10,37 +10,10 @@ import cloudImg from '../assets/CloudComputing.jpg';
 import remoteWorkImg from '../assets/remote work revolution.jpeg';
 import ecommerceImg from '../assets/ecomerce trends.jpeg';
 import quantumImg from '../assets/quantum computing.jpeg';
-import { useState } from 'react';
-import toast from 'react-hot-toast';
+import SubscribeForm from '../components/forms/SubscribeForm.jsx';
 
 const Blog = () => {
-  // Newsletter subscribe state
-  const [subscribeEmail, setSubscribeEmail] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [subscribed, setSubscribed] = useState(false);
-
-  const API = import.meta.env.VITE_API_URL || 'https://taliyo-backend.onrender.com';
-  
-  const handleSubscribe = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    try {
-      const res = await fetch(`${API}/api/subscribe`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: subscribeEmail }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to subscribe');
-      setSubscribed(true);
-      setSubscribeEmail('');
-      setTimeout(() => setSubscribed(false), 5000);
-    } catch (err) {
-      toast.error(err.message || 'Subscription failed.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  // Newsletter form handled by SubscribeForm component
 
   return (
     <>
@@ -160,29 +133,7 @@ const Blog = () => {
             <p className="text-white/90 mb-8 text-sm sm:text-base leading-relaxed">
               Get the latest insights, tips, and industry updates delivered to your inbox. Join thousands of tech professionals who trust our expertise.
             </p>
-            {subscribed ? (
-              <div className="py-8 text-lg text-white font-semibold bg-green-600/80 rounded-xl shadow mb-4 animate-fade-in">
-                Thank you for subscribing!
-              </div>
-            ) : (
-              <form className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto w-full" onSubmit={handleSubscribe}>
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="flex-1 px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 focus:bg-white/20 transition-all"
-                  required
-                  value={subscribeEmail}
-                  onChange={e => setSubscribeEmail(e.target.value)}
-                  disabled={submitting}
-                />
-                <button
-                  className="px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-white/50 disabled:opacity-60"
-                  disabled={submitting}
-                >
-                  {submitting ? 'Subscribing...' : 'Subscribe'}
-                </button>
-              </form>
-            )}
+            <SubscribeForm />
           </div>
         </div>
       </section>

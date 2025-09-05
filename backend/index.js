@@ -662,6 +662,41 @@ app.get('/api/admin/subscribers', authMiddleware, async (req, res) => {
   }
 });
 
+// Update contact status (done/not done) - Admin (JWT protected)
+app.patch('/api/admin/contacts/:id/status', authMiddleware, async (req, res) => {
+  try {
+    if (!hasMongoDB) {
+      return res.status(503).json({ success: false, message: 'Contact service is temporarily unavailable.' });
+    }
+    const { id } = req.params;
+    const { status } = req.body || {};
+    const allowed = ['done', 'not done'];
+    if (!allowed.includes(status)) {
+      return res.status(400).json({ success: false, message: 'Invalid status. Allowed: done | not done' });
+    }
+    const updated = await Contact.findByIdAndUpdate(id, { status }, { new: true });
+    if (!updated) return res.status(404).json({ success: false, message: 'Contact not found' });
+    return res.json({ success: true, item: updated });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Delete a subscriber - Admin (JWT protected)
+app.delete('/api/admin/subscribers/:id', authMiddleware, async (req, res) => {
+  try {
+    if (!hasMongoDB) {
+      return res.status(503).json({ success: false, message: 'Subscription service is temporarily unavailable.' });
+    }
+    const { id } = req.params;
+    const deleted = await Subscriber.findByIdAndDelete(id);
+    if (!deleted) return res.status(404).json({ success: false, message: 'Subscriber not found' });
+    return res.json({ success: true });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 // Blogs - Admin (JWT protected)
 app.get('/api/admin/blogs', authMiddleware, async (req, res) => {
   try {

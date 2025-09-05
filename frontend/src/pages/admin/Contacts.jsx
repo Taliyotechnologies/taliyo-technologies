@@ -80,6 +80,52 @@ const Contacts = () => {
     );
   });
 
+  const handleToggleStatus = async (c) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/admin/login', { replace: true });
+        return;
+      }
+      const nextStatus = c.status === 'done' ? 'not done' : 'done';
+      const res = await fetch(`${API}/api/admin/contacts/${c._id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: nextStatus })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.success === false) throw new Error(data.message || 'Failed to update status');
+      setContacts(prev => prev.map(x => x._id === c._id ? { ...x, status: nextStatus } : x));
+    } catch (e) {
+      setError(e.message || 'Something went wrong');
+    }
+  };
+
+  const exportCSV = () => {
+    const headers = ['Name','Email','Phone','Company','Service','Subject','Status','Received'];
+    const rows = filtered.map(c => [
+      c.name || '',
+      c.email || '',
+      c.phone || '',
+      c.company || '',
+      c.service || '',
+      c.subject || '',
+      c.status || '',
+      c.createdAt ? new Date(c.createdAt).toISOString() : ''
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `contacts_${Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <>
       <Helmet>
@@ -94,14 +140,22 @@ const Contacts = () => {
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Contacts</h1>
                 <p className="text-gray-600 dark:text-gray-300 mt-1">Incoming contact form submissions (live)</p>
               </div>
-              <div className="relative w-full sm:w-80">
-                <input
-                  type="text"
-                  placeholder="Search contacts..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-3 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
-                />
+              <div className="flex w-full sm:w-auto gap-3 items-center">
+                <div className="relative w-full sm:w-80">
+                  <input
+                    type="text"
+                    placeholder="Search contacts..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-3 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:border-gray-700 dark:text-gray-100"
+                  />
+                </div>
+                <button
+                  onClick={exportCSV}
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 rounded-lg border border-gray-300 dark:border-gray-600"
+                >
+                  Export CSV
+                </button>
               </div>
             </div>
           </div>
@@ -129,6 +183,7 @@ const Contacts = () => {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Received</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -148,12 +203,20 @@ const Contacts = () => {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">{c.createdAt ? new Date(c.createdAt).toLocaleString() : '—'}</td>
+                    <td className="px-4 py-3 text-sm">
+                      <button
+                        onClick={() => handleToggleStatus(c)}
+                        className={`px-3 py-1 rounded-lg border text-xs ${c.status === 'done' ? 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-100' : 'bg-green-600 text-white border-green-700'}`}
+                      >
+                        {c.status === 'done' ? 'Mark Not Done' : 'Mark Done'}
+                      </button>
+                    </td>
                   </tr>
                 ))}
 
                 {!loading && filtered.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">No contacts found.</td>
+                    <td colSpan={9} className="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">No contacts found.</td>
                   </tr>
                 )}
               </tbody>
