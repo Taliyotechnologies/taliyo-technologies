@@ -174,6 +174,21 @@ const Analytics = () => {
     }
   }, [data]);
 
+  const sourceSummary = useMemo(() => ({
+    direct: data?.breakdowns?.sourceSummary?.direct || 0,
+    google: data?.breakdowns?.sourceSummary?.google || 0,
+    googleOrganic: data?.breakdowns?.sourceSummary?.googleOrganic || 0,
+    googlePaid: data?.breakdowns?.sourceSummary?.googlePaid || 0,
+    linkedin: data?.breakdowns?.sourceSummary?.linkedin || 0,
+    instagram: data?.breakdowns?.sourceSummary?.instagram || 0,
+    facebook: data?.breakdowns?.sourceSummary?.facebook || 0,
+    twitter: data?.breakdowns?.sourceSummary?.twitter || 0,
+    otherSocial: data?.breakdowns?.sourceSummary?.otherSocial || 0,
+    referral: data?.breakdowns?.sourceSummary?.referral || 0,
+    email: data?.breakdowns?.sourceSummary?.email || 0,
+    paid: data?.breakdowns?.sourceSummary?.paid || 0,
+  }), [data]);
+
   const tableRows = (items, valueKey = 'count') => (items || []).map((x, idx) => (
     <tr key={idx} className="border-b border-gray-100 dark:border-gray-700/50">
       <td className="px-3 py-2 text-sm text-gray-700 dark:text-gray-200">{x._id || '—'}</td>
@@ -288,6 +303,54 @@ const Analytics = () => {
                 <Smartphone className="w-5 h-5 text-gray-500" />
               </div>
               <Bar data={socialChart} options={{ plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { color: 'rgba(107,114,128,0.15)' } } } }} />
+            </div>
+          </div>
+
+          {/* Source Overview */}
+          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-5">
+            <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Source Overview</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+              <div className="p-3 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/20">
+                <p className="text-xs text-gray-500">Direct</p>
+                <p className="text-xl font-semibold text-gray-900 dark:text-white">{sourceSummary.direct.toLocaleString()}</p>
+              </div>
+              <div className="p-3 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/20">
+                <p className="text-xs text-gray-500">Google</p>
+                <p className="text-xl font-semibold text-gray-900 dark:text-white">{sourceSummary.google.toLocaleString()}</p>
+                <p className="text-[11px] text-gray-500">Organic: {sourceSummary.googleOrganic.toLocaleString()} • Paid: {sourceSummary.googlePaid.toLocaleString()}</p>
+              </div>
+              <div className="p-3 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/20">
+                <p className="text-xs text-gray-500">LinkedIn</p>
+                <p className="text-xl font-semibold text-gray-900 dark:text-white">{sourceSummary.linkedin.toLocaleString()}</p>
+              </div>
+              <div className="p-3 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/20">
+                <p className="text-xs text-gray-500">Instagram</p>
+                <p className="text-xl font-semibold text-gray-900 dark:text-white">{sourceSummary.instagram.toLocaleString()}</p>
+              </div>
+              <div className="p-3 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/20">
+                <p className="text-xs text-gray-500">Facebook</p>
+                <p className="text-xl font-semibold text-gray-900 dark:text-white">{sourceSummary.facebook.toLocaleString()}</p>
+              </div>
+              <div className="p-3 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/20">
+                <p className="text-xs text-gray-500">Twitter/X</p>
+                <p className="text-xl font-semibold text-gray-900 dark:text-white">{sourceSummary.twitter.toLocaleString()}</p>
+              </div>
+              <div className="p-3 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/20">
+                <p className="text-xs text-gray-500">Other Social</p>
+                <p className="text-xl font-semibold text-gray-900 dark:text-white">{sourceSummary.otherSocial.toLocaleString()}</p>
+              </div>
+              <div className="p-3 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/20">
+                <p className="text-xs text-gray-500">Referral</p>
+                <p className="text-xl font-semibold text-gray-900 dark:text-white">{sourceSummary.referral.toLocaleString()}</p>
+              </div>
+              <div className="p-3 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/20">
+                <p className="text-xs text-gray-500">Email</p>
+                <p className="text-xl font-semibold text-gray-900 dark:text-white">{sourceSummary.email.toLocaleString()}</p>
+              </div>
+              <div className="p-3 rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/20">
+                <p className="text-xs text-gray-500">Paid (All)</p>
+                <p className="text-xl font-semibold text-gray-900 dark:text-white">{sourceSummary.paid.toLocaleString()}</p>
+              </div>
             </div>
           </div>
 

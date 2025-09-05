@@ -28,11 +28,11 @@ export default function useAnalyticsTracker() {
 
   useEffect(() => {
     const controller = new AbortController();
+    const isFirst = !sessionStorage.getItem('taliyo_referrer_sent');
     const payload = {
       path: location.pathname + location.search,
       clientId: getOrCreateClientId(),
-      referrer: document.referrer || '',
-      ...readUtm(location.search),
+      ...(isFirst ? { referrer: document.referrer || '', ...readUtm(location.search) } : {}),
       language: navigator.language,
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       screenWidth: window.screen?.width,
@@ -47,6 +47,10 @@ export default function useAnalyticsTracker() {
       keepalive: true,
       signal: controller.signal,
     }).catch(() => {});
+
+    if (isFirst) {
+      try { sessionStorage.setItem('taliyo_referrer_sent', '1'); } catch {}
+    }
 
     return () => controller.abort();
   }, [location.pathname, location.search]);

@@ -676,6 +676,49 @@ app.get('/api/admin/analytics/summary', authMiddleware, async (req, res) => {
     const organicCount = await safe(PageView.countDocuments({ ...match, isOrganic: true }), 0);
     const nonOrganicCount = Math.max(totalPageViews - organicCount, 0);
 
+    // Explicit source summary counts
+    const [
+      directCount,
+      googleCount,
+      googleOrganicCount,
+      googlePaidCount,
+      linkedinCount,
+      instagramCount,
+      facebookCount,
+      twitterCount,
+      otherSocialCount,
+      referralCount,
+      emailCount,
+      paidCount
+    ] = await Promise.all([
+      safe(PageView.countDocuments({ ...match, sourceCategory: 'direct' }), 0),
+      safe(PageView.countDocuments({
+        ...match,
+        $or: [
+          { referrerHost: /google\./i },
+          { utmSource: /^google$/i }
+        ]
+      }), 0),
+      safe(PageView.countDocuments({
+        ...match,
+        isOrganic: true,
+        $or: [ { referrerHost: /google\./i }, { utmSource: /^google$/i } ]
+      }), 0),
+      safe(PageView.countDocuments({
+        ...match,
+        sourceCategory: 'paid',
+        $or: [ { referrerHost: /google\./i }, { utmSource: /^google$/i } ]
+      }), 0),
+      safe(PageView.countDocuments({ ...match, socialNetwork: 'linkedin' }), 0),
+      safe(PageView.countDocuments({ ...match, socialNetwork: 'instagram' }), 0),
+      safe(PageView.countDocuments({ ...match, socialNetwork: 'facebook' }), 0),
+      safe(PageView.countDocuments({ ...match, socialNetwork: 'twitter' }), 0),
+      safe(PageView.countDocuments({ ...match, socialNetwork: { $exists: true, $nin: ['linkedin', 'instagram', 'facebook', 'twitter'] } }), 0),
+      safe(PageView.countDocuments({ ...match, sourceCategory: 'referral' }), 0),
+      safe(PageView.countDocuments({ ...match, sourceCategory: 'email' }), 0),
+      safe(PageView.countDocuments({ ...match, sourceCategory: 'paid' }), 0)
+    ]);
+
     // States for India and USA
     const inStates = await safe(PageView.aggregate([
       { $match: { ...match, countryCode: 'IN' } },
@@ -718,7 +761,21 @@ app.get('/api/admin/analytics/summary', authMiddleware, async (req, res) => {
         topReferrers,
         topPages,
         organic: organicCount,
-        nonOrganic: nonOrganicCount
+        nonOrganic: nonOrganicCount,
+        sourceSummary: {
+          direct: directCount,
+          google: googleCount,
+          googleOrganic: googleOrganicCount,
+          googlePaid: googlePaidCount,
+          linkedin: linkedinCount,
+          instagram: instagramCount,
+          facebook: facebookCount,
+          twitter: twitterCount,
+          otherSocial: otherSocialCount,
+          referral: referralCount,
+          email: emailCount,
+          paid: paidCount
+        }
       },
       timeseries
     });
