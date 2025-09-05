@@ -412,7 +412,7 @@ app.post('/api/subscribe', async (req, res) => {
 // Auth endpoints (JWT-based, no DB required)
 const generateToken = (payload) => jwt.sign(payload, JWT_SECRET, { expiresIn: '1d' });
 
-const authMiddleware = (req, res, next) => {
+function authMiddleware(req, res, next) {
   const authHeader = req.headers['authorization'] || '';
   if (!authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ message: 'Unauthorized' });
@@ -425,7 +425,7 @@ const authMiddleware = (req, res, next) => {
   } catch (err) {
     return res.status(401).json({ message: 'Invalid or expired token' });
   }
-};
+}
 
 // Multer configuration for image uploads
 const storage = multer.diskStorage({
