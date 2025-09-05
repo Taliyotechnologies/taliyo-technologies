@@ -440,37 +440,61 @@ app.get('/api/admin/blogs', authMiddleware, async (req, res) => {
 });
 
 // --- Analytics Tracking & Summary ---
-// Helper: categorize source
-const categorizeSource = ({ referrerHost = '', utmSource = '', utmMedium = '' }) => {
+// Helper: categorize source (robust)
+const categorizeSource = ({ referrerHost = '', utmSource = '', utmMedium = '', path = '' }) => {
   const host = (referrerHost || '').toLowerCase();
   const medium = (utmMedium || '').toLowerCase();
   const source = (utmSource || '').toLowerCase();
 
-  const isDirect = !host && !source;
-  const organicHosts = ['google.', 'bing.', 'yahoo.', 'duckduckgo'];
-  const socialHosts = ['facebook.', 'fb.', 'instagram.', 'ig.', 'linkedin.', 'lnkd.', 'x.com', 'twitter.', 't.co', 'youtube.', 'pinterest.', 'reddit.'];
+  // Parse query params from path to detect ads (e.g., gclid)
+  let hasGclid = false;
+  try {
+    const url = new URL(path.startsWith('http') ? path : `http://local${path.startsWith('/') ? path : '/' + path}`);
+    const sp = url.searchParams;
+    hasGclid = !!(sp.get('gclid') || sp.get('gclsrc'));
+  } catch {}
 
-  let category = 'unknown';
-  if (isDirect) category = 'direct';
-  else if (organicHosts.some(h => host.includes(h))) category = 'organic';
-  else if (socialHosts.some(h => host.includes(h))) category = 'social';
-  else if (['cpc','ppc','paid','ads','sem','display'].some(k => medium.includes(k))) category = 'paid';
-  else if (medium === 'email') category = 'email';
-  else if (host) category = 'referral';
+  const isDirect = !host && !source;
+
+  // Identify search engine
+  const isSearch = (
+    host.includes('google.') || source === 'google' ||
+    host.includes('bing.') || source === 'bing' ||
+    host.includes('yahoo.') || source === 'yahoo' ||
+    host.includes('duckduckgo') || source === 'duckduckgo'
+  );
+
+  // Identify social platform (by host or utm_source)
+  const isLinkedIn = host.includes('linkedin.') || host.includes('lnkd.') || source === 'linkedin';
+  const isFacebook = host.includes('facebook.') || host.includes('fb.') || host.includes('l.facebook.') || host.includes('lm.facebook.') || source === 'facebook' || source === 'fb';
+  const isInstagram = host.includes('instagram.') || host.includes('instagr.am') || host.includes('l.instagram.') || source === 'instagram' || source === 'ig';
+  const isTwitter = host.includes('twitter.') || host.includes('t.co') || host.includes('x.com') || source === 'twitter' || source === 'x';
+  const isYouTube = host.includes('youtube.') || host.includes('youtu.be') || source === 'youtube';
+  const isPinterest = host.includes('pinterest.') || source === 'pinterest';
+  const isReddit = host.includes('reddit.') || source === 'reddit';
 
   let socialNetwork = undefined;
-  if (category === 'social') {
-    if (host.includes('linkedin.')) socialNetwork = 'linkedin';
-    else if (host.includes('facebook.') || host.includes('fb.')) socialNetwork = 'facebook';
-    else if (host.includes('instagram.') || host.includes('ig.')) socialNetwork = 'instagram';
-    else if (host.includes('twitter.') || host.includes('x.com') || host.includes('t.co')) socialNetwork = 'twitter';
-    else if (host.includes('youtube.')) socialNetwork = 'youtube';
-    else if (host.includes('pinterest.')) socialNetwork = 'pinterest';
-    else if (host.includes('reddit.')) socialNetwork = 'reddit';
-    else socialNetwork = 'other';
-  }
+  if (isLinkedIn) socialNetwork = 'linkedin';
+  else if (isFacebook) socialNetwork = 'facebook';
+  else if (isInstagram) socialNetwork = 'instagram';
+  else if (isTwitter) socialNetwork = 'twitter';
+  else if (isYouTube) socialNetwork = 'youtube';
+  else if (isPinterest) socialNetwork = 'pinterest';
+  else if (isReddit) socialNetwork = 'reddit';
 
-  const isOrganic = category === 'organic' || (source === 'google' && medium === 'organic');
+  // Paid detection
+  const isPaid = ['cpc','ppc','paid','ads','sem','display','cpm'].some(k => medium.includes(k)) || hasGclid;
+
+  // Categorization priority: Social > Paid > Organic (search) > Email > Direct > Referral > Unknown
+  let category = 'unknown';
+  if (socialNetwork) category = 'social';
+  else if (isPaid) category = 'paid';
+  else if (isSearch) category = 'organic';
+  else if (medium === 'email') category = 'email';
+  else if (isDirect) category = 'direct';
+  else if (host) category = 'referral';
+
+  const isOrganic = category === 'organic';
   return { category, socialNetwork, isOrganic };
 };
 
@@ -558,7 +582,7 @@ app.post('/api/track', async (req, res) => {
         referrerHost = m ? m[1] : '';
       }
     }
-    const { category: sourceCategory, socialNetwork, isOrganic } = categorizeSource({ referrerHost, utmSource, utmMedium });
+    const { category: sourceCategory, socialNetwork, isOrganic } = categorizeSource({ referrerHost, utmSource, utmMedium, path });
 
     const geo = await geoLookup(ip);
 
