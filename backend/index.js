@@ -74,19 +74,33 @@ if (!hasMongoDB) {
 }
 
 // Middleware
-app.use(cors({
-  origin: [
-    'https://taliyotechnologies.com',
-    'https://taliyo.com',
-    'https://www.taliyo.com',
-    'https://taliyo-technologies.vercel.app',
-    'https://taliyo-frontend.onrender.com',
-    'http://localhost:5173',
-    'http://localhost:3000'
-  ],
+// Robust CORS handling (explicit origins + preflight)
+const allowedOrigins = [
+  'https://taliyotechnologies.com',
+  'https://www.taliyotechnologies.com',
+  'https://taliyo.com',
+  'https://www.taliyo.com',
+  'https://taliyo-technologies.vercel.app',
+  'https://taliyo-frontend.onrender.com',
+  'http://localhost:5173',
+  'http://localhost:3000'
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow non-browser requests (no Origin header)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS: ' + origin));
+  },
   credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json());
 
 // Static uploads directory for images
