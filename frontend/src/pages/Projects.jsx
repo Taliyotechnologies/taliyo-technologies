@@ -13,18 +13,66 @@ const Projects = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
+  const buildSampleProjects = () => {
+    const year = new Date().getFullYear()
+    const img = (seed) => `https://picsum.photos/seed/${encodeURIComponent(seed)}/800/600`
+    const base = [
+      { title: 'E‑commerce Fashion Store', description: 'High‑performance ecommerce site with personalized recommendations and seamless checkout.', category: 'ecommerce', tags: ['Ecommerce', 'Next.js', 'Stripe'], technologies: ['React', 'Next.js', 'Node.js', 'Stripe'] },
+      { title: 'Food Delivery Mobile App', description: 'Real‑time order tracking, geolocation, and restaurant discovery for a city‑wide network.', category: 'mobile', tags: ['Mobile', 'Maps', 'Realtime'], technologies: ['React Native', 'Socket.IO', 'Node.js'] },
+      { title: 'SaaS CRM Dashboard', description: 'Multi‑tenant CRM with analytics, role‑based access, and billing integration.', category: 'saas', tags: ['SaaS', 'Analytics', 'Dashboard'], technologies: ['React', 'Chart.js', 'Express', 'MongoDB'] },
+      { title: 'Healthcare Appointment System', description: 'Scheduling platform with reminders and telemedicine integration.', category: 'healthcare', tags: ['Healthcare', 'Scheduling'], technologies: ['Node.js', 'React', 'Twilio'] },
+      { title: 'Fintech Payments Gateway', description: 'Secure payment orchestration with fraud detection and dynamic routing.', category: 'fintech', tags: ['Fintech', 'Payments', 'Security'], technologies: ['Node.js', 'NestJS', 'PostgreSQL'] },
+      { title: 'Real Estate Listing Portal', description: 'Advanced search, map filters, and agent dashboards for property management.', category: 'real-estate', tags: ['Portal', 'Search', 'Maps'], technologies: ['React', 'Elasticsearch', 'Leaflet'] },
+      { title: 'Education LMS Platform', description: 'Course authoring, quizzes, and progress tracking for remote learning.', category: 'education', tags: ['LMS', 'Video', 'Quizzes'], technologies: ['React', 'Node.js', 'MongoDB'] },
+      { title: 'Travel Booking Website', description: 'Hotel and flight aggregation with price alerts and user reviews.', category: 'travel', tags: ['Travel', 'Booking'], technologies: ['Next.js', 'Node.js', 'Redis'] },
+      { title: 'Restaurant Ordering System', description: 'QR‑based table ordering, kitchen screens, and POS integration.', category: 'restaurant', tags: ['Ordering', 'POS'], technologies: ['React', 'WebSockets', 'MySQL'] },
+      { title: 'Agency Portfolio Website', description: 'Animated case studies with SEO‑optimized pages and blazing performance.', category: 'portfolio', tags: ['Portfolio', 'SEO', 'Animations'], technologies: ['Vite', 'React', 'GSAP'] },
+    ]
+    return base.map((p, i) => ({
+      ...p,
+      slug: `${p.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}-${i + 1}`,
+      status: 'completed',
+      progress: 100,
+      startDate: new Date(year - 1, (i % 12), 1).toISOString(),
+      endDate: new Date(year - 1, (i % 12) + 1, 1).toISOString(),
+      budget: 0,
+      team: [],
+      priority: 'medium',
+      duration: '4-8 weeks',
+      liveUrl: '',
+      githubUrl: '',
+      image: img(p.title),
+      overview: p.description,
+      features: ['Responsive UI', 'Fast performance', 'Secure auth'],
+      results: ['Improved conversions', 'Reduced bounce rate'],
+      year: year - (i % 2),
+      isPublished: true,
+      publishedAt: new Date(year - (i % 2), (i % 12), 10).toISOString(),
+      createdAt: new Date(year - (i % 2), (i % 12), 5).toISOString(),
+      updatedAt: new Date(year - (i % 2), (i % 12), 12).toISOString(),
+    }))
+  }
+
   useEffect(() => {
     const load = async () => {
       try {
         const res = await fetch(`${API}/api/projects?limit=100`)
         const data = await res.json()
         if (!res.ok || data.success === false) throw new Error(data.message || 'Failed to load projects')
-        const items = Array.isArray(data.items) ? data.items : (Array.isArray(data) ? data : [])
+        let items = Array.isArray(data.items) ? data.items : (Array.isArray(data) ? data : [])
+        if (!items || items.length === 0) {
+          items = buildSampleProjects()
+        }
         setProjects(items)
         const tags = Array.from(new Set(items.flatMap(p => Array.isArray(p.tags) ? p.tags : [])))
         setAllTags(tags)
       } catch (e) {
-        setError(e.message || 'Something went wrong')
+        // Fallback to sample data when fetch fails
+        const sample = buildSampleProjects()
+        setProjects(sample)
+        const tags = Array.from(new Set(sample.flatMap(p => Array.isArray(p.tags) ? p.tags : [])))
+        setAllTags(tags)
+        setError('')
       } finally {
         setLoading(false)
       }
