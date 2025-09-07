@@ -2,13 +2,23 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 const API = import.meta.env.VITE_API_URL || 'https://taliyo-backend.onrender.com';
 
-// Convert a base64 public VAPID key to a Uint8Array
-const urlBase64ToUint8Array = (base64String) => {
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding)
+// Convert a base64url public VAPID key to a Uint8Array (robust against whitespace/mistakes)
+const urlBase64ToUint8Array = (input) => {
+  const original = String(input || '');
+  // Remove any non-base64url characters (keep A-Z a-z 0-9 - _)
+  const cleaned = original.replace(/[^A-Za-z0-9\-_]/g, '');
+  if (!cleaned) throw new Error('Invalid VAPID public key');
+  const padding = '='.repeat((4 - (cleaned.length % 4)) % 4);
+  const base64 = (cleaned + padding)
     .replace(/-/g, '+')
     .replace(/_/g, '/');
-  const rawData = atob(base64);
+  let rawData = '';
+  try {
+    rawData = atob(base64);
+  } catch (e) {
+    console.error('Failed to decode VAPID key with atob. Original:', original);
+    throw new Error('Invalid VAPID key format');
+  }
   const outputArray = new Uint8Array(rawData.length);
   for (let i = 0; i < rawData.length; ++i) {
     outputArray[i] = rawData.charCodeAt(i);
@@ -45,8 +55,10 @@ export default function usePushNotifications() {
     const res = await fetch(`${API}/api/push/public-key`);
     if (!res.ok) throw new Error('Failed to fetch VAPID public key');
     const data = await res.json();
-    if (!data.publicKey) throw new Error('No public key provided by server');
-    return data.publicKey;
+    const key = String(data.publicKey || '');
+    if (!key) throw new Error('No public key provided by server');
+    // Return sanitized key (strip spaces/newlines just in case)
+    return key.trim();
   }, []);
 
   const saveSubscription = useCallback(async (sub) => {
@@ -95,9 +107,10 @@ export default function usePushNotifications() {
       if (perm !== 'granted') throw new Error('Permission not granted');
       const reg = await registerSW();
       const publicKey = await getPublicKey();
+      const appServerKey = urlBase64ToUint8Array(publicKey);
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey)
+        applicationServerKey: appServerKey
       });
       await saveSubscription(sub.toJSON());
       setIsSubscribed(true);
