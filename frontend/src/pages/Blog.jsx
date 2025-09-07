@@ -12,6 +12,7 @@ const Blog = () => {
   const [error, setError] = useState('')
   const [query, setQuery] = useState('')
   const [activeTag, setActiveTag] = useState('All')
+  const [showAllTags, setShowAllTags] = useState(false)
 
   useEffect(() => {
     const load = async () => {
@@ -80,8 +81,27 @@ const Blog = () => {
         <div className="container mx-auto px-2 sm:px-4 lg:px-8">
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6 text-center">Latest Blogs</h2>
           {/* Filters */}
-          <div className="max-w-4xl mx-auto mb-8 flex flex-col sm:flex-row items-center gap-4">
-            <div className="relative w-full">
+          <div className="max-w-5xl mx-auto mb-6">
+            {/* Tag bar */}
+            <div className="relative -mx-2 px-2">
+              <div className="overflow-x-auto hide-scrollbar">
+                <div className="whitespace-nowrap flex items-center gap-2 pb-2">
+                  {(showAllTags ? allTags : allTags.slice(0, 12)).map(tag => (
+                    <button key={tag} onClick={() => setActiveTag(tag)} className={`text-xs px-3 py-1.5 rounded-full border shrink-0 ${activeTag===tag?'bg-blue-600 text-white border-blue-600':'border-gray-700 text-gray-300 hover:bg-gray-800'}`}>
+                      <span className="inline-flex items-center gap-1"><Tag className="w-3 h-3" /> {tag}</span>
+                    </button>
+                  ))}
+                  {allTags.length > 12 && (
+                    <button onClick={() => setShowAllTags(v => !v)} className="text-xs px-3 py-1.5 rounded-full border border-gray-700 text-gray-300 hover:bg-gray-800 shrink-0">
+                      {showAllTags ? 'Less' : 'More'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Search */}
+            <div className="relative w-full mt-4">
               <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
@@ -91,17 +111,22 @@ const Blog = () => {
                 className="w-full pl-9 pr-3 py-2 rounded-lg bg-gray-900 border border-gray-700 text-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              {allTags.map(tag => (
-                <button key={tag} onClick={() => setActiveTag(tag)} className={`text-xs px-3 py-1.5 rounded-full border ${activeTag===tag?'bg-blue-600 text-white border-blue-600':'border-gray-700 text-gray-300 hover:bg-gray-800'}`}>
-                  <span className="inline-flex items-center gap-1"><Tag className="w-3 h-3" /> {tag}</span>
-                </button>
-              ))}
-            </div>
           </div>
 
           {loading ? (
-            <div className="text-gray-300 text-center">Loading blogs...</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="bg-gray-900 rounded-2xl overflow-hidden border border-gray-800 animate-pulse">
+                  <div className="w-full h-48 bg-gray-800" />
+                  <div className="p-5 space-y-3">
+                    <div className="h-3 w-24 bg-gray-800 rounded" />
+                    <div className="h-5 w-3/4 bg-gray-800 rounded" />
+                    <div className="h-4 w-full bg-gray-800 rounded" />
+                    <div className="h-4 w-2/3 bg-gray-800 rounded" />
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : error ? (
             <div className="text-red-400 text-center">{error}</div>
           ) : (
