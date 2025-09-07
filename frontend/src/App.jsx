@@ -39,6 +39,7 @@ const BlogDetailWebDev = lazy(() => import('./pages/blog/BlogDetailWebDev.jsx'))
 const EcommerceBlog = lazy(() => import('./pages/blog/EcommerceBlog.jsx'));
 const MobileAppBlog = lazy(() => import('./pages/blog/MobileAppBlog.jsx'));
 const BlogDetail = lazy(() => import('./pages/blog/BlogDetail.jsx'));
+const BlogPost = lazy(() => import('./pages/blog/Post.jsx'));
 const FAQ = lazy(() => import('./pages/FAQ.jsx'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy.jsx'));
 const TermsConditions = lazy(() => import('./pages/TermsConditions.jsx'));
@@ -134,7 +135,7 @@ function App() {
             <Route path="blog/cloud-computing-backbone-modern-it" element={<BlogDetailCloudComputing />} />
             <Route path="blog/quantum-computing-revolution-2024" element={<BlogDetailQuantumComputing />} />
             <Route path="blog/remote-work-revolution-2024" element={<BlogDetailRemoteWork />} />
-            <Route path="blog/:id" element={<BlogDetail />} />
+            <Route path="blog/:slug" element={<BlogPost />} />
             <Route path="contact" element={<Contact />} />
             <Route path="faq" element={<FAQ />} />
             <Route path="privacy-policy" element={<PrivacyPolicy />} />

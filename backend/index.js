@@ -446,6 +446,34 @@ if (hasMongoDB && typeof Project !== 'undefined' && Project && !global.__project
   })();
 }
 
+// If MongoDB is configured, seed 15 sample blogs when the collection is empty
+if (hasMongoDB && typeof Blog !== 'undefined' && Blog && !global.__blogsSeedAttempted) {
+  global.__blogsSeedAttempted = true;
+  (async () => {
+    try {
+      const count = await Blog.estimatedDocumentCount();
+      if (count === 0) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const slugify = (s) => String(s || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        const img = (seed) => `https://picsum.photos/seed/${encodeURIComponent(seed)}/1200/630`;
+        const base = buildSampleBlogs();
+        const docs = base.map((b, i) => ({
+          ...b,
+          slug: `${slugify(b.title)}-${i + 1}`,
+          image: b.image || img(b.title),
+          publishedAt: b.publishedAt || new Date(year, (i % 12), 10),
+          excerpt: b.excerpt || b.description || '',
+        }));
+        await Blog.insertMany(docs, { ordered: false });
+        console.log('✅ Seeded sample blogs:', docs.length);
+      }
+    } catch (e) {
+      console.warn('⚠️  Skipping blog seed:', e?.message || e);
+    }
+  })();
+}
+
 // Admin Settings endpoints
 app.get('/api/admin/settings', authMiddleware, async (req, res) => {
   try {
@@ -718,20 +746,80 @@ const generateUniqueBlogSlug = async (base, idToExclude) => {
   return slug;
 };
 
-// Blog endpoints
+// Blog endpoints (public)
 app.get('/api/blogs', async (req, res) => {
   try {
+    const { category, tag, search } = req.query;
+    const limit = Math.min(parseInt(req.query.limit) || 15, 50);
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const skip = (page - 1) * limit;
+
+    // In-memory fallback when DB is unavailable
     if (!hasMongoDB) {
-      return res.status(503).json({ 
-        success: false, 
-        message: 'Blog service is temporarily unavailable.' 
-      });
+      let items = (global.__memoryBlogs || []);
+      if (category) items = items.filter(b => (b.category || '').toLowerCase() === String(category).toLowerCase());
+      if (tag) items = items.filter(b => Array.isArray(b.tags) && b.tags.map(t => t.toLowerCase()).includes(String(tag).toLowerCase()));
+      if (search) {
+        const r = new RegExp(search, 'i');
+        items = items.filter(b => r.test(b.title) || r.test(b.excerpt || '') || r.test(b.content || ''));
+      }
+      const total = items.length;
+      const paged = items.slice(skip, skip + limit);
+      return res.json(paged);
     }
 
-    const blogs = await Blog.find().sort({ publishedAt: -1 });
-    res.json(blogs);
+    // DB path with graceful fallback if empty
+    const dbFilter = {};
+    if (category) dbFilter.category = category;
+    if (tag) dbFilter.tags = { $in: [tag] };
+    if (search) {
+      const r = new RegExp(search, 'i');
+      dbFilter.$or = [{ title: r }, { excerpt: r }, { content: r }, { category: r }, { tags: r }];
+    }
+    const [items, total] = await Promise.all([
+      Blog.find(dbFilter).sort({ publishedAt: -1 }).skip(skip).limit(limit),
+      Blog.countDocuments(dbFilter)
+    ]);
+
+    if (total === 0 && Array.isArray(global.__memoryBlogs) && global.__memoryBlogs.length) {
+      let mem = global.__memoryBlogs;
+      if (category) mem = mem.filter(b => (b.category || '').toLowerCase() === String(category).toLowerCase());
+      if (tag) mem = mem.filter(b => Array.isArray(b.tags) && b.tags.map(t => t.toLowerCase()).includes(String(tag).toLowerCase()));
+      if (search) {
+        const r = new RegExp(search, 'i');
+        mem = mem.filter(b => r.test(b.title) || r.test(b.excerpt || '') || r.test(b.content || ''));
+      }
+      const totalMem = mem.length;
+      const pagedMem = mem.slice(skip, skip + limit);
+      return res.json(pagedMem);
+    }
+
+    return res.json(items);
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Blog by slug (public)
+app.get('/api/blogs/:slug', async (req, res) => {
+  try {
+    const { slug } = req.params;
+    if (!hasMongoDB) {
+      const item = (global.__memoryBlogs || []).find(b => b.slug === slug);
+      if (!item) return res.status(404).json({ message: 'Blog not found' });
+      return res.json(item);
+    }
+    const item = await Blog.findOne({ slug });
+    if (!item) {
+      if (Array.isArray(global.__memoryBlogs)) {
+        const mem = global.__memoryBlogs.find(b => b.slug === slug);
+        if (mem) return res.json(mem);
+      }
+      return res.status(404).json({ message: 'Blog not found' });
+    }
+    return res.json(item);
+  } catch (err) {
+    return res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -1764,6 +1852,152 @@ function buildSampleProjects() {
 // In-memory sample projects (only set once to keep consistency across fallbacks)
 if (!global.__memoryProjects) {
   global.__memoryProjects = buildSampleProjects();
+}
+
+function buildSampleBlogs() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const img = (seed) => `https://picsum.photos/seed/${encodeURIComponent(seed)}/1200/630`;
+  const base = [
+    {
+      title: 'Web Development Trends 2025',
+      category: 'web',
+      tags: ['Web', 'Next.js', 'Edge', 'AI'],
+      author: 'Taliyo Team',
+      excerpt: 'From edge rendering to AI‑assisted development, here are the web trends you should prepare for in 2025.',
+      content: `<h2>Overview</h2><p>The modern web is shifting to the edge, prioritizing performance, security, and developer velocity. In 2025, expect server components, streaming UI, and AI copilots to be standard.</p><h2>Key Trends</h2><ul><li>Edge & serverless by default</li><li>AI‑assisted DX and testing</li><li>WebAssembly for performance‑critical modules</li><li>Server Components and partial hydration</li></ul><h2>What to Do Now</h2><p>Audit your Core Web Vitals, adopt SSR/SSG where it helps, and experiment with AI tools that accelerate delivery without compromising quality.</p>`
+    },
+    {
+      title: 'Cloud Cost Optimization: A Practical Guide',
+      category: 'cloud',
+      tags: ['Cloud', 'FinOps', 'AWS', 'GCP', 'Azure'],
+      author: 'Taliyo Team',
+      excerpt: 'Control your cloud bill with FinOps principles, right‑sizing, autoscaling, and architecture changes that pay for themselves.',
+      content: `<h2>Why Costs Grow</h2><p>Orphaned resources, over‑provisioned instances, and chatty microservices add up. Without guardrails, spend balloons.</p><h2>Quick Wins</h2><ul><li>Right size compute & enable autoscaling</li><li>Turn on lifecycle rules for storage</li><li>Use managed DB tiers with autoscale</li><li>Prefer pub/sub over polling</li></ul><h2>FinOps Culture</h2><p>Make cost a shared KPI. Add dashboards, budgets, and alerts so teams own efficiency.</p>`
+    },
+    {
+      title: 'eCommerce SEO: Technical Checklist that Works',
+      category: 'marketing',
+      tags: ['SEO', 'eCommerce', 'Performance'],
+      author: 'Taliyo Team',
+      excerpt: 'A battle‑tested technical SEO checklist for online stores to improve rankings and conversions.',
+      content: `<h2>Core Signals</h2><ul><li>Fast LCP: optimize images & critical CSS</li><li>Clean URLs with canonical tags</li><li>Structured data for products</li><li>XML sitemaps & robots best‑practices</li></ul><h2>Content</h2><p>Create category guides and comparison pages that answer high‑intent queries. Add FAQs and internal links.</p>`
+    },
+    {
+      title: 'Mobile App Architecture in 2025',
+      category: 'mobile',
+      tags: ['Mobile', 'React Native', 'Flutter'],
+      author: 'Taliyo Team',
+      excerpt: 'How to structure modern mobile apps for performance, reliability, and rapid iteration.',
+      content: `<h2>Architecture</h2><p>Use modular feature folders, a typed API layer, offline‑first storage, and background sync. Invest in CI with fast lanes.</p><h2>Observability</h2><p>Crash analytics, performance traces, and session replays reveal real issues before reviews do.</p>`
+    },
+    {
+      title: 'DevSecOps: Security Built into Your Pipeline',
+      category: 'devops',
+      tags: ['DevOps', 'Security', 'CI/CD'],
+      author: 'Taliyo Team',
+      excerpt: 'Shift security left with SAST, DAST, dependency scanning, and signed releases.',
+      content: `<h2>Pipeline Controls</h2><ul><li>SAST on PRs with gating</li><li>Dependency scanning & SBOM</li><li>Secrets scanning</li><li>Signed containers & provenance (SLSA)</li></ul><h2>Runtime</h2><p>Least privilege IAM, network policies, and WAF/CDN to stop abuse early.</p>`
+    },
+    {
+      title: 'Design Systems that Scale',
+      category: 'design',
+      tags: ['UI/UX', 'Design System', 'Accessibility'],
+      author: 'Taliyo Team',
+      excerpt: 'Build accessible, consistent interfaces with tokens, components, and usage guidelines.',
+      content: `<h2>Foundations</h2><p>Define color, type, spacing tokens. Provide coded components with docs and usage do/don'ts. Bake in a11y checks.</p>`
+    },
+    {
+      title: 'Data Analytics for Founders',
+      category: 'data',
+      tags: ['Analytics', 'Product', 'Growth'],
+      author: 'Taliyo Team',
+      excerpt: 'What to instrument, how to model events, and which dashboards matter at each stage.',
+      content: `<h2>North‑Star Metrics</h2><p>Define activation, retention, and revenue KPIs. Start with simple funnels; evolve to cohorts and LTV.</p>`
+    },
+    {
+      title: 'Content Strategy that Ranks in 2025',
+      category: 'marketing',
+      tags: ['SEO', 'Content'],
+      author: 'Taliyo Team',
+      excerpt: 'Topical authority beats thin posts. Build hubs, interlink, and refresh winners quarterly.',
+      content: `<h2>Plan</h2><p>Map topics, cluster keywords, and create pillar pages with supporting articles. Add schema, FAQs, and media.</p>`
+    },
+    {
+      title: 'SaaS Pricing: Models and Experiments',
+      category: 'saas',
+      tags: ['SaaS', 'Pricing', 'Growth'],
+      author: 'Taliyo Team',
+      excerpt: 'Freemium, usage‑based, or tiered? How to test and measure pricing changes safely.',
+      content: `<h2>Playbook</h2><p>Start with simple tiers; add usage add‑ons later. A/B price pages and monitor conversion, ARPU, churn.</p>`
+    },
+    {
+      title: 'PWAs vs Native Apps',
+      category: 'web',
+      tags: ['PWA', 'Mobile', 'Web'],
+      author: 'Taliyo Team',
+      excerpt: 'When to choose a Progressive Web App and when native still wins.',
+      content: `<h2>Trade‑offs</h2><p>PWAs shine for discoverability and cost; native still wins for deep OS integrations and performance for certain workloads.</p>`
+    },
+    {
+      title: 'Microservices vs Monolith: 2025 Reality Check',
+      category: 'architecture',
+      tags: ['Microservices', 'Monolith', 'Architecture'],
+      author: 'Taliyo Team',
+      excerpt: 'Most teams need a modular monolith before microservices. Here’s how to choose.',
+      content: `<h2>When to Split</h2><p>Split on clear bounded contexts, team ownership, and scaling hotspots. Avoid premature complexity.</p>`
+    },
+    {
+      title: 'Headless CMS: Pros, Cons, and Picks',
+      category: 'cms',
+      tags: ['Headless', 'CMS', 'Content'],
+      author: 'Taliyo Team',
+      excerpt: 'Why headless can speed up teams—and when a traditional CMS is simpler.',
+      content: `<h2>Evaluation</h2><p>Consider roles/permissions, workflows, localization, and API limits. Start with a pilot space.</p>`
+    },
+    {
+      title: 'Performance Optimization for Core Web Vitals',
+      category: 'web',
+      tags: ['Performance', 'CWV'],
+      author: 'Taliyo Team',
+      excerpt: 'Win on LCP, CLS, and INP with practical front‑end and backend fixes.',
+      content: `<h2>Checklist</h2><ul><li>Preload hero images and critical fonts</li><li>Eliminate layout shifts</li><li>Reduce JS by code‑splitting</li><li>Cache at the edge</li></ul>`
+    },
+    {
+      title: 'AI in Digital Marketing: Playbook',
+      category: 'marketing',
+      tags: ['AI', 'Marketing'],
+      author: 'Taliyo Team',
+      excerpt: 'Use AI for research, drafts, ad variations, and analytics—but keep human oversight.',
+      content: `<h2>Workflows</h2><p>Generate outlines, test copy variants, and summarize results. Build review steps for brand and facts.</p>`
+    },
+    {
+      title: 'Cybersecurity Basics for SMEs',
+      category: 'security',
+      tags: ['Security', 'SMB'],
+      author: 'Taliyo Team',
+      excerpt: 'Practical steps to secure your small business without enterprise budgets.',
+      content: `<h2>Essentials</h2><ul><li>MFA everywhere</li><li>Backups with restore drills</li><li>Patch cycles</li><li>Least privilege & audits</li></ul>`
+    },
+    {
+      title: 'Analytics Setup: From Events to Insights',
+      category: 'data',
+      tags: ['Analytics', 'Product'],
+      author: 'Taliyo Team',
+      excerpt: 'Instrument events, model funnels, and connect decisions to data.',
+      content: `<h2>Steps</h2><p>Define events, standardize properties, and build dashboards that answer product questions—not vanity metrics.</p>`
+    }
+  ];
+  return base.map((b, i) => ({
+    ...b,
+    slug: `${slugifyText(b.title)}-${i + 1}`,
+    image: img(b.title),
+    publishedAt: new Date(year, (i % 12), 10)
+  }));
+}
+
+if (!global.__memoryBlogs) {
+  global.__memoryBlogs = buildSampleBlogs();
 }
 
 const server = http.createServer(app);
