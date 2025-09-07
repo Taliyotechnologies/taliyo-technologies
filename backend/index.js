@@ -98,20 +98,18 @@ const allowedOrigins = [
 ];
 
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow non-browser requests (no Origin header)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error('Not allowed by CORS: ' + origin));
-  },
+  // Temporarily allow any Origin to prevent preflight failures; responses will Vary: Origin
+  origin: function (_, callback) { callback(null, true); },
   credentials: true,
   methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
   optionsSuccessStatus: 200,
 };
 
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
+// Ensure proxies/cache key vary by Origin
+app.use((req, res, next) => { res.header('Vary', 'Origin'); next(); });
 app.use(express.json());
 
 // Static uploads directory for images
