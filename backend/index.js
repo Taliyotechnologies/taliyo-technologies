@@ -747,7 +747,14 @@ const categorizeSource = ({ referrerHost = '', utmSource = '', utmMedium = '', p
 };
 
 // Helper: naive user-agent parsing
-const parseUA = (ua = '') => {
+const parseUA = (ua = '') =>
+  String(ua)
+    .toLowerCase()
+    .replace(/mobile|iphone|android.+mobile/g, 'mobile')
+    .replace(/ipad|tablet/g, 'tablet')
+    .replace(/windows|macintosh|linux/g, (match) => match);
+
+const parseUAExtended = (ua = '') => {
   const s = ua.toLowerCase();
   let deviceType = 'unknown';
   if (/mobile|iphone|android.+mobile/.test(s)) deviceType = 'mobile';
@@ -804,7 +811,7 @@ app.post('/api/track', async (req, res) => {
   try {
     if (!hasMongoDB) return res.json({ success: true, skipped: true });
     const ua = String(req.headers['user-agent'] || '');
-    const { deviceType, os, browser } = parseUA(ua);
+    const { deviceType, os, browser } = parseUAExtended(ua);
     const ip = getIp(req);
     const body = req.body && typeof req.body === 'object' ? req.body : {};
     const path = body.path || body.page || '/';
@@ -1142,7 +1149,24 @@ app.delete('/api/admin/blogs/:id', authMiddleware, async (req, res) => {
 app.get('/api/projects', async (req, res) => {
   try {
     if (!hasMongoDB) {
-      return res.status(503).json({ success: false, message: 'Project service is temporarily unavailable.' });
+      // In-memory demo projects
+      const limit = Math.min(parseInt(req.query.limit) || 50, 100);
+      const page = Math.max(parseInt(req.query.page) || 1, 1);
+      const skip = (page - 1) * limit;
+
+      const { status, tag, category, search } = req.query;
+      let items = (global.__memoryProjects || []).filter(p => p.isPublished !== false);
+      if (status) items = items.filter(p => p.status === status);
+      if (category) items = items.filter(p => (p.category || '').toLowerCase() === String(category).toLowerCase());
+      if (tag) items = items.filter(p => Array.isArray(p.tags) && p.tags.includes(tag));
+      if (search) {
+        const r = new RegExp(search, 'i');
+        items = items.filter(p => r.test(p.title) || r.test(p.description || '') || r.test(p.client || '') || (Array.isArray(p.technologies) && p.technologies.some(t => r.test(t))) || (Array.isArray(p.tags) && p.tags.some(t => r.test(t))));
+      }
+      items = items.sort((a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0));
+      const total = items.length;
+      const paged = items.slice(skip, skip + limit);
+      return res.json({ success: true, items: paged, total, page, limit });
     }
 
     const { status, tag, category, search } = req.query;
@@ -1182,7 +1206,9 @@ app.get('/api/projects', async (req, res) => {
 app.get('/api/projects/:slug', async (req, res) => {
   try {
     if (!hasMongoDB) {
-      return res.status(503).json({ success: false, message: 'Project service is temporarily unavailable.' });
+      const item = (global.__memoryProjects || []).find(p => p.slug === req.params.slug && p.isPublished !== false);
+      if (!item) return res.status(404).json({ message: 'Project not found' });
+      return res.json(item);
     }
 
     const project = await Project.findOne({ slug: req.params.slug, isPublished: true });
@@ -1595,6 +1621,122 @@ if (hasMongoDB) {
 } else {
   console.log('ℹ️  MongoDB not configured - running in limited mode');
   console.log('🔍 MONGO_URI value:', MONGO_URI);
+}
+
+// ---------------------------
+// In-memory sample projects (when DB is unavailable)
+// ---------------------------
+function slugifyText(str) {
+  return String(str || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
+
+if (!hasMongoDB && !global.__memoryProjects) {
+  const now = new Date();
+  const year = now.getFullYear();
+  const img = (seed) => `https://picsum.photos/seed/${encodeURIComponent(seed)}/800/600`;
+  const samples = [
+    {
+      title: 'E‑commerce Fashion Store',
+      description: 'High‑performance ecommerce site with personalized recommendations and seamless checkout.',
+      category: 'ecommerce',
+      tags: ['Ecommerce', 'Next.js', 'Stripe'],
+      technologies: ['React', 'Next.js', 'Node.js', 'Stripe'],
+    },
+    {
+      title: 'Food Delivery Mobile App',
+      description: 'Real‑time order tracking, geolocation, and restaurant discovery for a city‑wide network.',
+      category: 'mobile',
+      tags: ['Mobile', 'Maps', 'Realtime'],
+      technologies: ['React Native', 'Socket.IO', 'Node.js'],
+    },
+    {
+      title: 'SaaS CRM Dashboard',
+      description: 'Multi‑tenant CRM with analytics, role‑based access, and billing integration.',
+      category: 'saas',
+      tags: ['SaaS', 'Analytics', 'Dashboard'],
+      technologies: ['React', 'Chart.js', 'Express', 'MongoDB'],
+    },
+    {
+      title: 'Healthcare Appointment System',
+      description: 'HIPAA‑aware scheduling platform with reminders and telemedicine integration.',
+      category: 'healthcare',
+      tags: ['Healthcare', 'Scheduling'],
+      technologies: ['Node.js', 'React', 'Twilio'],
+    },
+    {
+      title: 'Fintech Payments Gateway',
+      description: 'Secure payment orchestration with fraud detection and dynamic routing.',
+      category: 'fintech',
+      tags: ['Fintech', 'Payments', 'Security'],
+      technologies: ['Node.js', 'NestJS', 'PostgreSQL'],
+    },
+    {
+      title: 'Real Estate Listing Portal',
+      description: 'Advanced search, map filters, and agent dashboards for property management.',
+      category: 'real-estate',
+      tags: ['Portal', 'Search', 'Maps'],
+      technologies: ['React', 'Elasticsearch', 'Leaflet'],
+    },
+    {
+      title: 'Education LMS Platform',
+      description: 'Course authoring, quizzes, and progress tracking for remote learning.',
+      category: 'education',
+      tags: ['LMS', 'Video', 'Quizzes'],
+      technologies: ['React', 'Node.js', 'MongoDB'],
+    },
+    {
+      title: 'Travel Booking Website',
+      description: 'Hotel and flight aggregation with price alerts and user reviews.',
+      category: 'travel',
+      tags: ['Travel', 'Booking'],
+      technologies: ['Next.js', 'Node.js', 'Redis'],
+    },
+    {
+      title: 'Restaurant Ordering System',
+      description: 'QR‑based table ordering, kitchen screens, and POS integration.',
+      category: 'restaurant',
+      tags: ['Ordering', 'POS'],
+      technologies: ['React', 'WebSockets', 'MySQL'],
+    },
+    {
+      title: 'Agency Portfolio Website',
+      description: 'Animated case studies with SEO‑optimized pages and blazing performance.',
+      category: 'portfolio',
+      tags: ['Portfolio', 'SEO', 'Animations'],
+      technologies: ['Vite', 'React', 'GSAP'],
+    },
+  ];
+
+  global.__memoryProjects = samples.map((p, i) => ({
+    ...p,
+    slug: `${slugifyText(p.title)}-${i + 1}`,
+    client: undefined,
+    status: 'completed',
+    progress: 100,
+    startDate: new Date(year - 1, (i % 12), 1),
+    endDate: new Date(year - 1, (i % 12) + 1, 1),
+    budget: 0,
+    team: [],
+    priority: 'medium',
+    duration: '4-8 weeks',
+    liveUrl: '',
+    githubUrl: '',
+    image: img(p.title),
+    overview: p.description,
+    features: ['Responsive UI', 'Fast performance', 'Secure auth'],
+    results: ['Improved conversions', 'Reduced bounce rate'],
+    tags: p.tags,
+    technologies: p.technologies,
+    year: year - (i % 2),
+    isPublished: true,
+    publishedAt: new Date(year - (i % 2), (i % 12), 10),
+    createdAt: new Date(year - (i % 2), (i % 12), 5),
+    updatedAt: new Date(year - (i % 2), (i % 12), 12),
+  }));
 }
 
 const server = http.createServer(app);
