@@ -108,7 +108,7 @@ function App() {
         <link rel="canonical" href="https://taliyo.com" />
         
         {/* Preload critical assets */}
-        <link rel="preload" href="/Taliyo technologies logo.png" as="image" />
+        {/** Removed unused image preload to avoid console warnings */}
         
         {/* Preconnect to important origins */}
         <link rel="preconnect" href="https://fonts.gstatic.com" />
