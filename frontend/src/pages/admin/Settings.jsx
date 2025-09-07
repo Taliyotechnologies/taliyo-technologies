@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { 
   Settings as SettingsIcon, 
@@ -18,6 +18,8 @@ import useTheme from '../../hooks/useTheme';
 import useAppearance from '../../hooks/useAppearance';
 import usePushNotifications from '../../hooks/usePushNotifications';
 
+const API = import.meta.env.VITE_API_URL || 'https://taliyo-backend.onrender.com';
+
 const Settings = () => {
   const [activeTab, setActiveTab] = useState('general');
   const [showPassword, setShowPassword] = useState(false);
@@ -29,6 +31,74 @@ const Settings = () => {
 
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [applyReport, setApplyReport] = useState({});
+
+  // General Settings state
+  const [general, setGeneral] = useState({
+    companyName: 'Taliyo Technologies',
+    websiteUrl: 'https://taliyo.com',
+    timezone: 'Asia/Kolkata',
+    language: 'en',
+    maintenanceMode: false,
+    maintenanceMessage: "We'll be back soon.",
+  });
+  const [loadingGeneral, setLoadingGeneral] = useState(true);
+  const [savingGeneral, setSavingGeneral] = useState(false);
+
+  const loadGeneral = useCallback(async () => {
+    const token = localStorage.getItem('token');
+    setLoadingGeneral(true);
+    try {
+      const res = await fetch(`${API}/api/admin/settings`, {
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '',
+        }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data?.settings) {
+        const s = data.settings;
+        setGeneral({
+          companyName: s.companyName || 'Taliyo Technologies',
+          websiteUrl: s.websiteUrl || 'https://taliyo.com',
+          timezone: s.timezone || 'Asia/Kolkata',
+          language: s.language || 'en',
+          maintenanceMode: !!s.maintenanceMode,
+          maintenanceMessage: s.maintenanceMessage || "We'll be back soon.",
+        });
+      }
+    } catch {}
+    finally { setLoadingGeneral(false); }
+  }, []);
+
+  useEffect(() => { loadGeneral(); }, [loadGeneral]);
+
+  const saveGeneral = useCallback(async (partial) => {
+    const token = localStorage.getItem('token');
+    setSavingGeneral(true);
+    try {
+      const res = await fetch(`${API}/api/admin/settings`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : '',
+        },
+        body: JSON.stringify(partial || general)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data?.settings) {
+        const s = data.settings;
+        setGeneral((prev) => ({
+          ...prev,
+          companyName: s.companyName,
+          websiteUrl: s.websiteUrl,
+          timezone: s.timezone,
+          language: s.language,
+          maintenanceMode: !!s.maintenanceMode,
+          maintenanceMessage: s.maintenanceMessage,
+        }));
+      }
+    } catch {}
+    finally { setSavingGeneral(false); }
+  }, [general]);
 
   const handleSave = () => {
     try {
@@ -120,7 +190,17 @@ const Settings = () => {
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:border-gray-700 transition-colors duration-200">
                 {activeTab === 'general' && (
                   <div className="space-y-6">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">General Settings</h3>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">General Settings</h3>
+                      <button
+                        onClick={() => saveGeneral()}
+                        disabled={savingGeneral || loadingGeneral}
+                        className="inline-flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-200 disabled:opacity-60"
+                      >
+                        <Save className="w-4 h-4" />
+                        {savingGeneral ? 'Saving...' : 'Save General'}
+                      </button>
+                    </div>
                     
                     <div className="space-y-4">
                       <div>
@@ -129,7 +209,9 @@ const Settings = () => {
                         </label>
                         <input
                           type="text"
-                          defaultValue="Taliyo Technologies"
+                          value={general.companyName}
+                          onChange={(e) => setGeneral(g => ({ ...g, companyName: e.target.value }))}
+                          disabled={loadingGeneral}
                           className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-400"
                         />
                       </div>
@@ -140,7 +222,9 @@ const Settings = () => {
                         </label>
                         <input
                           type="url"
-                          defaultValue="https://taliyo.com"
+                          value={general.websiteUrl}
+                          onChange={(e) => setGeneral(g => ({ ...g, websiteUrl: e.target.value }))}
+                          disabled={loadingGeneral}
                           className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-400"
                         />
                       </div>
@@ -149,7 +233,11 @@ const Settings = () => {
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                           Timezone
                         </label>
-                        <select className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+                        <select
+                          value={general.timezone}
+                          onChange={(e) => setGeneral(g => ({ ...g, timezone: e.target.value }))}
+                          disabled={loadingGeneral}
+                          className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
                           <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
                           <option value="UTC">UTC</option>
                           <option value="America/New_York">America/New_York (EST)</option>
@@ -161,12 +249,51 @@ const Settings = () => {
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                           Language
                         </label>
-                        <select className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+                        <select
+                          value={general.language}
+                          onChange={(e) => setGeneral(g => ({ ...g, language: e.target.value }))}
+                          disabled={loadingGeneral}
+                          className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
                           <option value="en">English</option>
                           <option value="hi">Hindi</option>
                           <option value="es">Spanish</option>
                           <option value="fr">French</option>
                         </select>
+                      </div>
+
+                      <div className="pt-2">
+                        <div className="flex items-start justify-between gap-4 p-4 bg-gray-50 dark:bg-gray-700/40 rounded-lg">
+                          <div>
+                            <p className="font-medium text-gray-900 dark:text-white">Maintenance Mode</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">When enabled, visitors will see a maintenance page. Admin can still access the dashboard.</p>
+                            <div className="mt-3">
+                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Maintenance message</label>
+                              <input
+                                type="text"
+                                value={general.maintenanceMessage}
+                                onChange={(e) => setGeneral(g => ({ ...g, maintenanceMessage: e.target.value }))}
+                                onBlur={() => saveGeneral({ maintenanceMessage: general.maintenanceMessage })}
+                                disabled={loadingGeneral}
+                                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-400"
+                                placeholder="We'll be back soon."
+                              />
+                            </div>
+                          </div>
+                          <label className="relative inline-flex items-center cursor-pointer mt-1">
+                            <input
+                              type="checkbox"
+                              className="sr-only peer"
+                              checked={!!general.maintenanceMode}
+                              onChange={async (e) => {
+                                const checked = e.target.checked;
+                                setGeneral(g => ({ ...g, maintenanceMode: checked }));
+                                await saveGeneral({ maintenanceMode: checked });
+                              }}
+                              disabled={loadingGeneral || savingGeneral}
+                            />
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-500 peer-checked:bg-blue-600"></div>
+                          </label>
+                        </div>
                       </div>
                     </div>
                   </div>

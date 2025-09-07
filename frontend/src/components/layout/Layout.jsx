@@ -3,12 +3,17 @@ import Header from './Header'
 import Footer from './Footer'
 import ScrollToTop from '../ui/ScrollToTop'
 import AnimatedCursor from '../ui/AnimatedCursor'
-import { useEffect, Suspense, useRef } from 'react';
+import { useEffect, Suspense, useRef, useState } from 'react';
 import io from 'socket.io-client';
+import Maintenance from '../../pages/Maintenance';
+
+const API = import.meta.env.VITE_API_URL || 'https://taliyo-backend.onrender.com';
 
 const Layout = () => {
   const location = useLocation();
   const socketRef = useRef(null);
+  const [publicSettings, setPublicSettings] = useState({ maintenanceMode: false, maintenanceMessage: '', companyName: 'Taliyo' });
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
 
   useEffect(() => {
     // Initialize socket once on mount if API URL is provided
@@ -31,6 +36,25 @@ const Layout = () => {
     };
   }, []);
 
+  // Load public settings (for maintenance mode)
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const res = await fetch(`${API}/api/settings/public`);
+        const data = await res.json().catch(() => ({}));
+        if (!cancelled && data) setPublicSettings(data);
+      } catch (e) {
+        // ignore
+      } finally {
+        if (!cancelled) setSettingsLoaded(true);
+      }
+    };
+    load();
+    const id = setInterval(load, 60000); // refresh every 60s
+    return () => { cancelled = true; clearInterval(id); };
+  }, []);
+
   useEffect(() => {
     // Emit page view if socket is connected
     try {
@@ -50,7 +74,11 @@ const Layout = () => {
       <Header />
       <main className="flex-1 bg-gray-950">
         <Suspense fallback={<div className="min-h-[50vh]" />}> 
-          <Outlet />
+          {publicSettings?.maintenanceMode ? (
+            <Maintenance message={publicSettings?.maintenanceMessage} companyName={publicSettings?.companyName} />
+          ) : (
+            <Outlet />
+          )}
         </Suspense>
       </main>
       <Footer />

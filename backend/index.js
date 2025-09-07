@@ -59,6 +59,17 @@ if (webpush) {
 // In-memory subscription store when DB is unavailable
 const memorySubscriptions = new Map(); // endpoint -> subscription JSON
 
+// Site settings defaults and in-memory store (when DB unavailable)
+const defaultSettings = {
+  companyName: 'Taliyo Technologies',
+  websiteUrl: 'https://taliyo.com',
+  timezone: 'Asia/Kolkata',
+  language: 'en',
+  maintenanceMode: false,
+  maintenanceMessage: "We'll be back soon.",
+};
+let memorySettings = { ...defaultSettings };
+
 // Check if MongoDB URI is provided
 const hasMongoDB = !!MONGO_URI;
 
@@ -228,7 +239,7 @@ app.post('/api/admin/push/test', authMiddleware, async (req, res) => {
 });
 
 // Only define schemas and models if MongoDB is available
-let Contact, Subscriber, Blog, Project, PageView, ActivityLog, PushSubscription;
+let Contact, Subscriber, Blog, Project, PageView, ActivityLog, PushSubscription, SiteSettings;
 
 if (hasMongoDB) {
   // Schemas
@@ -322,6 +333,15 @@ if (hasMongoDB) {
     createdAt: { type: Date, default: Date.now }
   });
 
+  const siteSettingsSchema = new mongoose.Schema({
+    companyName: { type: String, default: defaultSettings.companyName },
+    websiteUrl: { type: String, default: defaultSettings.websiteUrl },
+    timezone: { type: String, default: defaultSettings.timezone },
+    language: { type: String, default: defaultSettings.language },
+    maintenanceMode: { type: Boolean, default: false },
+    maintenanceMessage: { type: String, default: defaultSettings.maintenanceMessage },
+  }, { timestamps: true });
+
   const projectSchema = new mongoose.Schema({
     title: { type: String, required: true },
     slug: { type: String, required: true, unique: true, index: true },
@@ -364,7 +384,72 @@ if (hasMongoDB) {
   PageView = mongoose.model('PageView', pageViewSchema);
   ActivityLog = mongoose.model('ActivityLog', activityLogSchema);
   PushSubscription = mongoose.model('PushSubscription', pushSubscriptionSchema);
+  SiteSettings = mongoose.model('SiteSettings', siteSettingsSchema);
 }
+
+// Admin Settings endpoints
+app.get('/api/admin/settings', authMiddleware, async (req, res) => {
+  try {
+    if (hasMongoDB && SiteSettings) {
+      let doc = await SiteSettings.findOne();
+      if (!doc) doc = await SiteSettings.create(defaultSettings);
+      return res.json({ success: true, settings: doc });
+    }
+    return res.json({ success: true, settings: memorySettings, dbConfigured: false });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+app.patch('/api/admin/settings', authMiddleware, async (req, res) => {
+  try {
+    const allowed = ['companyName', 'websiteUrl', 'timezone', 'language', 'maintenanceMode', 'maintenanceMessage'];
+    const body = req.body || {};
+    const updates = {};
+    for (const k of allowed) if (Object.prototype.hasOwnProperty.call(body, k)) updates[k] = body[k];
+
+    if (hasMongoDB && SiteSettings) {
+      let doc = await SiteSettings.findOne();
+      if (!doc) doc = new SiteSettings(defaultSettings);
+      Object.assign(doc, updates);
+      await doc.save();
+      if (ActivityLog) {
+        ActivityLog.create({ user: req.user?.email || 'admin', action: 'update_settings', details: 'Updated site settings', ip: req.ip }).catch(() => {});
+      }
+      return res.json({ success: true, settings: doc });
+    }
+
+    memorySettings = { ...memorySettings, ...updates };
+    return res.json({ success: true, settings: memorySettings, dbConfigured: false });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Public settings (used by frontend to show maintenance page)
+app.get('/api/settings/public', async (req, res) => {
+  try {
+    if (hasMongoDB && SiteSettings) {
+      const doc = await SiteSettings.findOne().lean();
+      const s = doc || defaultSettings;
+      return res.json({
+        maintenanceMode: !!s.maintenanceMode,
+        maintenanceMessage: s.maintenanceMessage || defaultSettings.maintenanceMessage,
+        companyName: s.companyName || defaultSettings.companyName,
+        websiteUrl: s.websiteUrl || defaultSettings.websiteUrl,
+      });
+    }
+    const s = memorySettings || defaultSettings;
+    return res.json({
+      maintenanceMode: !!s.maintenanceMode,
+      maintenanceMessage: s.maintenanceMessage,
+      companyName: s.companyName,
+      websiteUrl: s.websiteUrl,
+    });
+  } catch (err) {
+    return res.json({ maintenanceMode: false });
+  }
+});
 
 // Email configuration
 const transporter = nodemailer.createTransport({
