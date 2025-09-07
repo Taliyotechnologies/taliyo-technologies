@@ -19,11 +19,14 @@ const RequireAuth = ({ children }) => {
     // Validate token with backend
     const checkAuth = async () => {
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
         const res = await fetch(`${API}/api/auth/me`, {
           headers: {
             'Authorization': `Bearer ${token}`,
           },
-        });
+          signal: controller.signal,
+        }).finally(() => clearTimeout(timeoutId));
         if (res.ok) {
           setValid(true);
         } else {
@@ -32,6 +35,9 @@ const RequireAuth = ({ children }) => {
           setValid(false);
         }
       } catch (e) {
+        // On network error/timeout, treat as invalid and clear token to avoid loops
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
         setValid(false);
       } finally {
         setLoading(false);
