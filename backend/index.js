@@ -109,7 +109,19 @@ app.get('/api/health', (req, res) => {
 // Push Notifications endpoints
 app.get('/api/push/public-key', (req, res) => {
   try {
-    const pub = VAPID_PUBLIC_KEY || EPHEMERAL_VAPID?.publicKey || '';
+    const pub = (VAPID_PUBLIC_KEY || EPHEMERAL_VAPID?.publicKey || '').toString().trim();
+    if (!pub) {
+      return res.status(500).json({ message: 'VAPID public key not configured' });
+    }
+    // Catch common misconfiguration where VAPID_PUBLIC_KEY is set to the endpoint URL by mistake
+    if (/^https?:\/\//i.test(pub)) {
+      console.warn('⚠️  VAPID_PUBLIC_KEY looks like a URL, this is misconfigured:', pub);
+      return res.status(500).json({ message: 'Server VAPID key misconfigured' });
+    }
+    // Warn if it contains non-base64url characters; frontend sanitizes but we surface a warning for logs
+    if (!/^[A-Za-z0-9_\-]+$/.test(pub)) {
+      console.warn('⚠️  VAPID_PUBLIC_KEY may have invalid characters (expected base64url)');
+    }
     return res.json({ publicKey: pub });
   } catch (e) {
     return res.status(500).json({ message: 'Server error' });
