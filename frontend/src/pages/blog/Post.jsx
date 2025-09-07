@@ -76,6 +76,9 @@ export default function Post() {
       <Helmet>
         <title>{post.title} | Taliyo Technologies Blog</title>
         <meta name="description" content={post.excerpt || post.description || ''} />
+        {Array.isArray(post.keywords) && post.keywords.length > 0 && (
+          <meta name="keywords" content={post.keywords.join(', ')} />
+        )}
         <meta property="og:title" content={post.title} />
         <meta property="og:description" content={post.excerpt || post.description || ''} />
         {post.image && <meta property="og:image" content={post.image} />}

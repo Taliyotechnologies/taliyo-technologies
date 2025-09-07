@@ -17,6 +17,8 @@ try {
   console.warn('⚠️  web-push module not available:', e?.message || e);
 }
 
+// Enrichment runs later after models and sample data are initialized.
+
 // Debug environment variables
 console.log('🔍 Environment check at startup:');
 console.log('🔍 MONGO_URI exists:', !!process.env.MONGO_URI);
@@ -269,6 +271,7 @@ if (hasMongoDB) {
     image: { type: String, required: true },
     category: { type: String, required: true },
     tags: [String],
+    keywords: [String],
     publishedAt: { type: Date, default: Date.now },
     views: { type: Number, default: 0 },
     featured: { type: Boolean, default: false }
@@ -1858,6 +1861,144 @@ function buildSampleBlogs() {
   const now = new Date();
   const year = now.getFullYear();
   const img = (seed) => `https://picsum.photos/seed/${encodeURIComponent(seed)}/1200/630`;
+
+  // Helper to generate long, SEO‑friendly HTML for any topic
+  const generateBlogContent = (b) => {
+    const topic = b.title;
+    const cat = (b.category || 'General');
+    const heroAlt = `${topic} – ${cat} insights`;
+    const t1 = 'What Is ' + topic + '?';
+    const t2 = 'Key Benefits & Business Impact';
+    const t3 = 'Core Concepts and Architecture';
+    const t4 = 'Best Practices & Implementation Guide';
+    const t5 = 'Common Pitfalls to Avoid';
+    const t6 = 'Real‑World Use Cases';
+    const t7 = 'Step‑by‑Step Checklist';
+    const t8 = 'Tools & Technology Stack';
+    const t9 = 'Measuring ROI & KPIs';
+    const t10 = 'Roadmap & Next Steps';
+    const t11 = 'Frequently Asked Questions';
+    const t12 = 'Conclusion';
+
+    const section = (id, title, body) => `
+      <section id="${slugifyText(id)}">
+        <h2>${title}</h2>
+        ${body}
+      </section>
+    `;
+
+    const toc = [t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12]
+      .map(h => `<li><a href="#${slugifyText(h)}">${h}</a></li>`)
+      .join('');
+
+    return `
+      <figure>
+        <img src="${img(topic + '-cover')}" alt="${heroAlt}" style="width:100%;height:auto;border-radius:12px"/>
+        <figcaption style="color:#9ca3af;margin-top:6px">An overview of ${topic} in the context of ${cat}.</figcaption>
+      </figure>
+
+      <nav aria-label="Table of contents" style="margin:22px 0;padding:16px;border:1px solid #1f2937;border-radius:12px;background:#0b1220">
+        <h3>Table of Contents</h3>
+        <ol>${toc}</ol>
+      </nav>
+
+      ${section(t1, t1, `
+        <p>${topic} refers to modern approaches within ${cat} that help teams improve performance, reliability, and business outcomes. In this guide, we unpack the concepts, share real‑world examples, and provide a practical playbook you can apply today.</p>
+        <p>Whether you are a founder, product manager, or engineer, this article equips you with a clear mental model and actionable steps.</p>
+      `)}
+
+      ${section(t2, t2, `
+        <ul>
+          <li><strong>Speed:</strong> Launch features faster with streamlined workflows.</li>
+          <li><strong>Scalability:</strong> Design systems that grow with traffic and data.</li>
+          <li><strong>Security:</strong> Bake in security controls from day one.</li>
+          <li><strong>Cost Efficiency:</strong> Optimize infra and operations for ROI.</li>
+          <li><strong>Customer Experience:</strong> Deliver smooth, reliable, and accessible journeys.</li>
+        </ul>
+      `)}
+
+      ${section(t3, t3, `
+        <p>At a high level, ${topic} is organized into layers: presentation, application, data, and infrastructure. Each layer plays a role in latency, resilience, and maintainability.</p>
+        <h3>Typical Reference Architecture</h3>
+        <ul>
+          <li>CDN/Edge with caching and security controls</li>
+          <li>API gateway and microservices or a modular monolith</li>
+          <li>Data stores tuned for workload (SQL/NoSQL/search/analytics)</li>
+          <li>Event streams and background workers</li>
+          <li>Observability: logs, traces, metrics, and alerts</li>
+        </ul>
+        <figure>
+          <img src="${img(topic + '-diagram')}" alt="${topic} reference architecture" style="width:100%;height:auto;border-radius:12px"/>
+          <figcaption style="color:#9ca3af;margin-top:6px">High‑level reference architecture for ${topic}.</figcaption>
+        </figure>
+      `)}
+
+      ${section(t4, t4, `
+        <ol>
+          <li>Define goals, KPIs, and non‑functional requirements.</li>
+          <li>Choose an MVP slice and validate architecture with a pilot.</li>
+          <li>Automate testing and CI/CD from the start.</li>
+          <li>Implement monitoring, tracing, and error budgets.</li>
+          <li>Document decisions, trade‑offs, and runbooks.</li>
+        </ol>
+      `)}
+
+      ${section(t5, t5, `
+        <ul>
+          <li>Over‑engineering early; prefer simplicity first.</li>
+          <li>Ignoring cost visibility—enable budgets and alerts.</li>
+          <li>Under‑investing in security and backups.</li>
+          <li>Poor observability leading to blind spots.</li>
+        </ul>
+      `)}
+
+      ${section(t6, t6, `
+        <p>Companies use ${topic} to accelerate product delivery, reduce time‑to‑market, and improve reliability. Typical applications include customer portals, analytics platforms, internal tools, and API products.</p>
+      `)}
+
+      ${section(t7, t7, `
+        <ul>
+          <li>Audit current stack and performance baselines.</li>
+          <li>Prioritize improvements with highest ROI.</li>
+          <li>Ship iteratively; measure and learn.</li>
+          <li>Harden with security reviews and chaos drills.</li>
+        </ul>
+      `)}
+
+      ${section(t8, t8, `
+        <p>Pick tools that match your team’s skills and business goals. Favor managed services where possible to reduce ops toil.</p>
+        <ul>
+          <li>Frameworks & runtimes appropriate to ${cat}</li>
+          <li>Managed databases with autoscaling</li>
+          <li>CI/CD with quality gates and security scans</li>
+          <li>End‑to‑end monitoring</li>
+        </ul>
+      `)}
+
+      ${section(t9, t9, `
+        <p>Track a small set of KPIs tied to customer value—latency, availability, error rate, conversion, retention, and unit economics. Visualize trends and share ownership across teams.</p>
+      `)}
+
+      ${section(t10, t10, `
+        <p>Create a 90‑day plan with monthly milestones. Invest in documentation, training, and a culture of continuous improvement.</p>
+      `)}
+
+      ${section(t11, t11, `
+        <h3>Is ${topic} suitable for small teams?</h3>
+        <p>Yes—start simple. A well‑structured foundation avoids rework later.</p>
+        <h3>How long does adoption take?</h3>
+        <p>Initial wins are possible in weeks; maturity builds over quarters.</p>
+        <h3>How does it improve SEO or performance?</h3>
+        <p>Faster pages, better stability, and accessible UX lead to higher engagement and rankings.</p>
+      `)}
+
+      ${section(t12, t12, `
+        <p>${topic} can be a force multiplier for your business. Start small, focus on outcomes, and iterate with data‑driven decisions.</p>
+        <p><em>Need expert help?</em> Taliyo Technologies partners with teams to design, build, and scale solutions across ${cat}. Contact us to discuss your roadmap.</p>
+      `)}
+    `;
+  };
+
   const base = [
     {
       title: 'Web Development Trends 2025',
@@ -1988,16 +2129,54 @@ function buildSampleBlogs() {
       content: `<h2>Steps</h2><p>Define events, standardize properties, and build dashboards that answer product questions—not vanity metrics.</p>`
     }
   ];
-  return base.map((b, i) => ({
-    ...b,
-    slug: `${slugifyText(b.title)}-${i + 1}`,
-    image: img(b.title),
-    publishedAt: new Date(year, (i % 12), 10)
-  }));
+  return base.map((b, i) => {
+    const content = generateBlogContent(b);
+    const keywords = Array.from(new Set([...(b.tags || []), b.category, 'technology', 'IT services', 'Taliyo Technologies'].filter(Boolean)));
+    return {
+      ...b,
+      slug: `${slugifyText(b.title)}-${i + 1}`,
+      image: img(b.title),
+      publishedAt: new Date(year, (i % 12), 10),
+      content,
+      keywords,
+    };
+  });
 }
 
 if (!global.__memoryBlogs) {
   global.__memoryBlogs = buildSampleBlogs();
+}
+
+// Enrich existing blogs in DB with long SEO content/keywords if they are short or missing
+if (hasMongoDB && typeof Blog !== 'undefined' && Blog && !global.__blogsEnriched) {
+  global.__blogsEnriched = true;
+  (async () => {
+    try {
+      const mem = Array.isArray(global.__memoryBlogs) ? global.__memoryBlogs : [];
+      if (!mem.length) return;
+      const memBySlug = new Map(mem.map(m => [m.slug, m]));
+      const docs = await Blog.find({}, 'slug title content excerpt image keywords category publishedAt').limit(500);
+      let updated = 0;
+      for (const d of docs) {
+        const isShort = !d.content || String(d.content).length < 1200; // ensure long, SEO‑ready content
+        const missingKW = !Array.isArray(d.keywords) || d.keywords.length < 3;
+        if (isShort || missingKW) {
+          const m = memBySlug.get(d.slug) || mem.find(x => slugifyText(x.title) === slugifyText(d.title));
+          if (m) {
+            if (isShort) d.content = m.content;
+            if (!d.excerpt) d.excerpt = m.excerpt || d.excerpt;
+            if (!d.image && m.image) d.image = m.image;
+            if (missingKW) d.keywords = m.keywords || d.keywords;
+            await d.save();
+            updated += 1;
+          }
+        }
+      }
+      if (updated) console.log('✅ Enriched blog posts:', updated);
+    } catch (e) {
+      console.warn('⚠️  Blog enrichment skipped:', e?.message || e);
+    }
+  })();
 }
 
 const server = http.createServer(app);
