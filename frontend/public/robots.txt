@@ -21,10 +21,5 @@ Allow: /terms-conditions
 # Crawl delay for better server performance
 Crawl-delay: 1
 
-# Sitemap location
+# Sitemap location (dynamic from backend)
 Sitemap: https://taliyotechnologies.com/sitemap.xml
-
-# Additional sitemaps for different content types
-Sitemap: https://taliyotechnologies.com/pages-sitemap.xml
-Sitemap: https://taliyotechnologies.com/blog-sitemap.xml
-Sitemap: https://taliyotechnologies.com/services-sitemap.xml

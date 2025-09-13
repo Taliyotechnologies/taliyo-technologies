@@ -449,6 +449,117 @@ if (hasMongoDB && typeof Project !== 'undefined' && Project && !global.__project
   })();
 }
 
+// -----------------------------
+// Dynamic Sitemaps (XML)
+// -----------------------------
+const DEFAULT_SITE_URL = 'https://taliyotechnologies.com';
+const siteBase = (req) => String((process.env.SITE_URL || process.env.FRONTEND_URL || DEFAULT_SITE_URL) || '').replace(/\/$/, '');
+const ymd = (d) => {
+  try { return new Date(d).toISOString().slice(0, 10); } catch { return new Date().toISOString().slice(0, 10); }
+};
+
+// Sitemap Index
+app.get(['/sitemap.xml', '/sitemap'], (req, res) => {
+  try {
+    const base = siteBase(req);
+    const today = ymd(new Date());
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n` +
+      `<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">` +
+      `<sitemap><loc>${base}/pages-sitemap.xml</loc><lastmod>${today}</lastmod></sitemap>` +
+      `<sitemap><loc>${base}/blog-sitemap.xml</loc><lastmod>${today}</lastmod></sitemap>` +
+      `<sitemap><loc>${base}/projects-sitemap.xml</loc><lastmod>${today}</lastmod></sitemap>` +
+      `<sitemap><loc>${base}/services-sitemap.xml</loc><lastmod>${today}</lastmod></sitemap>` +
+      `</sitemapindex>`;
+    res.set('Content-Type', 'application/xml');
+    res.set('Cache-Control', 'public, max-age=3600');
+    return res.send(xml);
+  } catch (e) {
+    return res.status(500).send('');
+  }
+});
+
+// Pages sitemap (static list of core pages)
+app.get(['/pages-sitemap.xml', '/sitemap-pages.xml'], async (req, res) => {
+  try {
+    const base = siteBase(req);
+    const today = ymd(new Date());
+    const pages = [
+      '/', '/about', '/services', '/projects', '/blog', '/contact', '/testimonials', '/faq', '/book', '/privacy-policy', '/terms-conditions'
+    ];
+    const urls = pages.map(p => `<url><loc>${base}${p}</loc><lastmod>${today}</lastmod><changefreq>${p==='/'?'weekly':'monthly'}</changefreq><priority>${p==='/'?'1.0':'0.8'}</priority></url>`).join('');
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>`;
+    res.set('Content-Type', 'application/xml');
+    res.set('Cache-Control', 'public, max-age=3600');
+    return res.send(xml);
+  } catch (e) {
+    return res.status(500).send('');
+  }
+});
+
+// Blog sitemap (DB or in-memory)
+app.get(['/blog-sitemap.xml', '/sitemap-blogs.xml'], async (req, res) => {
+  try {
+    const base = siteBase(req);
+    let list = [];
+    if (hasMongoDB && Blog) {
+      list = await Blog.find({}, 'slug updatedAt publishedAt').sort({ publishedAt: -1 }).limit(2000).lean();
+    } else {
+      list = Array.isArray(global.__memoryBlogs) ? global.__memoryBlogs : [];
+    }
+    const urls = list.map(b => {
+      const last = b.updatedAt || b.publishedAt || new Date();
+      return `<url><loc>${base}/blog/${b.slug}</loc><lastmod>${ymd(last)}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>`;
+    }).join('');
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>`;
+    res.set('Content-Type', 'application/xml');
+    res.set('Cache-Control', 'public, max-age=1800');
+    return res.send(xml);
+  } catch (e) {
+    return res.status(500).send('');
+  }
+});
+
+// Projects sitemap (DB or in-memory)
+app.get(['/projects-sitemap.xml', '/sitemap-projects.xml'], async (req, res) => {
+  try {
+    const base = siteBase(req);
+    let list = [];
+    if (hasMongoDB && Project) {
+      list = await Project.find({ isPublished: { $ne: false } }, 'slug updatedAt publishedAt').sort({ publishedAt: -1 }).limit(2000).lean();
+    } else {
+      list = Array.isArray(global.__memoryProjects) ? global.__memoryProjects : [];
+    }
+    const urls = list.map(p => {
+      const last = p.updatedAt || p.publishedAt || new Date();
+      return `<url><loc>${base}/projects/${p.slug}</loc><lastmod>${ymd(last)}</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>`;
+    }).join('');
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>`;
+    res.set('Content-Type', 'application/xml');
+    res.set('Cache-Control', 'public, max-age=1800');
+    return res.send(xml);
+  } catch (e) {
+    return res.status(500).send('');
+  }
+});
+
+// Services sitemap (static list of service slugs)
+app.get(['/services-sitemap.xml', '/sitemap-services.xml'], async (req, res) => {
+  try {
+    const base = siteBase(req);
+    const today = ymd(new Date());
+    const services = [
+      'web-development','app-development','graphic-design','digital-marketing','ai-solutions','cloud-computing','ecommerce-development','wordpress-development','react-development','nodejs-development','python-development','php-development'
+    ];
+    const urls = services.map(s => `<url><loc>${base}/services/${s}</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>`).join('');
+    const xml = `<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">${urls}</urlset>`;
+    res.set('Content-Type', 'application/xml');
+    res.set('Cache-Control', 'public, max-age=86400');
+    return res.send(xml);
+  } catch (e) {
+    return res.status(500).send('');
+  }
+});
+
 // If MongoDB is configured, seed 15 sample blogs when the collection is empty
 if (hasMongoDB && typeof Blog !== 'undefined' && Blog && !global.__blogsSeedAttempted) {
   global.__blogsSeedAttempted = true;

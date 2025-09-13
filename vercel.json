@@ -3,6 +3,13 @@
   "installCommand": "npm install --workspaces --include=dev",
   "buildCommand": "VITE_ENABLE_PWA=false npm run build",
   "outputDirectory": "frontend/dist",
+  "rewrites": [
+    { "source": "/sitemap.xml", "destination": "https://taliyo-backend.onrender.com/sitemap.xml" },
+    { "source": "/pages-sitemap.xml", "destination": "https://taliyo-backend.onrender.com/pages-sitemap.xml" },
+    { "source": "/blog-sitemap.xml", "destination": "https://taliyo-backend.onrender.com/blog-sitemap.xml" },
+    { "source": "/projects-sitemap.xml", "destination": "https://taliyo-backend.onrender.com/projects-sitemap.xml" },
+    { "source": "/services-sitemap.xml", "destination": "https://taliyo-backend.onrender.com/services-sitemap.xml" }
+  ],
   "headers": [
     {
       "source": "/index.html",
