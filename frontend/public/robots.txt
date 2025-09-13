@@ -25,5 +25,6 @@ Crawl-delay: 1
 Sitemap: https://taliyotechnologies.com/sitemap.xml
 
 # Additional sitemaps for different content types
+Sitemap: https://taliyotechnologies.com/pages-sitemap.xml
 Sitemap: https://taliyotechnologies.com/blog-sitemap.xml
-Sitemap: https://taliyotechnologies.com/services-sitemap.xml 
+Sitemap: https://taliyotechnologies.com/services-sitemap.xml

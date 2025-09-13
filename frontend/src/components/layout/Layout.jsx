@@ -78,7 +78,13 @@ const Layout = () => {
             '@type': 'Organization',
             name: 'Taliyo Technologies',
             url: 'https://taliyotechnologies.com',
-            logo: 'https://taliyotechnologies.com/favicon.png'
+            logo: 'https://taliyotechnologies.com/favicon.png',
+            sameAs: [
+              'https://www.instagram.com/taliyotechnologies/',
+              'https://www.linkedin.com/company/107573393/',
+              'https://www.facebook.com/profile.php?id=61558765421664',
+              'https://x.com/TaliyoTech'
+            ]
           })}
         </script>
         <script type="application/ld+json">
