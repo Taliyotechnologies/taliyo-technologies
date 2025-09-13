@@ -1,4 +1,5 @@
 import { Outlet, useLocation } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import Header from './Header'
 import Footer from './Footer'
 import ScrollToTop from '../ui/ScrollToTop'
@@ -70,6 +71,50 @@ const Layout = () => {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white flex flex-col">
+      <Helmet>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Organization',
+            name: 'Taliyo Technologies',
+            url: 'https://taliyotechnologies.com',
+            logo: 'https://taliyotechnologies.com/favicon.png'
+          })}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            name: 'Taliyo Technologies',
+            url: 'https://taliyotechnologies.com',
+            potentialAction: {
+              '@type': 'SearchAction',
+              target: {
+                '@type': 'EntryPoint',
+                urlTemplate: 'https://taliyotechnologies.com/blog?q={search_term_string}'
+              },
+              'query-input': 'required name=search_term_string'
+            }
+          })}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'SiteNavigationElement',
+            name: ['Home','About','Services','Projects','Blog','Contact','FAQ','Testimonials'],
+            url: [
+              'https://taliyotechnologies.com/',
+              'https://taliyotechnologies.com/about',
+              'https://taliyotechnologies.com/services',
+              'https://taliyotechnologies.com/projects',
+              'https://taliyotechnologies.com/blog',
+              'https://taliyotechnologies.com/contact',
+              'https://taliyotechnologies.com/faq',
+              'https://taliyotechnologies.com/testimonials'
+            ]
+          })}
+        </script>
+      </Helmet>
       <AnimatedCursor />
       <Header />
       <main className="flex-1 bg-gray-950">

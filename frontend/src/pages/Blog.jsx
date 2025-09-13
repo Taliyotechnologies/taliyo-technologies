@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Calendar, Tag, Search } from 'lucide-react'
 import SubscribeForm from '../components/forms/SubscribeForm.jsx';
 
@@ -13,6 +13,8 @@ const Blog = () => {
   const [query, setQuery] = useState('')
   const [activeTag, setActiveTag] = useState('All')
   const [showAllTags, setShowAllTags] = useState(false)
+  const location = useLocation()
+  const navigate = useNavigate()
 
   useEffect(() => {
     const load = async () => {
@@ -30,6 +32,24 @@ const Blog = () => {
     }
     load()
   }, [])
+
+  // Sync query param (?q=) to local state so Google SiteLinks Search Box works
+  useEffect(() => {
+    try {
+      const sp = new URLSearchParams(location.search)
+      const q = sp.get('q') || ''
+      setQuery(q)
+    } catch {}
+  }, [location.search])
+
+  const handleSearch = (value) => {
+    setQuery(value)
+    try {
+      const sp = new URLSearchParams(location.search)
+      if (value) sp.set('q', value); else sp.delete('q')
+      navigate({ pathname: '/blog', search: sp.toString() ? `?${sp}` : '' }, { replace: true })
+    } catch {}
+  }
 
   const allTags = useMemo(() => {
     const t = new Set()
@@ -55,6 +75,25 @@ const Blog = () => {
         <meta property="og:title" content="Blog | Taliyo Technologies" />
         <meta property="og:description" content="Our story, vision, and what makes Taliyo Technologies unique." />
         <meta property="og:type" content="website" />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'CollectionPage',
+            name: 'Taliyo Technologies Blog',
+            url: 'https://taliyotechnologies.com/blog',
+            description: 'Latest tech trends, company news, and expert insights from Taliyo Technologies.'
+          })}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://taliyotechnologies.com/' },
+              { '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://taliyotechnologies.com/blog' }
+            ]
+          })}
+        </script>
         <link rel="canonical" href="https://taliyotechnologies.com/blog" />
       </Helmet>
 
@@ -107,7 +146,7 @@ const Blog = () => {
                 type="text"
                 placeholder="Search articles..."
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => handleSearch(e.target.value)}
                 className="w-full pl-9 pr-3 py-2 rounded-lg bg-gray-900 border border-gray-700 text-gray-100 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>

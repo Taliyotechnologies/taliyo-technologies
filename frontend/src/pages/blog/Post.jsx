@@ -84,6 +84,36 @@ export default function Post() {
         {post.image && <meta property="og:image" content={post.image} />}
         <meta property="og:type" content="article" />
         <link rel="canonical" href={`https://taliyotechnologies.com/blog/${post.slug}`} />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'BlogPosting',
+            headline: post.title,
+            description: post.excerpt || post.description || '',
+            image: post.image || undefined,
+            author: [{ '@type': 'Organization', name: 'Taliyo Technologies' }],
+            publisher: { '@type': 'Organization', name: 'Taliyo Technologies' },
+            mainEntityOfPage: {
+              '@type': 'WebPage',
+              '@id': `https://taliyotechnologies.com/blog/${post.slug}`
+            },
+            datePublished: post.publishedAt || undefined,
+            dateModified: post.updatedAt || post.publishedAt || undefined,
+            keywords: Array.isArray(post.keywords) ? post.keywords.join(', ') : undefined,
+            articleSection: post.category || 'General'
+          })}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://taliyotechnologies.com/' },
+              { '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://taliyotechnologies.com/blog' },
+              { '@type': 'ListItem', position: 3, name: post.title, item: `https://taliyotechnologies.com/blog/${post.slug}` }
+            ]
+          })}
+        </script>
       </Helmet>
 
       {/* Hero */}
