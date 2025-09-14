@@ -48,6 +48,7 @@ const BlogDetailMarketingAI = lazy(() => import('./pages/blog/BlogDetailMarketin
 const BlogDetailCloudComputing = lazy(() => import('./pages/blog/BlogDetailCloudComputing.jsx'));
 const BlogDetailQuantumComputing = lazy(() => import('./pages/blog/BlogDetailQuantumComputing.jsx'));
 const BlogDetailRemoteWork = lazy(() => import('./pages/blog/BlogDetailRemoteWork.jsx'));
+const SEOLanding = lazy(() => import('./pages/SEOLanding.jsx'));
 
 // Lazy load Admin Pages
 const Dashboard = lazy(() => import('./pages/admin/Dashboard.jsx'));
@@ -106,14 +107,14 @@ function App() {
         <title>Taliyo Technologies - Top IT Company in India</title>
         <meta name="description" content="Leading IT company in India offering web development, app development, graphic design, and digital marketing services. Based in Delhi, serving clients worldwide." />
         <meta name="keywords" content="IT company, web development, app development, digital marketing, graphic design, Delhi, India" />
-        <link rel="canonical" href="https://taliyo.com" />
+        <link rel="canonical" href="https://taliyotechnologies.com" />
         
         {/* Preload critical assets */}
         {/** Removed unused image preload to avoid console warnings */}
         
         {/* Preconnect to important origins */}
         <link rel="preconnect" href="https://fonts.gstatic.com" />
-        <link rel="preconnect" href="https://api.taliyo.com" />
+        <link rel="preconnect" href="https://api.taliyotechnologies.com" />
       </Helmet>
       <Suspense fallback={<div className="min-h-[50vh]" />}>
         <Routes>
@@ -140,6 +141,8 @@ function App() {
             <Route path="faq" element={<FAQ />} />
             <Route path="privacy-policy" element={<PrivacyPolicy />} />
             <Route path="terms-conditions" element={<TermsConditions />} />
+            {/* SEO Landing Pages */}
+            <Route path="solutions/:slug" element={<SEOLanding />} />
             {/* 404 inside layout so header/footer stay visible */}
             <Route path="*" element={<ErrorPage status={404} />} />
           </Route>

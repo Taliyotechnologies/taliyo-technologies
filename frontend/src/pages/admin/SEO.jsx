@@ -368,7 +368,7 @@ const SEO = () => {
                         <input
                           type="text"
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="https://taliyo.com/sitemap.xml"
+                          placeholder="https://taliyotechnologies.com/sitemap.xml"
                         />
                       </div>
                       <div>
@@ -378,7 +378,7 @@ const SEO = () => {
                         <textarea
                           rows={4}
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="User-agent: *&#10;Allow: /&#10;Disallow: /admin/"
+                          placeholder="User-agent: *\nAllow: /\nDisallow: /admin/"
                         />
                       </div>
                       <div className="flex space-x-3 pt-4">

@@ -45,7 +45,7 @@ const team = [
     experience: '7+ years',
     expertise: 'Cloud, Security, AI',
     img: ishaMehraImg,
-    linkedin: '#',
+    linkedin: 'https://www.linkedin.com/in/isha-mehra-5ab043371/',
     bio: 'Technology leader driving innovation and technical excellence.'
   },
   {
@@ -54,7 +54,7 @@ const team = [
     experience: '6+ years',
     expertise: 'Human Resources, Talent Management',
     img: uditaImg,
-    linkedin: '#',
+    linkedin: 'https://www.linkedin.com/in/udita-shori/',
     bio: 'HR expert ensuring a great workplace and team culture.'
   },
   {
@@ -484,7 +484,6 @@ const About = () => (
             <p className="text-gray-300">70425 23611</p>
             <p className="text-gray-400 text-sm">Mon-Fri 9AM-6PM</p>
           </motion.div>
-
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -499,11 +498,10 @@ const About = () => (
               aria-label="Email info@taliyotechnologies.com"
             >
               <Mail className="text-blue-400 mx-auto mb-4" size={32} />
-              <h3 className="text-lg font-semibold text-white mb-2">info@taliyo.com</h3>
+              <h3 className="text-lg font-semibold text-white mb-2">info@taliyotechnologies.com</h3>
               <p className="text-gray-300">24/7 Support</p>
             </a>
           </motion.div>
-
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}

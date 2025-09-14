@@ -64,7 +64,7 @@ const memorySubscriptions = new Map(); // endpoint -> subscription JSON
 // Site settings defaults and in-memory store (when DB unavailable)
 const defaultSettings = {
   companyName: 'Taliyo Technologies',
-  websiteUrl: 'https://taliyo.com',
+  websiteUrl: 'https://taliyotechnologies.com',
   timezone: 'Asia/Kolkata',
   language: 'en',
   maintenanceMode: false,
@@ -91,8 +91,6 @@ if (!hasMongoDB) {
 const allowedOrigins = [
   'https://taliyotechnologies.com',
   'https://www.taliyotechnologies.com',
-  'https://taliyo.com',
-  'https://www.taliyo.com',
   'https://taliyo-technologies.vercel.app',
   'https://taliyo-frontend.onrender.com',
   'http://localhost:5173',
@@ -469,6 +467,7 @@ app.get(['/sitemap.xml', '/sitemap'], (req, res) => {
       `<sitemap><loc>${base}/blog-sitemap.xml</loc><lastmod>${today}</lastmod></sitemap>` +
       `<sitemap><loc>${base}/projects-sitemap.xml</loc><lastmod>${today}</lastmod></sitemap>` +
       `<sitemap><loc>${base}/services-sitemap.xml</loc><lastmod>${today}</lastmod></sitemap>` +
+      `<sitemap><loc>${base}/solutions-sitemap.xml</loc><lastmod>${today}</lastmod></sitemap>` +
       `</sitemapindex>`;
     res.set('Content-Type', 'application/xml');
     res.set('Cache-Control', 'public, max-age=3600');
@@ -552,6 +551,38 @@ app.get(['/services-sitemap.xml', '/sitemap-services.xml'], async (req, res) => 
     ];
     const urls = services.map(s => `<url><loc>${base}/services/${s}</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>`).join('');
     const xml = `<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">${urls}</urlset>`;
+    res.set('Content-Type', 'application/xml');
+    res.set('Cache-Control', 'public, max-age=86400');
+    return res.send(xml);
+  } catch (e) {
+    return res.status(500).send('');
+  }
+});
+
+// Solutions sitemap (SEO landing pages)
+app.get(['/solutions-sitemap.xml', '/sitemap-solutions.xml'], async (req, res) => {
+  try {
+    const base = siteBase(req);
+    const today = ymd(new Date());
+    const slugs = [
+      'custom-software-development-small-business-india',
+      'affordable-app-development-company-delhi',
+      'web-application-development-startups',
+      'hire-mern-stack-developer-india',
+      'top-software-agency-ecommerce',
+      'affordable-logo-design-company-india',
+      'brochure-design-services-delhi-ncr',
+      'ui-ux-design-agency-startups',
+      'creative-graphic-design-social-media',
+      'custom-packaging-design-services-india',
+      'digital-marketing-agency-small-business-delhi',
+      'seo-services-startups-india',
+      'social-media-marketing-company-delhi-ncr',
+      'affordable-ppc-management-india',
+      'content-marketing-services-ecommerce'
+    ];
+    const urls = slugs.map(s => `<url><loc>${base}/solutions/${s}</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>`).join('');
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>`;
     res.set('Content-Type', 'application/xml');
     res.set('Cache-Control', 'public, max-age=86400');
     return res.send(xml);

@@ -194,13 +194,13 @@ const Home = () => {
         <meta name="keywords" content="IT company India, web development Delhi, app development, digital marketing, graphic design, software development, IT services, technology solutions" />
         <meta name="author" content="Taliyo Technologies" />
         <meta name="robots" content="index, follow" />
-        <link rel="canonical" href="https://taliyo.com" />
+        <link rel="canonical" href="https://taliyotechnologies.com" />
         
         {/* Open Graph */}
         <meta property="og:title" content="Taliyo Technologies - Leading IT Company in India" />
         <meta property="og:description" content="Premier IT company offering web development, app development, and digital marketing services. Transform your business with our innovative solutions." />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://taliyo.com" />
+        <meta property="og:url" content="https://taliyotechnologies.com" />
         
         {/* Twitter Card */}
         <meta name="twitter:card" content="summary_large_image" />
@@ -263,7 +263,7 @@ const Home = () => {
             transition={{
               duration: 12,
               repeat: Infinity,
-              ease: "easeInOut",
+              ease: "easeInOut"
             }}
           />
         </div>
@@ -697,13 +697,13 @@ const Home = () => {
               className="bg-gray-800/50 rounded-2xl p-6 text-center border border-blue-500/10"
             >
               <a
-                href="mailto:info@taliyo.com"
+                href="mailto:info@taliyotechnologies.com"
                 className="block focus:outline-none focus:ring-2 focus:ring-blue-400 rounded-2xl hover:bg-gray-700/40 transition-all duration-200"
                 tabIndex={0}
-                aria-label="Email info@taliyo.com"
+                aria-label="Email info@taliyotechnologies.com"
               >
                 <Mail className="text-blue-400 mx-auto mb-4" size={32} />
-                <h3 className="text-lg font-semibold text-white mb-2">info@taliyo.com</h3>
+                <h3 className="text-lg font-semibold text-white mb-2">info@taliyotechnologies.com</h3>
                 <p className="text-gray-300">24/7 Support</p>
               </a>
             </motion.div>

@@ -35,7 +35,7 @@ const Settings = () => {
   // General Settings state
   const [general, setGeneral] = useState({
     companyName: 'Taliyo Technologies',
-    websiteUrl: 'https://taliyo.com',
+    websiteUrl: 'https://taliyotechnologies.com',
     timezone: 'Asia/Kolkata',
     language: 'en',
     maintenanceMode: false,
@@ -58,7 +58,7 @@ const Settings = () => {
         const s = data.settings;
         setGeneral({
           companyName: s.companyName || 'Taliyo Technologies',
-          websiteUrl: s.websiteUrl || 'https://taliyo.com',
+          websiteUrl: s.websiteUrl || 'https://taliyotechnologies.com',
           timezone: s.timezone || 'Asia/Kolkata',
           language: s.language || 'en',
           maintenanceMode: !!s.maintenanceMode,
@@ -314,7 +314,7 @@ const Settings = () => {
                       </div>
                       <div>
                         <h4 className="font-medium text-gray-900 dark:text-white">Admin User</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">admin@taliyo.com</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">admin@taliyotechnologies.com</p>
                       </div>
                     </div>
                     
@@ -347,7 +347,7 @@ const Settings = () => {
                         </label>
                         <input
                           type="email"
-                          defaultValue="admin@taliyo.com"
+                          defaultValue="admin@taliyotechnologies.com"
                           className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white placeholder-gray-400 dark:placeholder-gray-400"
                         />
                       </div>

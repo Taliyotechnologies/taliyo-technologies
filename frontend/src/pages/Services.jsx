@@ -494,6 +494,31 @@ const Services = () => {
 
       <TrustedByLoop />
 
+      {/* Targeted Solutions (SEO Landing Links) */}
+      <section className="py-16 bg-gray-900">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-8 text-center">Targeted Solutions</h2>
+          <p className="text-gray-300 text-center max-w-3xl mx-auto mb-8">Explore specialized solutions crafted for your exact needs. These pages are optimized for the use‑cases our clients search for most.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
+            <Link to="/solutions/custom-software-development-small-business-india" className="block p-4 rounded-xl bg-gray-800/60 border border-gray-700 hover:border-gray-500 text-blue-300 hover:text-blue-200">Custom Software Development for Small Business (India)</Link>
+            <Link to="/solutions/affordable-app-development-company-delhi" className="block p-4 rounded-xl bg-gray-800/60 border border-gray-700 hover:border-gray-500 text-blue-300 hover:text-blue-200">Affordable App Development Company in Delhi</Link>
+            <Link to="/solutions/web-application-development-startups" className="block p-4 rounded-xl bg-gray-800/60 border border-gray-700 hover:border-gray-500 text-blue-300 hover:text-blue-200">Web Application Development for Startups</Link>
+            <Link to="/solutions/hire-mern-stack-developer-india" className="block p-4 rounded-xl bg-gray-800/60 border border-gray-700 hover:border-gray-500 text-blue-300 hover:text-blue-200">Hire MERN Stack Developer (India)</Link>
+            <Link to="/solutions/top-software-agency-ecommerce" className="block p-4 rounded-xl bg-gray-800/60 border border-gray-700 hover:border-gray-500 text-blue-300 hover:text-blue-200">Top Software Agency for e‑Commerce</Link>
+            <Link to="/solutions/affordable-logo-design-company-india" className="block p-4 rounded-xl bg-gray-800/60 border border-gray-700 hover:border-gray-500 text-blue-300 hover:text-blue-200">Affordable Logo Design Company (India)</Link>
+            <Link to="/solutions/brochure-design-services-delhi-ncr" className="block p-4 rounded-xl bg-gray-800/60 border border-gray-700 hover:border-gray-500 text-blue-300 hover:text-blue-200">Brochure Design Services (Delhi NCR)</Link>
+            <Link to="/solutions/ui-ux-design-agency-startups" className="block p-4 rounded-xl bg-gray-800/60 border border-gray-700 hover:border-gray-500 text-blue-300 hover:text-blue-200">UI/UX Design Agency for Startups</Link>
+            <Link to="/solutions/creative-graphic-design-social-media" className="block p-4 rounded-xl bg-gray-800/60 border border-gray-700 hover:border-gray-500 text-blue-300 hover:text-blue-200">Creative Graphic Design for Social Media</Link>
+            <Link to="/solutions/custom-packaging-design-services-india" className="block p-4 rounded-xl bg-gray-800/60 border border-gray-700 hover:border-gray-500 text-blue-300 hover:text-blue-200">Custom Packaging Design Services (India)</Link>
+            <Link to="/solutions/digital-marketing-agency-small-business-delhi" className="block p-4 rounded-xl bg-gray-800/60 border border-gray-700 hover:border-gray-500 text-blue-300 hover:text-blue-200">Digital Marketing for Small Business (Delhi)</Link>
+            <Link to="/solutions/seo-services-startups-india" className="block p-4 rounded-xl bg-gray-800/60 border border-gray-700 hover:border-gray-500 text-blue-300 hover:text-blue-200">SEO Services for Startups (India)</Link>
+            <Link to="/solutions/social-media-marketing-company-delhi-ncr" className="block p-4 rounded-xl bg-gray-800/60 border border-gray-700 hover:border-gray-500 text-blue-300 hover:text-blue-200">Social Media Marketing Company (Delhi NCR)</Link>
+            <Link to="/solutions/affordable-ppc-management-india" className="block p-4 rounded-xl bg-gray-800/60 border border-gray-700 hover:border-gray-500 text-blue-300 hover:text-blue-200">Affordable PPC Management (India)</Link>
+            <Link to="/solutions/content-marketing-services-ecommerce" className="block p-4 rounded-xl bg-gray-800/60 border border-gray-700 hover:border-gray-500 text-blue-300 hover:text-blue-200">Content Marketing Services for e‑Commerce</Link>
+          </div>
+        </div>
+      </section>
+
       {/* Contact Info Section */}
       <section className="py-16 bg-gray-950">
         <div className="container mx-auto px-4">
@@ -525,7 +550,7 @@ const Services = () => {
                 aria-label="Email info@taliyotechnologies.com"
               >
                 <Mail className="text-blue-400 mx-auto mb-4" size={32} />
-                <h3 className="text-lg font-semibold text-white mb-2">info@taliyo.com</h3>
+                <h3 className="text-lg font-semibold text-white mb-2">info@taliyotechnologies.com</h3>
                 <p className="text-gray-300">24/7 Support</p>
               </a>
             </motion.div>
